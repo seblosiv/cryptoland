@@ -1,0 +1,79 @@
+{
+  "name": "CryptoLand — Own the World On-Chain",
+  "short_name": "CryptoLand",
+  "description": "Blockchain land registry game. Buy, own, and trade real-world map tiles as NFTs.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0d0f12",
+  "theme_color": "#0d0f12",
+  "categories": ["games", "finance"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "CryptoLand desktop view"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CryptoLand mobile view"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Map",
+      "url": "/",
+      "description": "Open the world map"
+    },
+    {
+      "name": "Marketplace",
+      "url": "/?view=marketplace",
+      "description": "Browse tile listings"
+    },
+    {
+      "name": "My Portfolio",
+      "url": "/?view=portfolio",
+      "description": "View owned tiles"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

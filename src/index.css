@@ -1,0 +1,381 @@
+@import "tailwindcss";
+
+/* ── Tokens ── */
+:root {
+  /* Solid backgrounds */
+  --bg:   #0f0f0f;
+  --s1:   #141414;
+  --s2:   #1a1a1a;
+  --s3:   #222222;
+  --s4:   #2a2a2a;
+
+  /* Borders */
+  --b0:   rgba(255,255,255,0.04);
+  --b1:   rgba(255,255,255,0.08);
+  --b2:   rgba(255,255,255,0.13);
+
+  /* Text */
+  --t1:   #ffffff;
+  --t2:   rgba(255,255,255,0.55);
+  --t3:   rgba(255,255,255,0.28);
+  --t4:   rgba(255,255,255,0.14);
+
+  /* Accent: green only, only for active/selected states */
+  --green:  #4ade80;
+  --green-d: rgba(74,222,128,0.12);
+  --green-b: rgba(74,222,128,0.22);
+
+  /* Status */
+  --red:    #f87171;
+  --amber:  #fbbf24;
+
+  /* Layout */
+  --feed-h: 44px;
+  --r-sm:   8px;
+  --r-md:   12px;
+  --r-lg:   20px;
+  --r-pill: 999px;
+
+  /* Fonts */
+  --font:   'Inter', system-ui, -apple-system, sans-serif;
+  --mono:   'Space Mono', 'Courier New', monospace;
+
+  /* Shadows — minimal, black only */
+  --sh-sm:  0 1px 4px rgba(0,0,0,0.6);
+  --sh-md:  0 4px 16px rgba(0,0,0,0.7);
+  --sh-lg:  0 8px 32px rgba(0,0,0,0.8);
+
+  /* Safe area */
+  --sat: env(safe-area-inset-top,    0px);
+  --sar: env(safe-area-inset-right,  0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left,   0px);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  overflow: hidden;
+  height: 100dvh;
+  width: 100dvw;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#root { width: 100%; height: 100%; position: relative; }
+
+.allow-select, .allow-select * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* ── Surface classes — solid only, zero blur ── */
+
+.panel {
+  background: var(--s1);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+}
+
+.card {
+  background: var(--s2);
+  border-radius: var(--r-md);
+}
+
+.pill {
+  background: var(--s2);
+  border-radius: var(--r-pill);
+}
+
+/* ── Buttons ── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  border-radius: var(--r-md);
+  padding: 0 24px;
+  height: 48px;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s, transform 0.12s;
+  background: var(--green);
+  color: #0f0f0f;
+  box-shadow: var(--sh-sm);
+}
+
+.btn:hover  { opacity: 0.88; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  border-radius: var(--r-md);
+  padding: 0 20px;
+  height: 48px;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+  background: var(--s3);
+  color: var(--t2);
+  border: none;
+}
+
+.btn-ghost:hover  { background: var(--s4); color: var(--t1); }
+.btn-ghost:active { opacity: 0.8; }
+
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  border-radius: var(--r-pill);
+  padding: 0 40px;
+  height: 52px;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s, transform 0.12s;
+  width: 100%;
+  background: var(--green);
+  color: #0f0f0f;
+}
+
+.btn-hero:hover  { opacity: 0.88; }
+.btn-hero:active { transform: scale(0.98); }
+
+/* ── Form ── */
+
+.input {
+  width: 100%;
+  background: var(--s3);
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 12px 16px;
+  outline: none;
+  transition: background 0.12s;
+}
+
+.input:focus { background: var(--s4); }
+.input::placeholder { color: var(--t3); }
+
+/* ── Type ── */
+
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+.mono { font-family: var(--mono); font-size: 12px; }
+
+/* ── Badge ── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.badge-green {
+  background: var(--green-d);
+  color: var(--green);
+}
+
+.badge-dim {
+  background: var(--s3);
+  color: var(--t3);
+}
+
+/* ── Live dot ── */
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.65); }
+}
+
+/* ── Divider ── */
+
+.divider { height: 1px; background: var(--b1); }
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar { width: 2px; height: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--b2) transparent; }
+
+/* ── Modal ── */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.82);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .modal-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--b2);
+  margin: 12px auto 20px;
+  flex-shrink: 0;
+}
+
+/* ── MapLibre overrides ── */
+
+.maplibregl-canvas { outline: none; touch-action: pan-x pan-y; }
+.maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display: none !important; }
+
+.maplibregl-ctrl-group {
+  background: var(--s2) !important;
+  border: none !important;
+  border-radius: var(--r-md) !important;
+  overflow: hidden;
+  box-shadow: var(--sh-md) !important;
+}
+
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  color: var(--t2) !important;
+  border: none !important;
+  transition: background 0.12s !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--s3) !important;
+  color: var(--t1) !important;
+}
+
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  bottom: calc(var(--feed-h) + 10px + var(--sab)) !important;
+}
+
+/* ── Animations ── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes sheet-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes news-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes alert-flash {
+  0%   { background: rgba(255,255,255,0.08); }
+  100% { background: transparent; }
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 639px) {
+  .modal-backdrop { align-items: flex-end; padding: 0; }
+  :root { --feed-h: 40px; }
+  button, [role="button"] { min-height: 44px; min-width: 44px; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .desktop-only { display: none !important; }
+}

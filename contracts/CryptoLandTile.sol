@@ -1,0 +1,418 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * CryptoLandTile — Universal ERC-721 Land NFT
+ * =============================================
+ * Deploys identically on: Polygon, Avalanche C-Chain, Base, Ethereum, and any EVM chain.
+ * To deploy on a new chain: same contract, new RPC/constructor args, update config.js.
+ *
+ * Features:
+ *   - ERC-721 compliant tile ownership (one NFT per tile coordinate)
+ *   - Deterministic tokenId from tile coordinates: (tx << 15) | ty
+ *     (Z14 grid: 16384×16384, tx/ty each 0–16383, fits in 29 bits)
+ *   - Built-in marketplace: list/unlist/buy with protocol fee
+ *   - On-chain metadata: tileKey, country, mintedAt stored per token
+ *   - Configurable mint fee (bps) and marketplace fee (bps)
+ *   - Enumerable: tokenOfOwnerByIndex for wallet portfolio reads
+ *   - Emergency pause (Ownable pattern — upgradeable to multisig/DAO)
+ *
+ * Coordinate system:
+ *   Z14 Web Mercator grid — 16384×16384 tiles (tx: 0–16383, ty: 0–16383)
+ *   tokenId = (tx << 15) | ty  →  fits in uint29, well under uint256
+ *
+ * Fee flow:
+ *   Mint:       msg.value goes to contract; owner withdraws via withdrawFees()
+ *   Resale:     buyer sends priceWei; (priceWei * marketFeeBps / 10000) → contract;
+ *               remainder → seller
+ *
+ * Roadmap hooks:
+ *   - setMinter(address)     → whitelist backend minter for gasless mints
+ *   - setGuardianContract()  → future Guardian yield contract
+ *   - setTokenContract()     → future $CLND staking rewards
+ */
+
+// ── Minimal interfaces (no OpenZeppelin dependency for lean deploy) ────────────
+
+interface IERC165 {
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
+interface IERC721 is IERC165 {
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
+    function balanceOf(address owner) external view returns (uint256);
+    function ownerOf(uint256 tokenId) external view returns (address);
+    function transferFrom(address from, address to, uint256 tokenId) external;
+    function approve(address to, uint256 tokenId) external;
+    function getApproved(uint256 tokenId) external view returns (address);
+    function setApprovalForAll(address operator, bool approved) external;
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+}
+
+interface IERC721Metadata is IERC721 {
+    function name() external view returns (string memory);
+    function symbol() external view returns (string memory);
+    function tokenURI(uint256 tokenId) external view returns (string memory);
+}
+
+interface IERC721Receiver {
+    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4);
+}
+
+// ── Contract ──────────────────────────────────────────────────────────────────
+
+contract CryptoLandTile is IERC721Metadata {
+
+    // ── Ownership ──────────────────────────────────────────────────────────
+    address public owner;
+    address public pendingOwner;
+    address public minter;  // backend minter address (for gasless mint flow)
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier onlyOwnerOrMinter() {
+        require(msg.sender == owner || msg.sender == minter, "Not authorized");
+        _;
+    }
+
+    // ── ERC-721 storage ────────────────────────────────────────────────────
+    string  private _name;
+    string  private _symbol;
+    string  private _baseURI;
+
+    mapping(uint256 => address) private _owners;
+    mapping(address => uint256) private _balances;
+    mapping(uint256 => address) private _tokenApprovals;
+    mapping(address => mapping(address => bool)) private _operatorApprovals;
+
+    // ── Enumerable ──────────────────────────────────────────────────────────
+    uint256[]                               private _allTokens;
+    mapping(uint256 => uint256)             private _allTokensIndex;
+    mapping(address => uint256[])           private _ownedTokens;
+    mapping(uint256 => uint256)             private _ownedTokensIndex;
+
+    // ── Tile metadata ───────────────────────────────────────────────────────
+    struct TileData {
+        string  tileKey;    // "tx:ty"
+        string  country;
+        uint256 mintedAt;   // block.timestamp
+        uint256 listPrice;  // wei; 0 = not listed
+        bool    listed;
+    }
+    mapping(uint256 => TileData) public tileData;
+    mapping(string  => uint256)  public keyToTokenId;   // "tx:ty" → tokenId
+    mapping(uint256 => bool)     public minted;
+
+    // ── Fee parameters ──────────────────────────────────────────────────────
+    uint256 public mintFeeBps    = 250;   // 2.5% of msg.value on mint
+    uint256 public marketFeeBps  = 250;   // 2.5% of resale price
+    uint256 public accruedFees;
+
+    // ── Pause ───────────────────────────────────────────────────────────────
+    bool public paused;
+
+    modifier whenNotPaused() {
+        require(!paused, "Contract paused");
+        _;
+    }
+
+    // ── Events ──────────────────────────────────────────────────────────────
+    event TileMinted(uint256 indexed tokenId, address indexed owner, string tileKey, string country);
+    event TileListed(uint256 indexed tokenId, address indexed seller, uint256 priceWei);
+    event TileUnlisted(uint256 indexed tokenId, address indexed seller);
+    event TileSold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 priceWei);
+    event FeesWithdrawn(address to, uint256 amount);
+    event OwnershipTransferred(address indexed previous, address indexed next);
+    event MinterChanged(address indexed previous, address indexed next);
+
+    // ── Constructor ─────────────────────────────────────────────────────────
+    constructor(string memory name_, string memory symbol_, string memory baseURI_) {
+        _name    = name_;
+        _symbol  = symbol_;
+        _baseURI = baseURI_;
+        owner    = msg.sender;
+        minter   = msg.sender;
+    }
+
+    // ── ERC-165 ─────────────────────────────────────────────────────────────
+    function supportsInterface(bytes4 id) external pure override returns (bool) {
+        return id == type(IERC721).interfaceId
+            || id == type(IERC721Metadata).interfaceId
+            || id == type(IERC165).interfaceId;
+    }
+
+    // ── ERC-721 Metadata ────────────────────────────────────────────────────
+    function name()   external view override returns (string memory) { return _name; }
+    function symbol() external view override returns (string memory) { return _symbol; }
+
+    function tokenURI(uint256 tokenId) external view override returns (string memory) {
+        require(minted[tokenId], "Token does not exist");
+        return string(abi.encodePacked(_baseURI, _uint2str(tokenId)));
+    }
+
+    function setBaseURI(string calldata uri) external onlyOwner {
+        _baseURI = uri;
+    }
+
+    // ── ERC-721 Core ────────────────────────────────────────────────────────
+    function balanceOf(address addr) external view override returns (uint256) {
+        require(addr != address(0), "Zero address");
+        return _balances[addr];
+    }
+
+    function ownerOf(uint256 tokenId) external view override returns (address) {
+        address a = _owners[tokenId];
+        require(a != address(0), "Token does not exist");
+        return a;
+    }
+
+    function approve(address to, uint256 tokenId) external override {
+        address tileOwner = _owners[tokenId];
+        require(msg.sender == tileOwner || _operatorApprovals[tileOwner][msg.sender], "Not authorized");
+        _tokenApprovals[tokenId] = to;
+        emit Approval(tileOwner, to, tokenId);
+    }
+
+    function getApproved(uint256 tokenId) external view override returns (address) {
+        return _tokenApprovals[tokenId];
+    }
+
+    function setApprovalForAll(address operator, bool approved) external override {
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
+    }
+
+    function isApprovedForAll(address addr, address operator) external view override returns (bool) {
+        return _operatorApprovals[addr][operator];
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) external override whenNotPaused {
+        require(_isApprovedOrOwner(msg.sender, tokenId), "Not approved");
+        _transfer(from, to, tokenId);
+        // Automatically unlist on transfer
+        if (tileData[tokenId].listed) {
+            tileData[tokenId].listed    = false;
+            tileData[tokenId].listPrice = 0;
+        }
+    }
+
+    // ── Tile minting ────────────────────────────────────────────────────────
+
+    /**
+     * Deterministic tokenId from tile coordinates.
+     * Matches tileTokenId() in src/lib/blockchain/adapters/evm.js
+     */
+    function tokenIdFromKey(uint256 tx_, uint256 ty_) public pure returns (uint256) {
+        return (tx_ << 15) | ty_;
+    }
+
+    /**
+     * Mint a new tile NFT. Called by backend after payment confirmation.
+     * msg.value: optional on-chain mint fee (can be 0 for off-chain payments).
+     */
+    function mint(
+        address to,
+        uint256 tokenId,
+        string calldata tileKey,
+        string calldata country
+    ) external payable onlyOwnerOrMinter whenNotPaused {
+        require(to != address(0), "Zero address");
+        require(!minted[tokenId], "Already minted");
+        require(bytes(tileKey).length > 0, "Empty tileKey");
+
+        minted[tokenId]       = true;
+        keyToTokenId[tileKey] = tokenId;
+
+        tileData[tokenId] = TileData({
+            tileKey:   tileKey,
+            country:   country,
+            mintedAt:  block.timestamp,
+            listPrice: 0,
+            listed:    false
+        });
+
+        _mint(to, tokenId);
+
+        // Accrue mint fee
+        if (msg.value > 0) {
+            uint256 fee = (msg.value * mintFeeBps) / 10000;
+            accruedFees += fee;
+        }
+
+        emit TileMinted(tokenId, to, tileKey, country);
+    }
+
+    // ── Marketplace ─────────────────────────────────────────────────────────
+
+    function listForSale(uint256 tokenId, uint256 priceWei) external whenNotPaused {
+        require(_owners[tokenId] == msg.sender, "Not tile owner");
+        require(priceWei > 0, "Price must be > 0");
+        tileData[tokenId].listed    = true;
+        tileData[tokenId].listPrice = priceWei;
+        emit TileListed(tokenId, msg.sender, priceWei);
+    }
+
+    function unlist(uint256 tokenId) external {
+        require(_owners[tokenId] == msg.sender, "Not tile owner");
+        tileData[tokenId].listed    = false;
+        tileData[tokenId].listPrice = 0;
+        emit TileUnlisted(tokenId, msg.sender);
+    }
+
+    function buy(uint256 tokenId) external payable whenNotPaused {
+        TileData storage td = tileData[tokenId];
+        require(td.listed, "Not listed for sale");
+        require(msg.value >= td.listPrice, "Insufficient payment");
+
+        address seller     = _owners[tokenId];
+        uint256 price      = td.listPrice;
+        uint256 fee        = (price * marketFeeBps) / 10000;
+        uint256 sellerPays = price - fee;
+
+        // Clear listing before transfer (reentrancy guard)
+        td.listed    = false;
+        td.listPrice = 0;
+        accruedFees += fee;
+
+        // Transfer NFT
+        _transfer(seller, msg.sender, tokenId);
+
+        // Pay seller
+        (bool ok, ) = payable(seller).call{ value: sellerPays }("");
+        require(ok, "Seller payment failed");
+
+        // Refund overpayment
+        if (msg.value > price) {
+            (bool refund, ) = payable(msg.sender).call{ value: msg.value - price }("");
+            require(refund, "Refund failed");
+        }
+
+        emit TileSold(tokenId, seller, msg.sender, price);
+    }
+
+    // ── Enumerable ──────────────────────────────────────────────────────────
+
+    function totalSupply() external view returns (uint256) {
+        return _allTokens.length;
+    }
+
+    function tokenByIndex(uint256 index) external view returns (uint256) {
+        require(index < _allTokens.length, "Out of bounds");
+        return _allTokens[index];
+    }
+
+    function tokenOfOwnerByIndex(address addr, uint256 index) external view returns (uint256) {
+        require(index < _ownedTokens[addr].length, "Out of bounds");
+        return _ownedTokens[addr][index];
+    }
+
+    function tokensOfOwner(address addr) external view returns (uint256[] memory) {
+        return _ownedTokens[addr];
+    }
+
+    // ── Admin ────────────────────────────────────────────────────────────────
+
+    function setMinter(address minter_) external onlyOwner {
+        emit MinterChanged(minter, minter_);
+        minter = minter_;
+    }
+
+    function setMintFeePercent(uint256 bps) external onlyOwner {
+        require(bps <= 1000, "Max 10%");
+        mintFeeBps = bps;
+    }
+
+    function setMarketFeePercent(uint256 bps) external onlyOwner {
+        require(bps <= 1000, "Max 10%");
+        marketFeeBps = bps;
+    }
+
+    function withdrawFees() external onlyOwner {
+        uint256 amount = accruedFees;
+        accruedFees    = 0;
+        (bool ok, )    = payable(owner).call{ value: amount }("");
+        require(ok, "Withdraw failed");
+        emit FeesWithdrawn(owner, amount);
+    }
+
+    function setPaused(bool paused_) external onlyOwner {
+        paused = paused_;
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        pendingOwner = newOwner;
+    }
+
+    function acceptOwnership() external {
+        require(msg.sender == pendingOwner, "Not pending owner");
+        emit OwnershipTransferred(owner, pendingOwner);
+        owner        = pendingOwner;
+        pendingOwner = address(0);
+    }
+
+    // ── Internal helpers ─────────────────────────────────────────────────────
+
+    function _mint(address to, uint256 tokenId) internal {
+        _owners[tokenId]  = to;
+        _balances[to]    += 1;
+
+        _allTokensIndex[tokenId] = _allTokens.length;
+        _allTokens.push(tokenId);
+
+        _ownedTokensIndex[tokenId]         = _ownedTokens[to].length;
+        _ownedTokens[to].push(tokenId);
+
+        emit Transfer(address(0), to, tokenId);
+    }
+
+    function _transfer(address from, address to, uint256 tokenId) internal {
+        require(_owners[tokenId] == from, "Wrong owner");
+        require(to != address(0), "Zero address");
+
+        delete _tokenApprovals[tokenId];
+        _owners[tokenId]   = to;
+        _balances[from]   -= 1;
+        _balances[to]     += 1;
+
+        // Update owned-by-owner enumeration
+        uint256 lastIdx = _ownedTokens[from].length - 1;
+        uint256 thisIdx = _ownedTokensIndex[tokenId];
+        if (thisIdx != lastIdx) {
+            uint256 lastToken = _ownedTokens[from][lastIdx];
+            _ownedTokens[from][thisIdx] = lastToken;
+            _ownedTokensIndex[lastToken] = thisIdx;
+        }
+        _ownedTokens[from].pop();
+        _ownedTokensIndex[tokenId]         = _ownedTokens[to].length;
+        _ownedTokens[to].push(tokenId);
+
+        emit Transfer(from, to, tokenId);
+    }
+
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view returns (bool) {
+        address tileOwner = _owners[tokenId];
+        return (
+            spender == tileOwner ||
+            _tokenApprovals[tokenId] == spender ||
+            _operatorApprovals[tileOwner][spender]
+        );
+    }
+
+    function _uint2str(uint256 v) internal pure returns (string memory) {
+        if (v == 0) return "0";
+        uint256 tmp = v;
+        uint256 len;
+        while (tmp > 0) { len++; tmp /= 10; }
+        bytes memory buf = new bytes(len);
+        while (v > 0) { buf[--len] = bytes1(uint8(48 + v % 10)); v /= 10; }
+        return string(buf);
+    }
+
+    receive() external payable {}
+}

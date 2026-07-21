@@ -1,0 +1,238 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "name_",    "type": "string", "internalType": "string" },
+      { "name": "symbol_",  "type": "string", "internalType": "string" },
+      { "name": "baseURI_", "type": "string", "internalType": "string" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "mint",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "to",       "type": "address", "internalType": "address" },
+      { "name": "tokenId",  "type": "uint256", "internalType": "uint256" },
+      { "name": "tileKey",  "type": "string",  "internalType": "string" },
+      { "name": "country",  "type": "string",  "internalType": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "listForSale",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "tokenId",   "type": "uint256", "internalType": "uint256" },
+      { "name": "priceWei",  "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "unlist",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "buy",
+    "stateMutability": "payable",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "tileData",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "tileKey",   "type": "string",  "internalType": "string" },
+      { "name": "country",   "type": "string",  "internalType": "string" },
+      { "name": "mintedAt",  "type": "uint256", "internalType": "uint256" },
+      { "name": "listPrice", "type": "uint256", "internalType": "uint256" },
+      { "name": "listed",    "type": "bool",    "internalType": "bool" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "tokenIdFromKey",
+    "stateMutability": "pure",
+    "inputs": [
+      { "name": "tx_", "type": "uint256", "internalType": "uint256" },
+      { "name": "ty_", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "address", "internalType": "address" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "balanceOf",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "tokenOfOwnerByIndex",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "index", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "totalSupply",
+    "stateMutability": "view",
+    "inputs": [],
+    "outputs": [
+      { "name": "", "type": "uint256", "internalType": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "tokenURI",
+    "stateMutability": "view",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [
+      { "name": "", "type": "string", "internalType": "string" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "setBaseURI",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "baseURI_", "type": "string", "internalType": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "withdrawFees",
+    "stateMutability": "nonpayable",
+    "inputs": [],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "setMintFeePercent",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "bps", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "setMarketFeePercent",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "bps", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "approve",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "to",      "type": "address", "internalType": "address" },
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "transferFrom",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "from",    "type": "address", "internalType": "address" },
+      { "name": "to",      "type": "address", "internalType": "address" },
+      { "name": "tokenId", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "event",
+    "name": "TileMinted",
+    "inputs": [
+      { "name": "tokenId", "type": "uint256", "indexed": true,  "internalType": "uint256" },
+      { "name": "owner",   "type": "address", "indexed": true,  "internalType": "address" },
+      { "name": "tileKey", "type": "string",  "indexed": false, "internalType": "string" },
+      { "name": "country", "type": "string",  "indexed": false, "internalType": "string" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TileListed",
+    "inputs": [
+      { "name": "tokenId",  "type": "uint256", "indexed": true,  "internalType": "uint256" },
+      { "name": "seller",   "type": "address", "indexed": true,  "internalType": "address" },
+      { "name": "priceWei", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TileSold",
+    "inputs": [
+      { "name": "tokenId",  "type": "uint256", "indexed": true,  "internalType": "uint256" },
+      { "name": "seller",   "type": "address", "indexed": true,  "internalType": "address" },
+      { "name": "buyer",    "type": "address", "indexed": true,  "internalType": "address" },
+      { "name": "priceWei", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Transfer",
+    "inputs": [
+      { "name": "from",    "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "to",      "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "tokenId", "type": "uint256", "indexed": true, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Approval",
+    "inputs": [
+      { "name": "owner",    "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "approved", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "tokenId",  "type": "uint256", "indexed": true, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  }
+]

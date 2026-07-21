@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open http://localhost:5173)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(open http://127.0.0.1:8000)",
+      "Bash(uvicorn main:app --reload --port 8000)",
+      "Bash(echo \"Backend PID: $!\")",
+      "Bash(npm run *)",
+      "Bash(echo \"Vite PID: $!\")"
+    ]
+  }
+}
