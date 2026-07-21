@@ -15,13 +15,15 @@ As of the current version, the backend also manages:
 
 See [documentation/affiliate.md](affiliate.md) for the full affiliate system spec.
 
-**Runtime:** `uvicorn main:app --reload`
-**Port:** `8000`
+**Runtime:** `uvicorn main:app` (dev: `--reload`)
+**Host:** binds to `127.0.0.1` by default (`HOST` env var; was `0.0.0.0` — now
+loopback-only unless explicitly overridden).
+**Port:** `8000` (`PORT` env var)
 **Database:** `./cryptoland.db` (SQLite, relative to `server/`)
-**CORS origins:** Configured via `ALLOWED_ORIGINS` env var (comma-separated). Defaults to `http://localhost:5173,http://127.0.0.1:5173`.
-**Rate limiting:** `slowapi` — `POST /blocks` 20/min, `POST /np/payment` 10/min, `POST /auth/register` 5/min, `POST /auth/login` 10/min.
+**CORS origins:** Configured via `ALLOWED_ORIGINS` env var (comma-separated). Defaults to `*`.
+**Rate limiting:** `slowapi` — `POST /blocks` 20/min, `POST /np/payment` 10/min, `POST /auth/register` 5/min, `POST /auth/wallet/nonce` and `/auth/link-wallet-upsert` 20/min, `POST /affiliate/redeem` 10/min.
 
-Copy `server/.env.example` to `server/.env` and fill in `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`, and `SERVER_URL` before running in production.
+Copy `server/.env.example` to `server/.env` and fill in `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`, and `SERVER_URL` before running in production. `requirements.txt` includes `eth-account` (used to recover the signer for SIWE wallet auth). Optional dev flag `ALLOW_UNSIGNED_WALLET_AUTH` bypasses wallet-signature verification.
 
 ---
 
@@ -31,62 +33,77 @@ Copy `server/.env.example` to `server/.env` and fill in `NOWPAYMENTS_API_KEY`, `
 
 ```sql
 CREATE TABLE IF NOT EXISTS blocks (
-    tile_key      TEXT PRIMARY KEY,
+    tile_key      TEXT PRIMARY KEY,        -- "tx:ty" — globally unique across all chains
     tx            INTEGER NOT NULL,
     ty            INTEGER NOT NULL,
     owner         TEXT NOT NULL,
     color         TEXT NOT NULL DEFAULT '#00ff88',
     price         REAL NOT NULL,
     country       TEXT NOT NULL DEFAULT 'Unknown',
+    chain         TEXT NOT NULL DEFAULT 'polygon',   -- which chain this build recorded the purchase on
     purchased_at  INTEGER NOT NULL,        -- Unix milliseconds
     image_url     TEXT,                    -- nullable
     label         TEXT                     -- nullable
 );
 
 CREATE INDEX IF NOT EXISTS idx_blocks_owner ON blocks(owner);
+CREATE INDEX IF NOT EXISTS idx_blocks_chain ON blocks(chain);
 ```
 
-`tile_key` format: `"tx:ty"` (e.g., `"1024:512"`).
+`tile_key` format: `"tx:ty"` (e.g., `"1024:512"`), coordinates are Z14 (0–16383).
+The `chain` column records which chain the recording build targeted (`image_url`,
+`label`, and `chain` are all added idempotently on startup for older DBs). Since the
+app is one-codebase-per-chain-build, a `tile_key` is unique across every chain — see
+[multichain.md](multichain.md).
 
 ### Pydantic Models
 
 #### `Block` (response model)
 ```python
 class Block(BaseModel):
-    tile_key: str
-    tx: int
-    ty: int
-    owner: str
-    color: str
-    price: float
-    country: str
+    tile_key:     str
+    tx:           int
+    ty:           int
+    owner:        str
+    color:        str
+    price:        float
+    country:      str
+    chain:        str = "polygon"
     purchased_at: int
-    image_url: Optional[str] = None
-    label: Optional[str] = None
+    image_url:    Optional[str] = None
+    label:        Optional[str] = None
 ```
 
 #### `PurchaseRequest` (request body)
 ```python
 class PurchaseRequest(BaseModel):
-    tile_key: str
-    tx: int
-    ty: int
-    owner: str
-    color: str
-    price: float
-    country: str
-    image_url: Optional[str] = None
-    label: Optional[str] = None
+    tile_key:       str
+    tx:             int
+    ty:             int
+    owner:          str            # IGNORED — owner is derived from the auth token
+    color:          str = "#00ff88"
+    price:          float
+    country:        str = "Unknown"
+    chain:          str = "polygon"
+    image_url:      Optional[str] = None
+    label:          Optional[str] = None
+    ref_code:       Optional[str] = None
+    session_id:     Optional[str] = None
+    purchase_email: Optional[str] = None
+    user_id:        Optional[str] = None
 ```
 
 ### Lifecycle
 
-#### `init_db()` (startup event)
-Called on application startup via `@app.on_event("startup")`.
-- Opens SQLite connection
-- Executes `CREATE TABLE IF NOT EXISTS blocks ...`
-- Executes `CREATE INDEX IF NOT EXISTS idx_blocks_owner ...`
-- Closes connection
+#### `init_db()` (startup)
+Called on startup from the FastAPI `lifespan` context manager (not the deprecated
+`@app.on_event`). It creates every table `IF NOT EXISTS` and runs idempotent
+`ALTER TABLE` migrations (e.g. adding `blocks.chain`, `payments.price_usd`,
+`payments.consumed_at`), normalizes `0x...` wallets to lowercase, and drops legacy
+migration tables. `lifespan()` also bootstraps the price-events and viral tables and
+starts background loops (`price_events_loop`, `refresh_news`, `agent_feed_loop`).
+`_check_zoom_level()` warns on startup if the DB still holds Z11 coordinates
+(max coord ≤ 2047) and points to `server/migrations/migrate_z11_to_z14.py`.
 
 ### API Endpoints
 
@@ -101,13 +118,19 @@ Health check. Returns database path.
 ---
 
 #### `GET /blocks`
-Returns all purchased blocks, newest first.
+Returns purchased blocks, newest first. **Paginated** — the result set is always
+bounded so this can never return an unbounded table.
+
+**Query params:**
+- `chain` — optional; filter to a single chain (`WHERE chain = ?`)
+- `limit` — default `5000`, clamped to `[1, 20000]`
+- `offset` — default `0`
 
 **Response:** `Block[]`
 
 **SQL:**
 ```sql
-SELECT * FROM blocks ORDER BY purchased_at DESC
+SELECT * FROM blocks [WHERE chain = ?] ORDER BY purchased_at DESC LIMIT ? OFFSET ?
 ```
 
 ---
@@ -127,7 +150,12 @@ SELECT * FROM blocks WHERE tile_key = ?
 ---
 
 #### `POST /blocks`
-Purchase a tile atomically. Protected by `BEGIN EXCLUSIVE` transaction.
+Purchase a tile atomically (the no-payment claim path). Protected by `BEGIN EXCLUSIVE`
+transaction.
+
+**Auth:** **required** (Bearer). The owner is derived from the authenticated user
+(their wallet, else `user_id`); the client-supplied `owner` field is **ignored**. This
+stops free-claiming of tiles under another identity.
 
 **Request body:** `PurchaseRequest`
 
@@ -135,7 +163,8 @@ Purchase a tile atomically. Protected by `BEGIN EXCLUSIVE` transaction.
 
 **Logic:**
 1. Validate coords: `tile_key` must equal `"{tx}:{ty}"`, both 0–16383 → `400` if mismatch.
-2. Normalize `owner`: `0x...` addresses lowercased, non-hex owners left as-is.
+2. `_require_auth(request, db)` → derive owner from the token (never from `req.owner`);
+   `0x...` addresses lowercased, non-hex owners (user_ids) left as-is.
 3. Open `BEGIN EXCLUSIVE` transaction to prevent race condition on simultaneous purchases.
 4. Check ownership:
    ```sql
@@ -212,29 +241,48 @@ Creates a NOWPayments payment intent and stores metadata for IPN fulfillment.
 **Request body:** `CreatePaymentRequest`
 ```python
 class CreatePaymentRequest(BaseModel):
-    tile_key: str
-    usd_amount: float
-    currency: str        # e.g. "usdttrc20"
-    owner: Optional[str] = None
-    chain: Optional[str] = None
-    ref_code: Optional[str] = None
-    session_id: Optional[str] = None
+    tile_key:    str
+    usd_amount:  float
+    currency:    str        # e.g. "usdttrc20"
+    owner:       Optional[str] = None
+    chain:       str = "polygon"
+    ref_code:    Optional[str] = None
+    session_id:  Optional[str] = None
 ```
 
 **Logic:**
 - Calls NOWPayments API to create payment, returns full NP response.
-- Stores `owner`, `chain`, `ref_code`, `session_id` in `payments` table for use by IPN handler.
+- Stores `owner`, `chain`, `ref_code`, `session_id`, and the expected `price_usd`
+  (= `usd_amount`) in the `payments` table so finalize/IPN can bind the amount.
 - Uses `SERVER_URL` env var for IPN callback URL (must be publicly accessible in production).
+
+#### `POST /np/finalize`
+Called by the frontend when a payment is confirmed. Verifies status with NOWPayments,
+then writes the block inside a `BEGIN EXCLUSIVE` transaction.
+
+**Payment binding (security):**
+- Looks up the stored `payments` row by `payment_id`; requires `payments.tile_key ==
+  req.tile_key` (else `409` "payment/tile mismatch").
+- **Single-use:** rejects if `consumed_at` is already set (re-checked inside the
+  transaction to defeat concurrent double-finalize); marks the payment consumed in the
+  same transaction that writes the block.
+- **Amount binding:** uses the server-stored `payments.price_usd` (never `req.price`)
+  as the authoritative amount; the NOWPayments-reported paid amount must cover it (95%
+  tolerance) or `402`.
+- `partially_paid` is treated as **insufficient** (`402`), not success.
 
 #### `POST /np/ipn`
 IPN webhook called by NOWPayments when payment status changes.
 
 **Logic:**
-- Verifies HMAC-SHA512 signature using `NOWPAYMENTS_IPN_SECRET`.
-- On `finished` status: calls `np_finalize()` which uses `BEGIN EXCLUSIVE` transaction and validates tile coords.
-- On `partially_paid` status: only finalizes if received amount ≥ 95% of expected.
-- Looks up `owner`, `chain`, `ref_code`, `session_id` from stored `payments` row to use real owner (never fabricates one).
-- Calls `_process_referral_commission()` with ref_code and session_id for affiliate credit.
+- Verifies HMAC-SHA512 signature using `NOWPAYMENTS_IPN_SECRET`. **Fails closed** —
+  a missing or invalid signature is rejected (never processed).
+- Applies the same `payment_id ↔ tile ↔ amount` binding, single-use, and server-stored
+  price checks as `/np/finalize`.
+- Looks up `owner`, `chain`, `ref_code`, `session_id` from the stored `payments` row to
+  use the real owner (never fabricates one).
+- Calls `_process_referral_commission()` with ref_code and session_id for affiliate
+  credit (commission math is done in integer cents).
 
 ---
 
@@ -242,18 +290,23 @@ IPN webhook called by NOWPayments when payment status changes.
 
 ```sql
 CREATE TABLE IF NOT EXISTS payments (
-    np_payment_id  TEXT PRIMARY KEY,
-    tile_key       TEXT NOT NULL,
-    usd_amount     REAL NOT NULL,
-    currency       TEXT NOT NULL,
-    status         TEXT NOT NULL DEFAULT 'waiting',
-    created_at     INTEGER NOT NULL,
-    owner          TEXT,     -- tile owner after purchase
-    chain          TEXT,     -- blockchain (e.g. 'polygon')
-    ref_code       TEXT,     -- affiliate ref code if present
-    session_id     TEXT      -- session UUID for affiliate tracking
+    payment_id  TEXT PRIMARY KEY,          -- NOWPayments payment_id
+    tile_key    TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'waiting',
+    owner       TEXT,                       -- tile owner after purchase
+    chain       TEXT NOT NULL DEFAULT 'polygon',
+    ref_code    TEXT,                       -- affiliate ref code if present
+    session_id  TEXT,                       -- session UUID for affiliate tracking
+    created_at  INTEGER NOT NULL,
+    price_usd   REAL,                        -- server-stored expected USD price (amount binding)
+    consumed_at INTEGER                      -- set once finalized — enforces single-use
 )
 ```
+
+`price_usd` and `consumed_at` are added idempotently on startup. `price_usd` is the
+authoritative expected amount (finalize/IPN never trust a client-supplied price);
+`consumed_at` makes each payment single-use so a payment can't be replayed to write two
+blocks.
 
 ---
 
@@ -377,14 +430,57 @@ def _streak_badge(streak):
 
 UTC day boundaries are used so streaks are deterministic regardless of user timezone. Yesterday calculation uses `datetime.timedelta(days=1)`.
 
+## Auth & Authorization (security hardening)
+
+### Wallet sign-in (SIWE)
+
+- **`POST /auth/wallet/nonce`** `{ wallet }` → `{ nonce, message }`. Issues a random
+  16-byte nonce stored in the `wallet_nonces` table and returns the canonical message
+  to sign. Rate-limited 20/min.
+- **`POST /auth/link-wallet-upsert`** now requires `{ wallet, signature, nonce }`. The
+  server recovers the signer via `eth-account` (`_verify_wallet_ownership` →
+  `_recover_wallet`) and requires a match; the nonce is consumed on use. Creates or
+  returns the wallet-only account and issues a token. `POST /sessions/bind-wallet`
+  uses the same verification.
+- `ALLOW_UNSIGNED_WALLET_AUTH=1` bypasses verification (dev/test only). If
+  `eth-account` is unavailable and the bypass is off → `501` (never silently allows).
+- **`wallet_nonces`** table: `(wallet TEXT, nonce TEXT, created_at INTEGER)` with an
+  index on `wallet`.
+
+### Guest claim
+
+- **`POST /auth/guest-claim`** requires the guest's own bearer token; the caller's
+  `user_id` must equal the claimed account's, and it must still be `is_guest=1` (else
+  `403`).
+
+### Authorization derived from the token (not the request body)
+
+These mutating endpoints now require a bearer token and take the acting identity from
+it — client-supplied `owner`/`seller`/`voter`/`weight` are ignored or rejected:
+
+| Endpoint | Rule |
+|----------|------|
+| `POST /blocks`, `PATCH /blocks/{tile_key}` | owner = authed user; edits require DB ownership (`_owns_block`) |
+| `POST /guardian`, `DELETE /guardian/{tile_key}` | must own the tile |
+| `POST /marketplace/list`, `DELETE /marketplace/{tile_key}` | must own the tile; stored seller = caller |
+| `POST /dao/vote` | voter = authed user; weight = tiles owned (min 1) |
+| `POST /affiliate/redeem` | always applies to the caller's own balance |
+| `GET /account/{wallet}`, `/affiliate/*/{wallet}` | require auth **and** wallet-match (prefer `/me` variants) |
+
 ## Security Notes
 
-- `server/.env` is in `.gitignore` — never commit API keys. Copy `.env.example` to `.env`.
-- `server/.env.example` is the safe template with placeholder values.
+- Server binds to `127.0.0.1` by default (`HOST` env; was `0.0.0.0`).
+- `server/.env`, `*.db`, `__pycache__/`, and `dist-*/` are git-ignored; `env/` per-chain
+  templates and `.env.example` are committed. Never commit API keys.
 - All `0x...` wallet addresses are stored lowercase — `_norm_wallet()` applied on all writes.
 - `BEGIN EXCLUSIVE` transactions prevent double-purchase race conditions.
 - `ON CONFLICT DO UPDATE` on `blocks` protects `price`, `owner`, `chain`, `country` from being overwritten on re-customization.
 - UNIQUE index on `referrals(tile_key)` prevents duplicate affiliate commissions per tile.
+- Payment finalize/IPN bind `payment_id ↔ tile ↔ amount`, are single-use
+  (`payments.consumed_at`), use the server-stored `payments.price_usd`, and the IPN
+  fails closed on a missing/invalid signature.
+- Money math uses integer cents (`_to_cents` / `_from_cents`) so the affiliate ledger
+  doesn't drift.
 
 ---
 

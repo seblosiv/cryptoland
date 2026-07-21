@@ -55,10 +55,22 @@ User fills in email + password on the Register tab of `AuthModal`.
 - `POST /auth/register` → creates account, returns token + user
 - Token stored in `localStorage`, user set in `authStore`
 
-### 2. Wallet Connect (wallet-only account)
-When a wallet connects and no email session exists:
-- `POST /auth/link-wallet-upsert` → creates wallet-only account if none exists, or returns existing
-- Token stored, user set in `authStore`
+### 2. Wallet Connect (wallet-only account) — SIWE-signed
+When a wallet connects and no email session exists, the account is created only
+after the caller **proves control of the wallet** with a signed nonce (SIWE-style):
+
+1. `POST /auth/wallet/nonce` `{ wallet }` → `{ nonce, message }`. The server stores
+   the nonce in `wallet_nonces` and returns the canonical message to sign:
+   `CryptoLand wants you to sign in with wallet <wallet>. Nonce: <nonce>`.
+2. The wallet signs that message via EVM `personal_sign`.
+3. `POST /auth/link-wallet-upsert` `{ wallet, signature, nonce }` → the server
+   recovers the signer with `eth-account` and requires it to match `wallet`
+   (case-insensitive); the nonce is consumed on use. On success it creates the
+   wallet-only account (or returns the existing one) and returns `{ token, user }`.
+
+**Dev bypass:** setting `ALLOW_UNSIGNED_WALLET_AUTH=1` skips signature verification
+entirely (local/testing only). If `eth-account` is not installed **and** the bypass
+is off, the wallet-signature endpoints return `501` rather than silently allowing.
 
 ### 3. Guest Account (purchase flow)
 When a non-logged-in user enters an email during tile purchase:
@@ -67,7 +79,9 @@ When a non-logged-in user enters an email during tile purchase:
 - Server creates a `is_guest=1` account with no password
 - `guest_account: { user_id, email, is_guest }` is returned in the response
 - Frontend shows "Set a password" CTA via `GuestClaimModal`
-- `POST /auth/guest-claim` converts guest → full account
+- `POST /auth/guest-claim` converts guest → full account. **This now requires the
+  guest's own bearer token** — the caller must be authenticated as the exact
+  `user_id` being claimed, and that account must still be `is_guest=1` (else 403).
 
 ### 4. Linking Wallet to Email Account
 After email login, when wallet connects:
@@ -84,12 +98,16 @@ After email login, when wallet connects:
 | POST | `/auth/login` | — | Email + password login |
 | GET | `/auth/me` | Bearer | Get current user |
 | POST | `/auth/logout` | Bearer | Invalidate token |
+| POST | `/auth/wallet/nonce` | — | Issue a SIWE nonce to sign → `{ nonce, message }` |
 | POST | `/auth/link-wallet` | Bearer | Link wallet to email account |
-| POST | `/auth/link-wallet-upsert` | — | Wallet-only account (creates or returns existing) |
-| POST | `/auth/guest-claim` | — | Convert guest account (set password) |
+| POST | `/auth/link-wallet-upsert` | Signature | Wallet-only account — requires `{ wallet, signature, nonce }` (SIWE); creates or returns existing |
+| POST | `/auth/guest-claim` | Bearer (self) | Convert guest account (set password); caller must be the guest being claimed |
 | PATCH | `/auth/profile` | Bearer | Update username / avatar / bio |
-| GET | `/account/me` | Bearer | Full account dashboard (token auth) |
-| GET | `/account/{wallet}` | — | Full account dashboard (wallet, backwards compat) |
+| GET | `/account/me` | Bearer | Full account dashboard (token auth — preferred) |
+| GET | `/account/{wallet}` | Bearer + wallet-match | Full account dashboard; wallet must match caller's own (returns PII), else 403 |
+
+> `POST /sessions/bind-wallet` also verifies wallet ownership via the same
+> `{ signature, nonce }` SIWE flow before binding a wallet to a session.
 
 ---
 
@@ -154,3 +172,31 @@ wallet connects
 - `_safe_user()` strips `password_hash` and `salt` before returning user data
 - No plaintext passwords ever stored or returned
 - Token expiry: 30 days from issue
+
+### Wallet-auth hardening (SIWE)
+
+- Wallet sign-in requires a signed nonce. `POST /auth/wallet/nonce` issues a random
+  16-byte nonce (stored in the `wallet_nonces` table); the wallet signs the canonical
+  message; `link-wallet-upsert` / `sessions/bind-wallet` recover the signer via
+  `eth-account` (`_recover_wallet` → `Account.recover_message(encode_defunct(...))`)
+  and require it to equal the claimed wallet. The nonce is consumed on use.
+- `ALLOW_UNSIGNED_WALLET_AUTH` env flag bypasses verification for dev/test only.
+- If `eth-account` is unavailable and the bypass is off → `501` (never silently allow).
+
+### Authorization on mutating endpoints (identity derived from the token)
+
+The following now **require a bearer token** and derive the acting identity from it —
+client-supplied `owner` / `seller` / `voter` / `weight` fields are ignored or rejected:
+
+- `POST /blocks`, `PATCH /blocks/{tile_key}` — owner = the authed user; edits require
+  DB ownership (`_owns_block`).
+- `POST /guardian`, `DELETE /guardian/{tile_key}` — must own the tile.
+- `POST /marketplace/list`, `DELETE /marketplace/{tile_key}` — must own the tile;
+  stored seller is the caller's identity.
+- `POST /dao/vote` — voter = authed user; weight = number of tiles owned (min 1).
+- `POST /affiliate/redeem` — always applies to the caller's own balance.
+- `GET /account/{wallet}`, `/affiliate/*/{wallet}` — require auth **and** the wallet to
+  match the caller's own (prefer the `/me` variants).
+- `/np/finalize` and `/np/ipn` bind `payment_id ↔ tile ↔ amount`, are single-use
+  (`payments.consumed_at`), use the server-stored `payments.price_usd`, and the IPN
+  fails **closed** on a missing/invalid signature.

@@ -89,6 +89,9 @@ export async function signPurchase({ tileKey, price }) {
 // We ask the backend to build + serialize the transaction, then sign it here.
 
 export async function mintTile({ tx, ty, country, toAddress }) {
+  // No deployed program yet → skip the on-chain mint. Purchase still succeeds
+  // (DB-backed ownership); minting activates when VITE_CONTRACT_SOLANA is set.
+  if (!hasContract()) return mintStub('Solana program not deployed')
   // Step 1: backend builds the transaction
   const BASE = import.meta.env.VITE_API_BASE ?? ''
   const res  = await fetch(`${BASE}/solana/build-mint`, {
@@ -109,7 +112,8 @@ export async function mintTile({ tx, ty, country, toAddress }) {
   })
   const transaction = Transaction.from(txBytes)
   const signed      = await provider.signTransaction(transaction)
-  const serialized  = Buffer.from(signed.serialize()).toString('base64')
+  // Browser-safe base64 (no Node Buffer, which is undefined in the browser).
+  const serialized  = btoa(String.fromCharCode(...new Uint8Array(signed.serialize())))
 
   // Step 3: backend broadcasts
   const sendRes = await fetch(`${BASE}/solana/send-tx`, {

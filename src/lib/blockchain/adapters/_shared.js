@@ -8,19 +8,20 @@
 
 import { ACTIVE_CHAIN } from '../config.js'
 
-// Grid is 16384 × 16384 (Z14). A tile's canonical token id is tx * GRID + ty,
-// which is stable, collision-free, and identical across every chain family so a
-// tile means the same NFT id whether it's minted on Sui, TON, or Aptos.
-export const GRID = 16384
+// Grid is 16384 × 16384 (Z14). tokenId packs the coords as (tx << 15) | ty —
+// the SAME scheme as evm.js and the Solidity contract (CryptoLandTile.sol), so
+// a tile maps to the identical NFT id on every chain family. ty occupies the
+// low 15 bits (0x7FFF); tx sits above it.
+export const COORD_SHIFT = 15n
+export const COORD_MASK   = 0x7FFFn
 
 export function tileTokenId(tx, ty) {
-  return BigInt(tx) * BigInt(GRID) + BigInt(ty)
+  return (BigInt(tx) << COORD_SHIFT) | BigInt(ty)
 }
 
 export function tokenIdToTile(tokenId) {
   const id = BigInt(tokenId)
-  const g  = BigInt(GRID)
-  return { tx: Number(id / g), ty: Number(id % g) }
+  return { tx: Number(id >> COORD_SHIFT), ty: Number(id & COORD_MASK) }
 }
 
 /**
