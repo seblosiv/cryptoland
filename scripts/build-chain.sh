@@ -17,7 +17,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-CHAINS=(ton polygon avalanche ronin base arbitrum solana bnb aptos sui)
+# Every chain we ship a grant-targeted build for. Derived from env/.env.* so a
+# new template is picked up automatically; this list is the documented default.
+CHAINS=(
+  # EVM
+  polygon avalanche base arbitrum ronin bnb optimism scroll celo moonbeam
+  beam oasys skale hedera injective kadena
+  # non-EVM
+  solana ton aptos sui starknet cardano near stellar algorand multiversx
+  radix tezos
+)
 
 build_one() {
   local chain="$1"
