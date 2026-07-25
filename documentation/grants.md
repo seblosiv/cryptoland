@@ -9,6 +9,27 @@ so an application is never blocked on missing tech.
 
 ---
 
+## 0. Status corrections — verify before spending application hours
+
+Re-checked against primary sources (25 July 2026). Three entries in the dossier have
+materially changed, and one architectural constraint affects a whole class of programs.
+
+| Finding | Impact |
+|---|---|
+| 🔴 **TON Grants & Bounties is PAUSED.** The `ton-society/grants-and-bounties` README states new submissions/applications are not being accepted. | Programs #26 and #42 are not directly applicable right now. The **Bounties** track (tooling/docs/education) and hackathons/Fast Grants remain live. A Telegram Mini App build is still worth doing — it is the highest-leverage distribution surface — but do not schedule it *for* the grant. |
+| 🔴 **Optimism Retro Funding is PAUSED.** The Optimism Foundation announced it is pausing Retro Funding (Council dissolution, June 2026). Surviving Season 9 Growth Grants score *DEX TVL / trading volume*, which excludes a game. | Program #22 is out. Do not build a 2026 plan around RetroPGF. |
+| 🟠 **Gitcoin restructured.** Grants Stack was sunset; GG24 is domain-based and QF operations moved to **Giveth** (apply on giveth.io, not a Gitcoin round manager). QF chains: Arbitrum, Celo, Ethereum. | Program #2 still viable but the process is different. See the public-good caveat below. |
+| 🟠 **"Public good, not personal gain."** Giveth states projects focused on personal gain are ineligible for GIVbacks. | A tile-*selling* game is a poor fit as-framed. The fundable artifact should be reframed as the **open-source geospatial engine / multichain adapter layer / map tooling**, not the revenue-generating game. |
+| 🔴 **Kadena has ceased operations.** The organization announced (Oct 2025) it is ending business activity and active maintenance. Chainweb EVM never reached mainnet, the documented testnet host no longer resolves in DNS, and Kadena has no entry in the canonical `ethereum-lists/chains` registry. | Program #39 is not actionable. Deliberately **not** configured — see the note in `config.js`. |
+| 🔴 **Injective's "inEVM" (chainId 2525) is dead** — its RPC returns 404. The canonical Injective EVM is the native layer at **chainId 1776**. | Shipping 2525 would have given users a chain they cannot transact on. Config uses 1776. |
+| 🟠 **Celo's Alfajores testnet (44787) is decommissioned** (DNS gone); the replacement is **Celo Sepolia (11142220)**. | Config uses Celo Sepolia. |
+| 🟠 **SKALE testnet infrastructure is unreachable** (proxy host has no A records; a sibling host serves an unrelated TLS certificate). Mainnet hubs are healthy. | Only SKALE mainnet hubs (Nebula gaming + Europa) are configured. |
+| 🟢 **Avalanche Retro9000 is ACTIVE** (C-Chain rounds running). | Program #21 is a live, realistic target. |
+| ⚠️ **Retroactive programs measure on-chain activity, and our architecture currently produces almost none.** Retro9000 scores **AVAX burned by your contracts**; Optimism's (now-paused) thresholds were ≥1,000 tx / ≥420 qualified addresses / ≥10 active days over 180 days. Our DB-canonical model with a stubbed mint emits ~1 tx per purchase at best. | To compete in retroactive rounds, recurring gameplay actions (claim, upgrade, transfer, daily check-in) must move **on-chain**. This is a product decision, not a config change — see §7. |
+| 🔑 **Keep the deployer key.** Both Optimism (OP Atlas) and Retro9000 require the **original deployer address to sign** a message to claim contract ownership. A throwaway deployer permanently forfeits attribution. | When deploying each chain's contract, use a retained, backed-up deployer key — ideally one per project, not shared across factories. |
+
+---
+
 ## 1. How CryptoLand satisfies a chain requirement
 
 CryptoLand is **one codebase deployed as N chain-native builds**. Committing to a chain
@@ -144,13 +165,78 @@ Beyond a chain deployment, several programs gate on capabilities. Status in this
 
 ## 5. Programs needing more than a chain switch
 
-- **TON Mini App (#26, #42)** — requires a Telegram Mini App build: the Telegram WebApp SDK,
-  a hosted `tonconnect-manifest.json`, TON Connect wiring, and BotFather registration.
-- **Solana Mobile (#16)** — requires a mobile-first build integrating the Solana Mobile Stack
-  (Mobile Wallet Adapter, Seed Vault).
-- **Aztec (#43)** — privacy mechanic in Noir; the ecosystem's maturity should be confirmed
-  before investing here.
-- **Celestia (#32)** — needs a sovereign-rollup / DA narrative rather than a normal deployment.
+### Telegram Mini App (#26, #42 — TON; grants paused, distribution still valuable)
+- `<script src="https://telegram.org/js/telegram-web-app.js?63">` must load **in `<head>`
+  before any other script**; it is injected by the Telegram client, not an npm package, so it
+  is `undefined` outside Telegram and every use must be feature-gated.
+- `initData` is **the only trustworthy field** — `initDataUnsafe` must never be trusted.
+  Server-side validation (implemented in `POST /auth/telegram`):
+  ```
+  data_check_string = fields except `hash`, sorted by key, "key=value", joined with "\n"
+  secret_key        = HMAC_SHA256(key="WebAppData", message=<bot_token>)
+  valid             = hex(HMAC_SHA256(secret_key, data_check_string)) == hash
+  ```
+  Note the **key/message inversion** in step 1 — the most common implementation bug. Also
+  enforce a max age on `auth_date`.
+- `tonconnect-manifest.json` (served at `public/tonconnect-manifest.json`): required `url`
+  (no trailing slash), `name`, `iconUrl` (**PNG/ICO only — SVG is rejected**, ideally 180×180);
+  `termsOfUseUrl`/`privacyPolicyUrl` optional but required for Tonkeeper's recommended list.
+  Must be reachable over HTTPS by an unauthenticated cross-origin `GET` (no CORS rule, no auth,
+  no challenge page).
+- Use `viewportStableHeight`, not `viewportHeight`, for bottom-anchored UI. `LocationManager`
+  (Bot API 8.0) gives native geolocation permission — directly useful for a map game.
+- BotFather: `/newbot` → `/newapp` → *Bot Settings → Configure Mini App → Enable Mini App*.
+
+### Solana Mobile (#16)
+- **A PWA is acceptable** — wrap it into a signed APK with **Bubblewrap** (Trusted Web
+  Activity). Publishing to the dApp Store is *not* required to apply.
+- MWA on web: use **`@solana-mobile/wallet-standard-mobile` ≥ v0.5.0** and call `registerMwa()`
+  in a non-SSR context. `@solana-mobile/wallet-adapter-mobile` is deprecated, and
+  `@solana/wallet-adapter-react` ≥ 1.0.0 no longer bundles MWA by default.
+  The ≥ v0.5.0 pin matters: browser **Local Network Access** enforcement silently breaks MWA
+  signing in mobile web without it.
+- **Seed Vault needs no direct integration** — dApps reach it *through* MWA. Do not budget
+  engineering for `seed-vault-sdk` unless shipping a wallet.
+
+### Other
+- **Aztec (#43)** — privacy mechanic in Noir; confirm ecosystem maturity before investing.
+- **Celestia (#32)** — needs a sovereign-rollup / DA narrative rather than a deployment.
+
+---
+
+## 7. On-chain impact — the gap that matters most
+
+Retroactive and traction-gated programs score **on-chain** activity:
+
+| Program | Primary metric |
+|---|---|
+| Avalanche Retro9000 | **AVAX burned** by your verified C-Chain contracts; users tiered `Unregistered` < `Connected` < `Verified` (wallet linked to the Retro9000 platform + verified X account) |
+| Optimism (paused, but the template is being copied) | ≥1,000 tx, ≥420 qualified addresses, ≥10 distinct active days over 180 days |
+
+CryptoLand today records ownership in the backend DB and treats the chain as a payment rail,
+with `mintTile()` stubbed until a contract is deployed. That yields **at most one on-chain
+transaction per purchase** — structurally uncompetitive in these rounds.
+
+**To compete, move recurring gameplay on-chain**, not just the purchase: tile claim, upgrade,
+transfer, guardian deploy, daily check-in. Each becomes a transaction, a distinct active day,
+and fee burn. Practical sequencing:
+
+1. Deploy the contract on the target chain and **verify it on the explorer** (Snowtrace for
+   Retro9000) using a **retained deployer key**.
+2. Turn on `mintTile()` by setting `VITE_CONTRACT_<CHAIN>` — already wired, no code change.
+3. Move one or two high-frequency actions on-chain (check-in is the cheapest, highest-volume).
+4. For Retro9000, drive users to **link and verify their wallet** on the Retro9000 platform —
+   unlinked in-game wallets score in the lowest tier.
+5. For measurability by Open Source Observer (used by Optimism/Gitcoin), add the project to
+   `opensource-observer/oss-directory`. Note its network enum currently has **no Avalanche
+   C-Chain, Ronin or BNB** — those chains are not OSO-measurable today.
+
+Gasless is cheapest on **SKALE**: true zero-gas via the pre-deployed `Etherbase` contract
+(`0xd2bA3e0000000000000000000000000000000000`), so no bundler, paymaster or ERC-4337 stack is
+needed — just an sFUEL top-up during onboarding. Solana likewise supports native fee
+sponsorship (set `feePayer` to a service key and partial-sign server-side). Everywhere else,
+gasless means an ERC-7677 paymaster behind a **backend proxy** (never ship the paymaster URL
+to the client).
 
 ---
 

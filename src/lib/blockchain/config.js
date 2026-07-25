@@ -162,6 +162,180 @@ const CHAIN_DEFS = {
     blockTime: 3, confirmations: 2, color: '#f0b90b', logo: '🟡', testnet: true,
   },
 
+  // ── Grant-target EVM chains ───────────────────────────────────────────────
+  // All values below were verified against live nodes (eth_chainId + measured
+  // block-time deltas), not just docs. Notes call out where a chain deviates
+  // from the obvious assumption.
+
+  optimism: {
+    id: 10, name: 'OP Mainnet', shortName: 'OP', family: 'evm',
+    // mainnet.optimism.io is aggressively rate-limited — publicnode first.
+    rpcUrl: 'https://optimism-rpc.publicnode.com', rpcUrlFallback: 'https://mainnet.optimism.io',
+    explorerUrl: 'https://optimistic.etherscan.io',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockTime: 2, confirmations: 3, color: '#ff0420', logo: '🔴',
+    grant: 'Optimism Retro Funding (PAUSED — see grants.md §0)',
+  },
+  'optimism-sepolia': {
+    id: 11155420, name: 'OP Sepolia', shortName: 'OP', family: 'evm',
+    rpcUrl: 'https://sepolia.optimism.io',
+    explorerUrl: 'https://sepolia-optimism.etherscan.io',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockTime: 2, confirmations: 2, color: '#ff0420', logo: '🔴', testnet: true,
+  },
+
+  scroll: {
+    id: 534352, name: 'Scroll', shortName: 'ETH', family: 'evm',
+    rpcUrl: 'https://rpc.scroll.io', rpcUrlFallback: 'https://scroll-rpc.publicnode.com',
+    explorerUrl: 'https://scrollscan.com',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockTime: 3.5, confirmations: 3, color: '#ffeeda', logo: '📜',
+    grant: 'Scroll Community Grants (Levels)',
+  },
+  'scroll-sepolia': {
+    id: 534351, name: 'Scroll Sepolia', shortName: 'ETH', family: 'evm',
+    rpcUrl: 'https://sepolia-rpc.scroll.io',
+    explorerUrl: 'https://sepolia.scrollscan.com',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockTime: 6, confirmations: 2, color: '#ffeeda', logo: '📜', testnet: true,
+  },
+
+  celo: {
+    id: 42220, name: 'Celo', shortName: 'CELO', family: 'evm',
+    rpcUrl: 'https://forno.celo.org',
+    explorerUrl: 'https://celoscan.io',
+    nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+    blockTime: 1, confirmations: 5, color: '#fcff52', logo: '🌱',
+    grant: 'Celo Builder Fund (CeloPG) / Prezenti',
+  },
+  'celo-sepolia': {
+    // Alfajores (44787) is decommissioned — its RPC no longer resolves in DNS.
+    id: 11142220, name: 'Celo Sepolia', shortName: 'CELO', family: 'evm',
+    rpcUrl: 'https://forno.celo-sepolia.celo-testnet.org',
+    explorerUrl: 'https://celo-sepolia.blockscout.com',
+    nativeCurrency: { name: 'CELO', symbol: 'CELO', decimals: 18 },
+    blockTime: 1, confirmations: 2, color: '#fcff52', logo: '🌱', testnet: true,
+  },
+
+  moonbeam: {
+    id: 1284, name: 'Moonbeam', shortName: 'GLMR', family: 'evm',
+    rpcUrl: 'https://rpc.api.moonbeam.network', rpcUrlFallback: 'https://moonbeam-rpc.publicnode.com',
+    explorerUrl: 'https://moonbeam.moonscan.io',
+    nativeCurrency: { name: 'Glimmer', symbol: 'GLMR', decimals: 18 },
+    blockTime: 6, confirmations: 3, color: '#53cbc9', logo: '🌗',
+    grant: 'Moonbeam Interim Grant Program',
+  },
+  'moonbase-alpha': {
+    id: 1287, name: 'Moonbase Alpha', shortName: 'DEV', family: 'evm',
+    rpcUrl: 'https://rpc.api.moonbase.moonbeam.network',
+    explorerUrl: 'https://moonbase.moonscan.io',
+    // Testnet gas token is DEV, not GLMR.
+    nativeCurrency: { name: 'Dev', symbol: 'DEV', decimals: 18 },
+    blockTime: 6, confirmations: 2, color: '#53cbc9', logo: '🌗', testnet: true,
+  },
+
+  beam: {
+    id: 4337, name: 'Beam', shortName: 'BEAM', family: 'evm',
+    rpcUrl: 'https://build.onbeam.com/rpc', rpcUrlFallback: 'https://subnets.avax.network/beam/mainnet/rpc',
+    explorerUrl: 'https://subnets.avax.network/beam',
+    nativeCurrency: { name: 'Beam', symbol: 'BEAM', decimals: 18 },
+    // subnet-evm mints blocks on demand, so there is no meaningful fixed block
+    // time (idle rate measured 17-24s). Avalanche consensus finalises ~1-2s once
+    // a tx lands — never derive UX timeouts from blockTime here.
+    blockTime: 2, confirmations: 1, color: '#ffd200', logo: '🎮',
+    grant: 'Beam Foundation Grants (gaming)',
+  },
+  'beam-testnet': {
+    id: 13337, name: 'Beam Testnet', shortName: 'BEAM', family: 'evm',
+    rpcUrl: 'https://build.onbeam.com/rpc/testnet',
+    explorerUrl: 'https://subnets-test.avax.network/beam',
+    nativeCurrency: { name: 'Beam', symbol: 'BEAM', decimals: 18 },
+    blockTime: 2, confirmations: 1, color: '#ffd200', logo: '🎮', testnet: true,
+  },
+
+  oasys: {
+    // Whitepaper still says 15s blocks; the live chain measures ~6s.
+    id: 248, name: 'Oasys', shortName: 'OAS', family: 'evm',
+    rpcUrl: 'https://rpc.mainnet.oasys.games',
+    explorerUrl: 'https://explorer.oasys.games',
+    nativeCurrency: { name: 'OAS', symbol: 'OAS', decimals: 18 },
+    blockTime: 6, confirmations: 5, color: '#0f62fe', logo: '🕹️',
+    grant: 'Oasys — Gaming grants / ecosystem',
+  },
+  'oasys-testnet': {
+    id: 9372, name: 'Oasys Testnet', shortName: 'OAS', family: 'evm',
+    rpcUrl: 'https://rpc.testnet.oasys.games',
+    explorerUrl: 'https://explorer.testnet.oasys.games',
+    nativeCurrency: { name: 'OAS', symbol: 'OAS', decimals: 18 },
+    blockTime: 6, confirmations: 2, color: '#0f62fe', logo: '🕹️', testnet: true,
+  },
+
+  // SKALE — true zero gas. sFUEL is a valueless faucet token that exists only to
+  // satisfy EVM gas accounting; users never pay, so suppress all fee UI.
+  // NOTE: SKALE's *testnet* infrastructure is currently unreachable (the proxy
+  // host has no A records and a sibling serves an unrelated TLS cert), so only
+  // the mainnet hubs are configured here.
+  skale: {
+    id: 1482601649, name: 'SKALE Nebula Gaming Hub', shortName: 'sFUEL', family: 'evm',
+    rpcUrl: 'https://mainnet.skalenodes.com/v1/green-giddy-denebola',
+    explorerUrl: 'https://green-giddy-denebola.explorer.mainnet.skalenodes.com',
+    nativeCurrency: { name: 'sFUEL', symbol: 'sFUEL', decimals: 18 },
+    blockTime: 1, confirmations: 1, color: '#000000', logo: '⚡', gasless: true,
+    grant: 'SKALE $2M Indie Game Accelerator',
+  },
+  'skale-europa': {
+    id: 2046399126, name: 'SKALE Europa Hub', shortName: 'sFUEL', family: 'evm',
+    rpcUrl: 'https://mainnet.skalenodes.com/v1/elated-tan-skat',
+    explorerUrl: 'https://elated-tan-skat.explorer.mainnet.skalenodes.com',
+    nativeCurrency: { name: 'sFUEL', symbol: 'sFUEL', decimals: 18 },
+    blockTime: 1, confirmations: 1, color: '#000000', logo: '⚡', gasless: true,
+  },
+
+  hedera: {
+    id: 295, name: 'Hedera', shortName: 'HBAR', family: 'evm',
+    // Hashio is documented as dev/test-only — use a commercial relay in prod
+    // via VITE_RPC_HEDERA.
+    rpcUrl: 'https://mainnet.hashio.io/api', rpcUrlFallback: 'https://295.rpc.thirdweb.com',
+    explorerUrl: 'https://hashscan.io/mainnet',
+    // Hedera's explorer uses /transaction/ — unlike every other chain here.
+    explorerTxPath: '/transaction/',
+    // HBAR is 8 decimals on the native ledger but the JSON-RPC relay reports
+    // value/gasPrice in 18-decimal weibar, which is what EVM tooling sees.
+    nativeCurrency: { name: 'HBAR', symbol: 'HBAR', decimals: 18 },
+    blockTime: 2.2, confirmations: 1, color: '#222222', logo: 'ℏ',
+    grant: 'Hedera / HBAR Foundation grants',
+  },
+  'hedera-testnet': {
+    id: 296, name: 'Hedera Testnet', shortName: 'HBAR', family: 'evm',
+    rpcUrl: 'https://testnet.hashio.io/api',
+    explorerUrl: 'https://hashscan.io/testnet', explorerTxPath: '/transaction/',
+    nativeCurrency: { name: 'HBAR', symbol: 'HBAR', decimals: 18 },
+    blockTime: 2.2, confirmations: 1, color: '#222222', logo: 'ℏ', testnet: true,
+  },
+
+  injective: {
+    // Injective's canonical EVM is the native layer at 1776. The older
+    // Caldera "inEVM" rollup (chainId 2525) is dead — its RPC returns 404.
+    id: 1776, name: 'Injective', shortName: 'INJ', family: 'evm',
+    rpcUrl: 'https://sentry.evm-rpc.injective.network/', rpcUrlFallback: 'https://injectiveevm-rpc.polkachu.com',
+    explorerUrl: 'https://blockscout.injective.network',
+    nativeCurrency: { name: 'Injective', symbol: 'INJ', decimals: 18 },
+    blockTime: 0.6, confirmations: 1, color: '#00f2fe', logo: '🌀',
+    grant: 'Injective — Ecosystem / AI fund',
+  },
+  'injective-testnet': {
+    id: 1439, name: 'Injective EVM Testnet', shortName: 'INJ', family: 'evm',
+    rpcUrl: 'https://k8s.testnet.json-rpc.injective.network/',
+    explorerUrl: 'https://testnet.blockscout.injective.network',
+    nativeCurrency: { name: 'Injective', symbol: 'INJ', decimals: 18 },
+    blockTime: 0.8, confirmations: 1, color: '#00f2fe', logo: '🌀', testnet: true,
+  },
+
+  // NOTE: Kadena is deliberately NOT configured. The Kadena organization ceased
+  // operations in Oct 2025, Chainweb EVM never reached mainnet, the documented
+  // testnet host no longer resolves, and Kadena has no entry in the canonical
+  // ethereum-lists/chains registry. Program #39 in grants.md is not actionable.
+
   // ══ Non-EVM chains ════════════════════════════════════════════════════════
 
   solana: {

@@ -2,6 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Telegram Mini App SDK. Telegram's docs require this to load in <head>
+         BEFORE any other script. It is injected by the Telegram client, so
+         window.Telegram is simply undefined in a normal browser and every use
+         in src/lib/telegram.js is feature-gated. See documentation/grants.md §5. -->
+    <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="mobile-web-app-capable" content="yes" />

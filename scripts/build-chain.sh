@@ -22,7 +22,7 @@ cd "$(dirname "$0")/.."
 CHAINS=(
   # EVM
   polygon avalanche base arbitrum ronin bnb optimism scroll celo moonbeam
-  beam oasys skale hedera injective kadena
+  beam oasys skale hedera injective
   # non-EVM
   solana ton aptos sui starknet cardano near stellar algorand multiversx
   radix tezos
