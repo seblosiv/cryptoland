@@ -2,193 +2,137 @@
 
 ## Overview
 
-CryptoLand uses Tailwind CSS 4 for utility classes combined with a custom CSS layer in `src/index.css` for design tokens, component classes, and animations. The visual theme is **dark gold** — deep near-black surfaces with warm gold accents and glassmorphism panels.
+CryptoLand uses Tailwind CSS 4 for utility classes combined with a custom CSS layer in `src/index.css` for design tokens, component classes, and animations.
+
+The visual theme is **solid dark** — opaque near-black surfaces, hairline white-alpha borders, and a single green accent reserved for active/selected states. It should read like a native dark mobile app.
+
+> **No glassmorphism.** Panels are opaque. There is no `backdrop-filter`, blur or translucent panel anywhere in `src/` (verified: zero occurrences). This is a deliberate, repeatedly-reaffirmed product decision — do not reintroduce frosted or blurred panels.
+
+**Per-chain accent.** Each per-chain deployment additionally sets `--chain-accent` and `--chain-accent-dim` at boot via `applyProfileTheme()` in [`src/lib/chainProfile.js`](../src/lib/chainProfile.js). Chain theming changes **the accent colour and the copy only** — never the layout or the visual language. See [multichain.md](multichain.md#per-chain-presentation-chain-profiles).
 
 ---
 
 ## Typography
 
-Two Google Fonts loaded in `index.html`:
+Two Google Fonts loaded in `index.html`, exposed as tokens:
 
-| Font | Family | Usage |
-|------|--------|-------|
-| Space Mono | `font-mono` | Primary monospace — numbers, coordinates, code values |
-| Syne | `font-sans` | Headings, labels, UI text |
+| Token | Family | Usage |
+|---|---|---|
+| `--font` | Inter | All UI text |
+| `--mono` | Space Mono | Addresses, prices, coordinates, tickers |
 
 ---
 
-## CSS Custom Properties (Design Tokens)
+## Design Tokens
 
-Defined in `:root` in `index.css`.
+All defined in `:root` in `src/index.css`.
 
-### Surface Colors
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--bg` | `#08080c` | Page background |
-| `--surface` | `#0e0e14` | Card/panel base |
-| `--surface-2` | `#14141e` | Elevated panels |
-| `--surface-3` | `#1c1c28` | Highest elevation |
-
-### Border Colors
+### Surfaces (opaque, no transparency)
 
 | Variable | Value | Usage |
-|----------|-------|-------|
-| `--border` | `rgba(255,255,255, 0.055)` | Subtle dividers |
-| `--border-2` | `rgba(255,255,255, 0.09)` | Panel borders |
-| `--border-bright` | `rgba(212,175,100, 0.35)` | Gold accent borders |
+|---|---|---|
+| `--bg` | `#0f0f0f` | Page background |
+| `--s1` | `#141414` | Panels, modals |
+| `--s2` | `#1a1a1a` | Cards, inputs, raised rows |
+| `--s3` | `#222222` | Hover / selected rows |
+| `--s4` | `#2a2a2a` | Highest elevation |
 
-### Text Colors
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| `--text` | `#f0ede8` | Primary body text |
-| `--muted` | `#5a5868` | Secondary/disabled text |
-| `--dim` | `#363444` | Placeholder/ghost text |
-
-### Accent Colors
+### Borders (white-alpha hairlines)
 
 | Variable | Value | Usage |
-|----------|-------|-------|
-| `--accent` | `#d4af64` | Primary gold accent |
-| `--accent-glow` | `rgba(212,175,100, 0.4)` | Glow/shadow for accent |
-| `--accent-dim` | `rgba(212,175,100, 0.6)` | Muted gold |
+|---|---|---|
+| `--b0` | `rgba(255,255,255,0.04)` | Default hairline |
+| `--b1` | `rgba(255,255,255,0.08)` | Emphasised |
+| `--b2` | `rgba(255,255,255,0.13)` | Strongest |
 
-### Status Colors
+### Text
 
 | Variable | Value | Usage |
-|----------|-------|-------|
-| `--green` | `#4ade80` | Success, available, owned |
-| `--red` | `#f87171` | Error, danger |
-| `--blue` | `#60a5fa` | Info |
+|---|---|---|
+| `--t1` | `#ffffff` | Primary |
+| `--t2` | `rgba(255,255,255,0.55)` | Secondary |
+| `--t3` | `rgba(255,255,255,0.28)` | Tertiary / hints |
+| `--t4` | `rgba(255,255,255,0.14)` | Disabled / faintest |
+
+### Accent & status
+
+| Variable | Value | Usage |
+|---|---|---|
+| `--green` | `#4ade80` | Accent — active, available, owned, success |
+| `--green-d` | `rgba(74,222,128,0.12)` | Accent fill |
+| `--green-b` | `rgba(74,222,128,0.22)` | Accent border |
+| `--red` | `#f87171` | Error, danger, sold |
+| `--amber` | — | Warning / scarcity |
+| `--chain-accent` | per-deployment | Set at runtime by `applyProfileTheme()` |
+| `--chain-accent-dim` | `--chain-accent` + `22` | Low-opacity variant of the above |
+
+### Radii, shadows, layout
+
+| Group | Variables |
+|---|---|
+| Radii | `--r-sm`, `--r-md`, `--r-lg`, `--r-pill` |
+| Shadows | `--sh-sm`, `--sh-md`, `--sh-lg` |
+| Safe areas | `--sat`, `--sar`, `--sab`, `--sal` (iOS notch insets) |
+| Layout | `--feed-h` (live-feed ticker height; shrinks on mobile) |
 
 ---
 
 ## Component Classes
 
-### `.glass`
-Glassmorphism panel — standard variant.
-```css
-background: rgba(14, 14, 20, 0.82);
-backdrop-filter: blur(28px) saturate(1.4);
-border: 1px solid var(--border-2);
-border-radius: 12px;
-box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
-```
+Real classes defined in `src/index.css`:
 
-### `.glass-bright`
-Enhanced glassmorphism — used for primary panels (HUD, PurchasePanel).
-```css
-background: rgba(14, 14, 20, 0.88);
-backdrop-filter: blur(40px) saturate(1.6);
-border: 1px solid var(--border-bright);
-box-shadow: 0 12px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,100,0.08), inset 0 1px 0 rgba(212,175,100,0.06);
-```
-
-### `.btn-neon`
-Primary CTA button.
-```css
-background: linear-gradient(135deg, var(--accent), #b8943e);
-color: #08080c;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.1em;
-border-radius: 8px;
-padding: 10px 20px;
-```
-Hover: `translateY(-1px)`, brighter glow.
-Active: `translateY(0)`.
-
-### `.btn-ghost`
-Secondary button.
-```css
-background: transparent;
-border: 1px solid var(--border-2);
-color: var(--muted);
-```
-Hover: `background: var(--surface-2)`, text becomes `var(--text)`.
-
-### `.pulse-dot`
-Animated status indicator (used in HUD logo).
-```css
-width: 7px;
-height: 7px;
-border-radius: 50%;
-background: var(--green);
-```
-After pseudo-element: ring pulse animation (scale 1→2.5, opacity 1→0, 2.4s infinite).
-
-### `.blink`
-Step-function opacity blink.
-```css
-animation: blink 1s steps(1) infinite;
-/* keyframes: 0%/100% opacity 1, 50% opacity 0 */
-```
-
-### `.accent`
-```css
-color: var(--accent);
-```
-
-### `.accent-dim`
-```css
-color: var(--accent-dim);
-```
-
-### `.muted`
-```css
-color: var(--muted);
-```
+| Class | Purpose |
+|---|---|
+| `.panel` | Opaque surface container — `var(--s1)`, `--r-lg`, `--sh-lg` |
+| `.card` | Inset content block on `var(--s2)` |
+| `.btn` | Primary button (inline-flex, `--font`) |
+| `.btn-ghost` | Secondary/transparent button |
+| `.btn-hero` | Large CTA (intro overlay "Enter CryptoLand") |
+| `.badge`, `.badge-dim`, `.badge-green` | Small status chips |
+| `.pill` | Rounded label (`--r-pill`) |
+| `.label` | Uppercase micro-label |
+| `.input` | Text input on `var(--s2)` |
+| `.divider` | 1px separator using `--b0` |
+| `.live-dot` | Pulsing "live" indicator |
+| `.modal-backdrop` | Full-screen dim behind modals |
+| `.drag-handle` | Mobile sheet grab handle |
+| `.mono` | Applies `--mono` |
+| `.allow-select` | Opts back into text selection |
 
 ---
 
 ## Animations
 
-All defined as `@keyframes` in `index.css`.
+`@keyframes` defined in `index.css`:
 
-| Name | Duration | Timing | Usage |
-|------|----------|--------|-------|
-| `introIn` | 0.5s | cubic-bezier(0.16,1,0.3,1) | Intro overlay entrance (translateY + opacity) |
-| `panelIn` | 0.24s | cubic-bezier(0.16,1,0.3,1) | Right panel slide-in (translateX + scale) |
-| `panelUp` | 0.22s | cubic-bezier(0.16,1,0.3,1) | Leaderboard drawer open (translateY + scale) |
-| `fadeUp` | 0.15s | ease-out | Tooltip entrance (translateY + opacity) |
-| `ticker-slide` | 90s | linear, infinite | LiveFeed horizontal scroll (translateX 0 → -50%) |
-| `spin` | 1s | linear, infinite | Payment confirming spinner (rotate 360°) |
-| `popIn` | 0.35s | cubic-bezier(0.34,1.56,0.64,1) | Confirmed checkmark (scale 0→1, with bounce) |
-| `pulse` | 2.4s | ease-out, infinite | HUD pulse dot ring |
-| `blink` | 1s | steps(1), infinite | Countdown timer warning |
+`pulse-dot`, `fade-up`, `fade-in`, `scale-in`, `sheet-up`, `slide-in-right`,
+`ticker`, `spin`, `ping`, `news-scroll`, `alert-flash`
+
+Notable uses: `sheet-up` for mobile bottom sheets, `slide-in-right` for the desktop purchase panel, `ticker` / `news-scroll` for the live feed, `spin` for the payment-confirming spinner, `alert-flash` for scarcity alerts.
 
 ---
 
 ## Map Styling
 
-MapLibre GL canvas overrides in `index.css`:
+MapLibre GL overrides in `index.css` — restyled to the **solid** theme (no blur):
 
-```css
-.maplibregl-canvas { outline: none; }
-```
-
-Attribution and logo elements hidden:
-```css
-.maplibregl-ctrl-attrib,
-.maplibregl-ctrl-logo { display: none !important; }
-```
-
-Control buttons (zoom +/-) restyled to glass theme:
 ```css
 .maplibregl-ctrl-group {
-  background: rgba(14,14,20,0.82);
-  border: 1px solid var(--border-2);
-  backdrop-filter: blur(20px);
+  background: var(--s2) !important;
+  border: none !important;
+  border-radius: var(--r-md) !important;
+  overflow: hidden;
 }
-.maplibregl-ctrl button { color: var(--muted); }
-.maplibregl-ctrl button:hover { color: var(--accent); }
+.maplibregl-canvas { outline: none; }
+.maplibregl-ctrl-attrib { /* attribution restyled/minimised */ }
 ```
 
-### OSM Raster Layer Paint
-Applied via MapLibre layer paint properties (not CSS):
+### OSM raster layer paint
+Applied via MapLibre layer paint properties (not CSS), to darken the basemap so
+tiles and UI read clearly on top:
+
 ```js
-'raster-saturation': -0.8,    // near-grayscale
+'raster-saturation': -0.8,     // near-grayscale
 'raster-brightness-min': 0,
 'raster-brightness-max': 0.35  // darkened
 ```
@@ -198,7 +142,8 @@ Applied via MapLibre layer paint properties (not CSS):
 ## Layout System
 
 - **Full viewport:** `html, body, #root` are `width/height: 100%`, `overflow: hidden`
-- **Map layer:** `position: absolute; inset: 0` (fills viewport behind everything)
-- **UI panels:** `position: fixed` with specific `top/right/bottom/left` placement
-- **Z-index stack:** Map (0) → Vignette (5) → UI panels (10) → Tooltip (20) → Modal (50)
-- **Vignette:** `radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)` — darkens map edges
+- **Map layer:** `position: absolute; inset: 0` (fills the viewport behind everything)
+- **UI panels:** `position: fixed` with explicit `top/right/bottom/left` placement
+- **Z-index stack:** Map → UI panels → tooltip → modal
+- **Safe areas:** mobile UI uses `--sat/--sar/--sab/--sal` so controls clear the notch and home indicator
+- **Touch targets:** on coarse pointers, buttons are forced to a 44×44px minimum
