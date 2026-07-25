@@ -4,7 +4,7 @@
 
 CryptoLand uses a **chain-agnostic adapter pattern** — the same application code targets any supported blockchain by changing a single build-time environment variable (`VITE_CHAIN`). All blockchain-specific logic is isolated in `src/lib/blockchain/`.
 
-CryptoLand ships as **one codebase → N chain-native builds** (one `VITE_CHAIN` per deployment). Ownership is DB-canonical within a build; an on-chain contract, deployed later, anchors it and enables NFT minting. Until a chain's contract address is set, `mintTile()` is stubbed (`{ minted: false }`) and purchases still work off the DB. For the full per-chain-build model, the 13 grant targets, and deploy steps, see [multichain.md](multichain.md). This doc covers the adapter interface, the EVM contract, and wallet auth.
+CryptoLand ships as **one codebase → N chain-native builds** (one `VITE_CHAIN` per deployment). Ownership is DB-canonical within a build; an on-chain contract, deployed later, anchors it and enables NFT minting. Until a chain's contract address is set, `mintTile()` is stubbed (`{ minted: false }`) and purchases still work off the DB. For the full per-chain-build model, the 29 chain targets, and deploy steps, see [multichain.md](multichain.md). This doc covers the adapter interface, the EVM contract, and wallet auth.
 
 ## Active Chain
 

@@ -240,5 +240,5 @@ ownership record within that build, and an on-chain contract (deployed later) an
 ownership + optional NFT mint. Chain-specific logic is isolated in
 `src/lib/blockchain/` behind a uniform adapter interface (families: `evm`, `solana`,
 `ton`, `aptos`, `sui`). Until a chain's `VITE_CONTRACT_<CHAIN>` is set, purchases work
-off the DB and the on-chain mint is stubbed. Full detail — the 13 grant targets,
+off the DB and the on-chain mint is stubbed. Full detail — the 29 chain targets,
 adapter interface, and deploy steps — is in [multichain.md](multichain.md).

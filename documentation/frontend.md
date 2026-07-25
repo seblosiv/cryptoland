@@ -177,10 +177,10 @@ Top-left panel. Purely display, reads from store.
 | Claimed % | `blocks.size / TOTAL_TILES × 100` | Local calc |
 | Volume | `stats.volume` | Sum of all purchase prices (USD) |
 | Owners | `stats.owners` | Distinct owner count |
-| Grid | `PURCHASE_ZOOM` | Always "Z11" |
+| Grid | `PURCHASE_ZOOM` | Always "Z14" |
 | Zoom | `zoom` | Live map zoom level |
 
-**Constants used:** `TOTAL_TILES = 4,194,304`, `PURCHASE_ZOOM = 11`
+**Constants used:** `TOTAL_TILES = 268,435,456`, `PURCHASE_ZOOM = 14`
 
 ---
 
@@ -501,7 +501,7 @@ Pure utility module. No imports.
 |------|-------|-------------|
 | `PURCHASE_ZOOM` | `11` | Zoom level used for purchasable tile grid |
 | `GRID_N` | `2048` | Tiles per side at zoom 11 (`2^11`) |
-| `TOTAL_TILES` | `4,194,304` | `GRID_N²` — total purchasable tiles worldwide |
+| `TOTAL_TILES` | `268,435,456` | `GRID_N²` — total purchasable tiles worldwide |
 | `KM_PER_TILE` | `~19` | Approximate tile width at equator in km |
 
 ### Functions

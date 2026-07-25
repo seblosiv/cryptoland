@@ -3845,7 +3845,11 @@ async def search_place(request: Request, q: str, limit: int = 6):
 app.include_router(build_viral_router(DB_PATH, _require_auth))
 
 # ── Static frontend (production) ──────────────────────────────────────────────
-DIST = Path(__file__).parent.parent / "dist"
+# Which built frontend this backend serves. Per-chain builds emit dist-<chain>/,
+# so a chain-specific deployment sets CRYPTOLAND_DIST=/path/to/dist-algorand.
+# (Most deployments serve the bundle from a static host instead and never hit
+# this path — it exists so a single-box deployment works without a symlink.)
+DIST = Path(os.environ.get("CRYPTOLAND_DIST") or (Path(__file__).parent.parent / "dist"))
 if DIST.exists():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 

@@ -27,28 +27,39 @@ before any smart contract exists:
 
 ---
 
-## The 13 grant targets
+## Chain targets
 
-10 of these are **chains** (each gets its own native build); 3 are **funding
-programs** that fund a build on an existing chain rather than adding a new chain.
+`src/lib/blockchain/config.js` defines **55 entries — 29 mainnet plus 26 testnet
+counterparts — across 13 adapter families**. `scripts/build-chain.sh` and `env/`
+agree on **27 build targets** (every mainnet chain except `ethereum`, a general
+EVM target not tied to a named grant, and `skale-europa`, since the SKALE grant
+build is the Nebula gaming hub).
 
-### Chains (one build each)
+| Family | Adapter | Mainnet chains |
+|---|---|---|
+| `evm` | `evm.js` | Polygon, Avalanche, Base, Ethereum, Arbitrum, Ronin, BNB, Optimism, Scroll, Celo, Moonbeam, Beam, Oasys, SKALE Nebula, SKALE Europa, Hedera, Injective |
+| `solana` | `solana.js` | Solana |
+| `ton` | `ton.js` | TON |
+| `aptos` | `aptos.js` | Aptos |
+| `sui` | `sui.js` | Sui |
+| `starknet` | `starknet.js` | Starknet |
+| `cardano` | `cardano.js` | Cardano |
+| `near` | `near.js` | NEAR |
+| `stellar` | `stellar.js` | Stellar (Soroban) |
+| `algorand` | `algorand.js` | Algorand |
+| `multiversx` | `multiversx.js` | MultiversX |
+| `radix` | `radix.js` | Radix |
+| `tezos` | `tezos.js` | Tezos |
 
-| Chain | Family | Adapter | Grant program | `VITE_CHAIN` key(s) |
-|-------|--------|---------|---------------|---------------------|
-| TON | `ton` | `ton.js` | Telegram / TON **Mini App Grant** | `ton` · `ton-testnet` |
-| Polygon | `evm` | `evm.js` | Polygon **Community Grants S2** | `polygon` · `polygon-amoy` |
-| Avalanche | `evm` | `evm.js` | Avalanche **Retro9000** | `avalanche` · `avalanche-fuji` |
-| Ronin | `evm` | `evm.js` | Ronin **Forge** | `ronin` · `ronin-saigon` |
-| Base | `evm` | `evm.js` | Base **Builder Grants** | `base` · `base-sepolia` |
-| Arbitrum | `evm` | `evm.js` | Arbitrum **Gaming Catalyst** | `arbitrum` · `arbitrum-sepolia` |
-| Solana | `solana` | `solana.js` | Solana **Foundation** grant | `solana` · `solana-devnet` |
-| BNB Smart Chain | `evm` | `evm.js` | BNB **MVB S10** | `bnb` · `bnb-testnet` |
-| Aptos | `aptos` | `aptos.js` | Aptos **Ecosystem** grant | `aptos` · `aptos-testnet` |
-| Sui | `sui` | `sui.js` | Sui **RFP** | `sui` · `sui-testnet` |
+Each chain's `grant` field in `config.js` names the program it targets. The full
+52-program mapping, including which programs are paused or dead, lives in
+[grants.md](grants.md); the step-by-step application process is in
+[submitting-grants.md](submitting-grants.md).
 
-Ethereum (`ethereum`, EVM) is also present in the config as a general EVM target,
-though it isn't tied to a named grant.
+**Deliberately not shipped:** Kadena (organisation ceased operations Oct 2025),
+Aztec (unaudited, no NFT standard, and no arbitrary-message signing so login
+cannot work), Celestia (a DA layer, not a wallet chain). Each has a `NOTE`
+comment in `config.js` where its entry would otherwise sit.
 
 ### Funding programs (not chains)
 
@@ -70,18 +81,32 @@ src/lib/blockchain/
   config.js              ← CHAINS registry (every chain + its params) + active-chain selection
   index.js               ← loads the active family's adapter, re-exports the interface
   adapters/
-    _shared.js           ← shared tile↔tokenId map + mint-stub helpers (non-EVM reuse)
-    evm.js               ← Polygon, Avalanche, Base, Arbitrum, Ronin, BNB, Ethereum (+ testnets)
+    _shared.js           ← shared tile↔tokenId packing + mint-stub helpers
+    evm.js               ← all 17 EVM chains (MetaMask, Coinbase, Rabby, injected)
     solana.js            ← Solana (Phantom, Solflare, Backpack)
-    ton.js               ← TON (TON Connect / Tonkeeper / OpenMask / Telegram Mini App)
+    ton.js               ← TON (TON Connect / Tonkeeper / Telegram Mini App)
     aptos.js             ← Aptos (Petra, Martian, Pontem, Nightly)
-    sui.js               ← Sui
+    sui.js               ← Sui (Wallet Standard: Sui Wallet, Suiet, Ethos)
+    starknet.js          ← Starknet (get-starknet: Ready/Argent X, Braavos, Cartridge)
+    cardano.js           ← Cardano (CIP-30: Lace, Eternl, Typhon, Vespr)
+    near.js              ← NEAR (wallet-selector: Meteor, MyNearWallet, Nightly)
+    stellar.js           ← Stellar / Soroban (Freighter)
+    algorand.js          ← Algorand (Pera, Defly, Lute)
+    multiversx.js        ← MultiversX (DeFi Wallet extension, xPortal)
+    radix.js             ← Radix (Radix Wallet via Connector extension; ROLA auth)
+    tezos.js             ← Tezos (Beacon / TZIP-10: Temple, Kukai, Umami)
   contracts/
     abi.json             ← EVM ABI (matches contracts/CryptoLandTile.sol)
 ```
 
-Five families exist: `evm`, `solana`, `ton`, `aptos`, `sui`. One `evm.js` adapter
-covers all seven EVM chains — adding an EVM chain needs **no adapter changes**.
+**13 families.** One `evm.js` adapter covers all 17 EVM chains — adding an EVM
+chain needs **no adapter changes**, only a `config.js` entry. Adding a non-EVM
+family needs a new adapter implementing the full interface; `src/test/chains.test.js`
+fails the build until it does.
+
+Optional chain SDKs are listed as rollup `external` in `vite.config.js` and
+lazy-imported *inside* adapter functions, so every build compiles with those
+packages absent — only the chain you are shipping needs its SDK installed.
 
 ### Active-chain selection (`config.js`)
 
@@ -128,22 +153,30 @@ Every adapter (EVM, Solana, TON, Aptos, Sui) implements the identical surface th
 | `onAccountsChanged` / `onChainChanged` / `onDisconnect` / `removeListeners` | Wallet event listeners |
 | `detectWallets()` | Enumerate installed/available wallets for this family |
 | `tileTokenId(tx, ty)` / `tokenIdToTile(id)` | Deterministic tile ↔ tokenId mapping |
-| `ADAPTER_TYPE` | Family string (`'evm' | 'solana' | 'ton' | 'aptos' | 'sui'`) |
+| `ADAPTER_TYPE` | Family string — one of the 13 families (`'evm'`, `'solana'`, `'ton'`, `'aptos'`, `'sui'`, `'starknet'`, `'cardano'`, `'near'`, `'stellar'`, `'algorand'`, `'multiversx'`, `'radix'`, `'tezos'`) |
 
 ### tile ↔ tokenId mapping
 
-Two encodings exist, both deterministic and collision-free on the 16384×16384 (Z14)
-grid, and both round-trip via `tokenIdToTile()`:
+**One encoding, everywhere.** Every family — EVM and non-EVM alike — packs the
+coordinates identically, so a tile maps to the same NFT id on every chain:
 
-- **EVM** (`evm.js`): bit-packed — `tokenId = (BigInt(tx) << 15n) | BigInt(ty)`.
-  Matches `tokenIdFromKey` in `contracts/CryptoLandTile.sol` (packs into 29 bits).
-- **Non-EVM** (`_shared.js`, reused by TON/Aptos/Sui/Solana): multiplied —
-  `tokenId = BigInt(tx) * 16384n + BigInt(ty)` (`GRID = 16384`). Identical across
-  every non-EVM family, so a tile means the same NFT id whether minted on Sui, TON,
-  or Aptos.
+```js
+tokenId = (BigInt(tx) << 15n) | BigInt(ty)     // ty in the low 15 bits (0x7FFF)
+```
 
-The tile *key* string (`"tx:ty"`) is the true cross-chain identity; the numeric
-tokenId is a per-family derivation of it.
+`evm.js` defines it directly; every other adapter re-exports it from `_shared.js`
+(`COORD_SHIFT = 15n`, `COORD_MASK = 0x7FFF`). It matches `tokenIdFromKey` in
+`contracts/CryptoLandTile.sol`, which packs into 29 bits, and it round-trips via
+`tokenIdToTile()`.
+
+> ⚠️ **Historical note.** `_shared.js` briefly used a *multiplied* scheme
+> (`tx * 16384 + ty`), which produced **different ids from the EVM/Solidity
+> packing** for the same tile. It was unified to the bit-packed form on
+> 2026-07-25, and `src/test/chains.test.js` now asserts EVM and `_shared` agree.
+> Any contract or index built against the old multiplied ids must be regenerated.
+
+The tile *key* string (`"tx:ty"`) remains the canonical cross-chain identity; the
+numeric tokenId is derived from it.
 
 ### Shared mint-stub behaviour (`_shared.js`)
 
