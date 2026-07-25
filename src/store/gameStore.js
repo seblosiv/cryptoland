@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { PURCHASE_ZOOM, GRID_N, TOTAL_TILES, tileKey, tileBasePrice } from '../lib/tiles'
 import { ACTIVE_CHAIN_CANONICAL } from '../lib/blockchain/config.js'
 import { api } from '../lib/api'
+import { analytics } from '../lib/analytics'
 import {
   createPayment,
   getPaymentStatus,
@@ -129,6 +130,7 @@ export const useGameStore = create((set, get) => ({
       paymentData: null,
       purchaseEmail: null,
     })
+    analytics.purchaseOpen(selectedKey)
   },
 
   closePurchaseModal: () => {
@@ -172,6 +174,7 @@ export const useGameStore = create((set, get) => ({
     )
 
     set({ purchaseStep: 'loading', purchaseError: null })
+    analytics.paymentStart(purchasingKey, selectedCurrency)
 
     try {
       const { useWalletStore: _ws } = await import('./walletStore.js')
@@ -336,6 +339,8 @@ export const useGameStore = create((set, get) => ({
         : { guestAccount: serverResp.guest_account ?? null }
 
       set({ purchaseStep: 'confirmed', blocks: newBlocks, stats, myBlocks, paymentData: updatedPaymentData })
+      // Conversion event — the bottom of the funnel grant applications cite.
+      analytics.paymentConfirmed(tileKey, price)
       console.log(`[Store] ✓ Block ${tileKey} finalized and map updated`)
 
       // Refresh user account tiles (non-blocking)
@@ -357,6 +362,9 @@ export const useGameStore = create((set, get) => ({
               walletState.markTileOwned(tileKey)
               // Store tx hash on the server
               api.recordNFTMint?.(tileKey, result.txHash, result.tokenId).catch(() => {})
+              // On-chain impact event — what retroactive funding rounds
+              // (Optimism RetroPGF, Avalanche Retro9000) actually measure.
+              analytics.nftMint(tileKey, result.txHash)
               console.log(`[NFT] Minted tile ${tileKey} → tx ${result.txHash}`)
             }
           })

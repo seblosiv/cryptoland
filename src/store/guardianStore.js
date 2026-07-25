@@ -15,6 +15,7 @@
 
 import { create } from 'zustand'
 import { api } from '../lib/api'
+import { analytics } from '../lib/analytics'
 
 function loadLocalGuardians() {
   try { return new Map(JSON.parse(localStorage.getItem('cl-guardians') || '[]')) }
@@ -111,6 +112,7 @@ export const useGuardianStore = create((set, get) => ({
       })
       saveLocalGuardians(guardians)
       set({ guardians, loading: false })
+      analytics.guardianDeploy(tileKey)
       return guardian
     } catch (err) {
       set({ loading: false, error: err.message })
@@ -166,6 +168,7 @@ export const useGuardianStore = create((set, get) => ({
         loading: false,
       })
       set(s => ({ raidModal: { ...s.raidModal, step: 'result' } }))
+      analytics.raidLaunch(attackerTile, defenderTile)
       return result
     } catch (err) {
       set({ loading: false, error: err.message })
