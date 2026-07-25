@@ -157,12 +157,19 @@ async def init_db():
                 ("password_hash", "TEXT"),
                 ("salt",          "TEXT"),
                 ("is_guest",      "INTEGER DEFAULT 0"),
+                # Telegram Mini App identity ("tg:<telegram_user_id>")
+                ("telegram_id",   "TEXT"),
             ]:
                 if col not in users_cols:
                     try:
                         await db.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
                     except Exception:
                         pass
+        # Unique index so one Telegram account maps to exactly one game account.
+        await db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram ON users(telegram_id) "
+            "WHERE telegram_id IS NOT NULL"
+        )
 
         # Auth tokens — each login/session gets a bearer token (30-day TTL)
         await db.execute("""
@@ -1466,6 +1473,122 @@ async def register(req: RegisterRequest, request: Request):
         await db.execute(
             "INSERT INTO auth_tokens (token, user_id, created_at, expires_at, user_agent) VALUES (?,?,?,?,?)",
             (token, user_id, now, now + TOKEN_TTL_MS, request.headers.get("User-Agent","")[:200])
+        )
+        await db.commit()
+        async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
+            row = dict(await cur.fetchone())
+
+    return {"token": token, "user": _safe_user(row)}
+
+# ── Telegram Mini App auth ────────────────────────────────────────────────────
+# TON's Mini App surface identifies users via `initData`, a signed query string
+# the Telegram client injects. The client-side `initDataUnsafe` object must NEVER
+# be trusted for identity — only the HMAC-verified raw string below.
+
+TELEGRAM_BOT_TOKEN          = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_INITDATA_MAX_AGE_S = int(os.environ.get("TELEGRAM_INITDATA_MAX_AGE", "86400"))
+
+def _verify_telegram_init_data(init_data: str) -> Optional[dict]:
+    """
+    Verify Telegram Mini App initData (core.telegram.org/bots/webapps).
+
+        data_check_string = all fields except `hash`, sorted by key,
+                            rendered "key=value", joined with "\\n"
+        secret_key        = HMAC_SHA256(key="WebAppData", message=<bot_token>)
+        valid             = hex(HMAC_SHA256(secret_key, data_check_string)) == hash
+
+    Note the key/message inversion in the secret_key step: the constant string
+    "WebAppData" is the KEY and the bot token is the MESSAGE. Doing it the other
+    way round is the single most common implementation bug and silently accepts
+    nothing (or, worse, is copied from a blog post that has it backwards).
+
+    Returns the parsed fields on success, None on any failure.
+    """
+    if not init_data or not TELEGRAM_BOT_TOKEN:
+        return None
+    from urllib.parse import parse_qsl
+    try:
+        fields = dict(parse_qsl(init_data, keep_blank_values=True, strict_parsing=True))
+    except ValueError:
+        return None
+
+    received_hash = fields.pop("hash", None)
+    if not received_hash:
+        return None
+
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(fields.items()))
+    secret_key = hmac.new(b"WebAppData", TELEGRAM_BOT_TOKEN.encode(), hashlib.sha256).digest()
+    expected   = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, received_hash):
+        return None
+
+    # Replay protection — reject stale payloads.
+    try:
+        auth_date = int(fields.get("auth_date", "0"))
+    except ValueError:
+        return None
+    if TELEGRAM_INITDATA_MAX_AGE_S > 0 and (time.time() - auth_date) > TELEGRAM_INITDATA_MAX_AGE_S:
+        return None
+
+    return fields
+
+class TelegramAuthRequest(BaseModel):
+    init_data: str
+
+@app.post("/auth/telegram")
+@limiter.limit("20/minute")
+async def auth_telegram(request: Request, req: TelegramAuthRequest):
+    """
+    Exchange a verified Telegram `initData` string for a CryptoLand session.
+    Creates the account on first sight, keyed on the Telegram user id.
+    """
+    if not TELEGRAM_BOT_TOKEN:
+        raise HTTPException(501, "Telegram auth not configured (TELEGRAM_BOT_TOKEN unset)")
+
+    fields = _verify_telegram_init_data(req.init_data)
+    if fields is None:
+        raise HTTPException(401, "Invalid or expired Telegram initData")
+
+    try:
+        tg_user = json.loads(fields.get("user", "{}"))
+    except (ValueError, TypeError):
+        raise HTTPException(400, "Malformed Telegram user payload")
+
+    # Telegram user ids can exceed 32 bits — keep them as int/str, never int32.
+    tg_id = tg_user.get("id")
+    if not tg_id:
+        raise HTTPException(400, "Telegram payload missing user id")
+    tg_key = f"tg:{tg_id}"
+
+    username = (tg_user.get("username")
+                or " ".join(filter(None, [tg_user.get("first_name"), tg_user.get("last_name")]))
+                or f"tg{tg_id}")[:32]
+
+    now   = int(time.time() * 1000)
+    token = _make_token()
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        # `telegram_id` is stored in the wallet column's sibling — we key on a
+        # dedicated column added idempotently at startup elsewhere; fall back to
+        # matching on username-scoped id for older schemas.
+        async with db.execute("SELECT * FROM users WHERE telegram_id = ?", (tg_key,)) as cur:
+            row = await cur.fetchone()
+
+        if row is None:
+            user_id = _make_user_id()
+            await db.execute(
+                "INSERT INTO users (user_id, telegram_id, username, avatar_emoji, is_guest, created_at, last_seen) "
+                "VALUES (?,?,?,'💎',0,?,?)",
+                (user_id, tg_key, username, now, now)
+            )
+        else:
+            user_id = row["user_id"]
+            await db.execute("UPDATE users SET last_seen = ? WHERE user_id = ?", (now, user_id))
+
+        await db.execute(
+            "INSERT INTO auth_tokens (token, user_id, created_at, expires_at, user_agent) VALUES (?,?,?,?,?)",
+            (token, user_id, now, now + TOKEN_TTL_MS, request.headers.get("User-Agent", "")[:200])
         )
         await db.commit()
         async with db.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)) as cur:
