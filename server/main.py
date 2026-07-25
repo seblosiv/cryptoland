@@ -2655,6 +2655,129 @@ async def analytics_funnel():
     ]
     return {"funnel": funnel, "all_events": events}
 
+# ── Grant metrics ─────────────────────────────────────────────────────────────
+# Nearly every grant program in documentation/grants.md is metrics-aware:
+# retroactive rounds (Optimism RetroPGF, Avalanche Retro9000) score measurable
+# on-chain impact; traction-gated grants (Aptos, Starknet Growth, MultiversX,
+# SafePal, BNB MVB) ask for DAU/MAU/retention/tx counts. This endpoint produces
+# those numbers in one call so an application can cite real data instead of
+# estimates. Read-only and safe to expose; it aggregates, never returns PII.
+
+@app.get("/metrics/grant")
+async def grant_metrics(days: int = 30):
+    """
+    Aggregate traction metrics for grant applications.
+
+    days — trailing window for the activity timeseries (1..365, default 30).
+    Returns DAU/WAU/MAU, retention, purchase + volume totals, a per-chain
+    breakdown (the multichain story), and engagement depth.
+    """
+    days = max(1, min(int(days), 365))
+    now_ms = int(time.time() * 1000)
+    day_ms = 86_400_000
+    window_start = now_ms - days * day_ms
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+
+        async def scalar(sql, args=()):
+            async with db.execute(sql, args) as cur:
+                row = await cur.fetchone()
+            return (row[0] if row and row[0] is not None else 0)
+
+        # ── Active users. Prefer wallet identity, fall back to session id, so
+        # the count is meaningful before wallets are connected.
+        actor = "COALESCE(NULLIF(wallet,''), session_id)"
+        dau = await scalar(
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
+            (now_ms - day_ms,))
+        wau = await scalar(
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
+            (now_ms - 7 * day_ms,))
+        mau = await scalar(
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
+            (now_ms - 30 * day_ms,))
+
+        # ── Daily activity timeseries over the window.
+        async with db.execute(f"""
+            SELECT CAST((? - ts) / ? AS INTEGER) AS days_ago,
+                   COUNT(DISTINCT {actor})       AS actives,
+                   COUNT(*)                      AS events
+            FROM analytics_events
+            WHERE ts >= ?
+            GROUP BY days_ago ORDER BY days_ago
+        """, (now_ms, day_ms, window_start)) as cur:
+            ts_rows = await cur.fetchall()
+        timeseries = [
+            {"days_ago": r["days_ago"], "active_users": r["actives"], "events": r["events"]}
+            for r in ts_rows
+        ]
+
+        # ── Retention: of the actors first seen 7+ days ago, how many returned
+        # at least 24h after their first event.
+        async with db.execute(f"""
+            SELECT {actor} AS a, MIN(ts) AS first_ts, MAX(ts) AS last_ts
+            FROM analytics_events
+            WHERE {actor} IS NOT NULL
+            GROUP BY a
+        """) as cur:
+            cohort = await cur.fetchall()
+        eligible = [r for r in cohort if r["first_ts"] <= now_ms - day_ms]
+        returned_d1 = [r for r in eligible if r["last_ts"] - r["first_ts"] >= day_ms]
+        eligible_7 = [r for r in cohort if r["first_ts"] <= now_ms - 7 * day_ms]
+        returned_d7 = [r for r in eligible_7 if r["last_ts"] - r["first_ts"] >= 7 * day_ms]
+        def pct(num, den):
+            return round(100.0 * len(num) / len(den), 1) if den else 0.0
+
+        # ── Economy / on-chain-relevant totals.
+        total_tiles   = await scalar("SELECT COUNT(*) FROM blocks")
+        total_owners  = await scalar("SELECT COUNT(DISTINCT owner) FROM blocks")
+        total_volume  = await scalar("SELECT SUM(price) FROM blocks")
+        window_tiles  = await scalar("SELECT COUNT(*) FROM blocks WHERE purchased_at >= ?", (window_start,))
+        window_volume = await scalar("SELECT SUM(price) FROM blocks WHERE purchased_at >= ?", (window_start,))
+        nft_mints     = await scalar("SELECT COUNT(*) FROM nft_mints")
+
+        # ── Per-chain breakdown — the multichain deployment story funders want.
+        async with db.execute("""
+            SELECT chain,
+                   COUNT(*)               AS tiles,
+                   COUNT(DISTINCT owner)  AS owners,
+                   COALESCE(SUM(price),0) AS volume
+            FROM blocks GROUP BY chain ORDER BY tiles DESC
+        """) as cur:
+            chain_rows = await cur.fetchall()
+        by_chain = [
+            {"chain": r["chain"], "tiles": r["tiles"], "owners": r["owners"],
+             "volume_usd": round(r["volume"], 2)}
+            for r in chain_rows
+        ]
+
+        # ── Engagement depth (shows it's a game, not a mint).
+        guardians = await scalar("SELECT COUNT(*) FROM guardians")
+        accounts  = await scalar("SELECT COUNT(*) FROM users")
+
+    return {
+        "generated_at": now_ms,
+        "window_days":  days,
+        "users": {
+            "dau": dau, "wau": wau, "mau": mau,
+            "registered_accounts": accounts,
+            "retention_d1_pct": pct(returned_d1, eligible),
+            "retention_d7_pct": pct(returned_d7, eligible_7),
+        },
+        "economy": {
+            "tiles_sold_total":   total_tiles,
+            "unique_owners":      total_owners,
+            "volume_usd_total":   round(total_volume, 2),
+            "tiles_sold_window":  window_tiles,
+            "volume_usd_window":  round(window_volume, 2),
+            "nft_mints_onchain":  nft_mints,
+        },
+        "by_chain":   by_chain,
+        "engagement": {"guardians_deployed": guardians},
+        "timeseries": timeseries,
+    }
+
 # ── DAO ────────────────────────────────────────────────────────────────────────
 
 class DAOProposal(BaseModel):
