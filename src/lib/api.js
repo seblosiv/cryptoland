@@ -30,14 +30,16 @@ async function req(method, path, body, opts = {}) {
 const tk = (key) => encodeURIComponent(key)
 
 export const api = {
-  /** Load all purchased blocks from DB */
-  fetchBlocks: () => req("GET", "/blocks"),
+  /** Load all purchased blocks from DB (optionally scoped to one chain) */
+  fetchBlocks: (chain = null) =>
+    req("GET", chain ? `/blocks?chain=${encodeURIComponent(chain)}` : "/blocks"),
 
   /** Record a purchase — returns the saved block */
   purchaseBlock: (data) => req("POST", "/blocks", data),
 
   /** Global stats */
-  fetchStats: () => req("GET", "/stats"),
+  fetchStats: (chain = null) =>
+    req("GET", chain ? `/stats?chain=${encodeURIComponent(chain)}` : "/stats"),
 
   /** Country leaderboard */
   fetchCountryStats: () => req("GET", "/stats/countries"),

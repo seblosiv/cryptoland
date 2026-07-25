@@ -36,7 +36,10 @@ from viral import (
 
 load_dotenv()
 
-DB_PATH = Path(__file__).parent / "cryptoland.db"
+# Each per-chain deployment runs its own backend with its own database, so the
+# path is env-configurable (CRYPTOLAND_DB=/srv/cryptoland/algorand.db). Defaults
+# to the local dev database.
+DB_PATH = Path(os.environ.get("CRYPTOLAND_DB") or (Path(__file__).parent / "cryptoland.db"))
 NP_API_KEY = os.environ.get("NOWPAYMENTS_API_KEY", "")
 NP_IPN_SECRET = os.environ.get("NOWPAYMENTS_IPN_SECRET", "")
 NP_BASE = "https://api.nowpayments.io/v1"
@@ -852,9 +855,21 @@ async def get_country_stats():
     return [{"country": r[0], "blocks": r[1]} for r in rows]
 
 @app.get("/stats")
-async def get_stats():
+async def get_stats(chain: Optional[str] = None):
+    """
+    Global stats. Pass ?chain= to scope to one chain — required when a single
+    backend serves several per-chain frontends, so an Algorand build never shows
+    Polygon's numbers. Deployments with one DB per chain can omit it.
+    """
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute("SELECT COUNT(*), SUM(price), COUNT(DISTINCT owner) FROM blocks") as cur:
+        if chain:
+            sql = ("SELECT COUNT(*), SUM(price), COUNT(DISTINCT owner) "
+                   "FROM blocks WHERE chain = ?")
+            args = (chain,)
+        else:
+            sql = "SELECT COUNT(*), SUM(price), COUNT(DISTINCT owner) FROM blocks"
+            args = ()
+        async with db.execute(sql, args) as cur:
             row = await cur.fetchone()
     return {
         "sold":    row[0] or 0,
