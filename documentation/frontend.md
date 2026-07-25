@@ -23,13 +23,23 @@ Mounts the React tree into `#root`. No StrictMode.
 - Renders full layout: map, HUD, panels, overlays
 - Handles `dbError` — shows retry banner if backend unreachable
 - Manages `IntroOverlay` visibility via `showIntro` state
+- Calls `applyProfileTheme()` from `lib/chainProfile.js` in a mount effect, which
+  sets `--chain-accent` / `--chain-accent-dim` plus `data-chain` / `data-family`
+  on `<html>` so every per-chain build tints itself. Consumers always pass a
+  fallback (`var(--chain-accent, var(--green))`) so the first frame is correct.
 
 ### `IntroOverlay`
-Inner component. First-load splash screen.
+Inner component. First-load splash screen. Chain-native: all ecosystem copy comes
+from `PROFILE` (`lib/chainProfile.js`), never hardcoded.
 
 - Shows logo, tagline, key stats (sold tiles, volume, owners)
-- "Enter the World" button sets `showIntro = false`
-- Animation: `introIn` (0.5s cubic-bezier slide+fade)
+- Tagline line renders `PROFILE.tagline` (falls back to "Own the World · On-Chain")
+- `PROFILE.pitch`, when set, renders as one accent-coloured line under the description
+- Registry chip uses the chain accent; `PROFILE.features.gasless` and
+  `.miniApp` add `badge badge-dim` chips ("Zero gas · you never pay to claim",
+  "Runs inside Telegram"). The `btn-hero` CTA is deliberately **not** re-tinted —
+  accent colours vary per chain and would break its contrast.
+- "Enter CryptoLand" button sets `showIntro = false` and persists `cl-intro-seen`
 
 ### `Corner`
 Inner component. Renders one decorative L-shaped border corner.

@@ -401,6 +401,165 @@ const CHAIN_DEFS = {
     nativeCurrency: { name: 'Sui', symbol: 'SUI', decimals: 9 },
     blockTime: 0.5, confirmations: 1, color: '#4da2ff', logo: '🌊', testnet: true,
   },
+
+  // ── Additional non-EVM grant chains ───────────────────────────────────────
+  // All endpoints below were live-probed. NOTE: chain `id` is deliberately a
+  // STRING for every non-EVM chain even where the network's own id is numeric
+  // (Cardano networkId 1, Radix networkId 1) — a numeric 1 would collide with
+  // Ethereum in chainById().
+
+  starknet: {
+    id: 'SN_MAIN', name: 'Starknet', shortName: 'STRK', family: 'starknet',
+    rpcUrl: 'https://api.cartridge.gg/x/starknet/mainnet', rpcUrlFallback: 'https://rpc.starknet.lava.build',
+    explorerUrl: 'https://starkscan.co', explorerNFTPath: '/contract/',
+    // Two fee tokens (STRK and ETH), both 18 decimals; STRK is the default.
+    nativeCurrency: { name: 'Starknet Token', symbol: 'STRK', decimals: 18 },
+    blockTime: 30, confirmations: 1, color: '#ec796b', logo: '🔱',
+    grant: 'Starknet Foundation Seed + Growth Grants',
+  },
+  'starknet-sepolia': {
+    id: 'SN_SEPOLIA', name: 'Starknet Sepolia', shortName: 'STRK', family: 'starknet',
+    rpcUrl: 'https://api.cartridge.gg/x/starknet/sepolia', rpcUrlFallback: 'https://starknet-sepolia.drpc.org',
+    // sepolia.starkscan.co no longer resolves — Voyager is the working explorer.
+    explorerUrl: 'https://sepolia.voyager.online', explorerNFTPath: '/contract/',
+    nativeCurrency: { name: 'Starknet Token', symbol: 'STRK', decimals: 18 },
+    blockTime: 30, confirmations: 1, color: '#ec796b', logo: '🔱', testnet: true,
+  },
+
+  cardano: {
+    id: 'cardano-mainnet', name: 'Cardano', shortName: 'ADA', family: 'cardano',
+    rpcUrl: 'https://api.koios.rest/api/v1',
+    explorerUrl: 'https://cardanoscan.io', explorerTxPath: '/transaction/',
+    nativeCurrency: { name: 'Cardano', symbol: 'ADA', decimals: 6 },
+    blockTime: 20, confirmations: 1, color: '#0033ad', logo: '💠',
+    grant: 'Cardano Project Catalyst / CAP',
+  },
+  'cardano-preprod': {
+    id: 'cardano-preprod', name: 'Cardano Preprod', shortName: 'ADA', family: 'cardano',
+    rpcUrl: 'https://preprod.koios.rest/api/v1',
+    explorerUrl: 'https://preprod.cardanoscan.io', explorerTxPath: '/transaction/',
+    nativeCurrency: { name: 'Cardano', symbol: 'ADA', decimals: 6 },
+    blockTime: 20, confirmations: 1, color: '#0033ad', logo: '💠', testnet: true,
+  },
+
+  near: {
+    id: 'mainnet', name: 'NEAR', shortName: 'NEAR', family: 'near',
+    rpcUrl: 'https://rpc.mainnet.near.org', rpcUrlFallback: 'https://free.rpc.fastnear.com',
+    explorerUrl: 'https://nearblocks.io', explorerTxPath: '/txns/', explorerNFTPath: '/nft-token/',
+    nativeCurrency: { name: 'NEAR', symbol: 'NEAR', decimals: 24 },
+    blockTime: 1, confirmations: 1, color: '#00c08b', logo: '🌐',
+    grant: 'NEAR Foundation Funding Initiatives',
+  },
+  'near-testnet': {
+    id: 'testnet', name: 'NEAR Testnet', shortName: 'NEAR', family: 'near',
+    rpcUrl: 'https://rpc.testnet.near.org', rpcUrlFallback: 'https://test.rpc.fastnear.com',
+    explorerUrl: 'https://testnet.nearblocks.io', explorerTxPath: '/txns/', explorerNFTPath: '/nft-token/',
+    nativeCurrency: { name: 'NEAR', symbol: 'NEAR', decimals: 24 },
+    blockTime: 1, confirmations: 1, color: '#00c08b', logo: '🌐', testnet: true,
+  },
+
+  stellar: {
+    id: 'Public Global Stellar Network ; September 2015',
+    name: 'Stellar', shortName: 'XLM', family: 'stellar',
+    rpcUrl: 'https://horizon.stellar.org', rpcUrlFallback: 'https://mainnet.sorobanrpc.com',
+    explorerUrl: 'https://stellar.expert/explorer/public', explorerNFTPath: '/contract/',
+    nativeCurrency: { name: 'Lumen', symbol: 'XLM', decimals: 7 },
+    blockTime: 5, confirmations: 1, color: '#7d00ff', logo: '🚀',
+    grant: 'Stellar Community Fund (Soroban)',
+  },
+  'stellar-testnet': {
+    id: 'Test SDF Network ; September 2015',
+    name: 'Stellar Testnet', shortName: 'XLM', family: 'stellar',
+    rpcUrl: 'https://horizon-testnet.stellar.org', rpcUrlFallback: 'https://soroban-testnet.stellar.org',
+    explorerUrl: 'https://stellar.expert/explorer/testnet', explorerNFTPath: '/contract/',
+    nativeCurrency: { name: 'Lumen', symbol: 'XLM', decimals: 7 },
+    blockTime: 5, confirmations: 1, color: '#7d00ff', logo: '🚀', testnet: true,
+  },
+
+  algorand: {
+    id: 'mainnet-v1.0', name: 'Algorand', shortName: 'ALGO', family: 'algorand',
+    rpcUrl: 'https://mainnet-api.4160.nodely.dev', rpcUrlFallback: 'https://mainnet-api.algonode.cloud',
+    explorerUrl: 'https://lora.algokit.io/mainnet',
+    explorerTxPath: '/transaction/', explorerNFTPath: '/asset/',
+    nativeCurrency: { name: 'Algo', symbol: 'ALGO', decimals: 6 },
+    blockTime: 3, confirmations: 1, color: '#00d1b2', logo: '▲',
+    grant: 'Algorand Foundation Grants',
+  },
+  'algorand-testnet': {
+    id: 'testnet-v1.0', name: 'Algorand Testnet', shortName: 'ALGO', family: 'algorand',
+    rpcUrl: 'https://testnet-api.4160.nodely.dev', rpcUrlFallback: 'https://testnet-api.algonode.cloud',
+    // testnet.allo.info does not resolve — Lora covers both networks.
+    explorerUrl: 'https://lora.algokit.io/testnet',
+    explorerTxPath: '/transaction/', explorerNFTPath: '/asset/',
+    nativeCurrency: { name: 'Algo', symbol: 'ALGO', decimals: 6 },
+    blockTime: 3, confirmations: 1, color: '#00d1b2', logo: '▲', testnet: true,
+  },
+
+  multiversx: {
+    id: '1', name: 'MultiversX', shortName: 'EGLD', family: 'multiversx',
+    rpcUrl: 'https://api.multiversx.com', rpcUrlFallback: 'https://gateway.multiversx.com',
+    explorerUrl: 'https://explorer.multiversx.com',
+    explorerTxPath: '/transactions/', explorerNFTPath: '/nfts/',
+    nativeCurrency: { name: 'eGold', symbol: 'EGLD', decimals: 18 },
+    blockTime: 6, confirmations: 1, color: '#23f7dd', logo: '✖️',
+    grant: 'MultiversX Growth Games / Grants',
+  },
+  'multiversx-devnet': {
+    id: 'D', name: 'MultiversX Devnet', shortName: 'EGLD', family: 'multiversx',
+    rpcUrl: 'https://devnet-api.multiversx.com', rpcUrlFallback: 'https://devnet-gateway.multiversx.com',
+    explorerUrl: 'https://devnet-explorer.multiversx.com',
+    explorerTxPath: '/transactions/', explorerNFTPath: '/nfts/',
+    nativeCurrency: { name: 'eGold', symbol: 'EGLD', decimals: 18 },
+    blockTime: 6, confirmations: 1, color: '#23f7dd', logo: '✖️', testnet: true,
+  },
+
+  radix: {
+    id: 'radix-mainnet', name: 'Radix', shortName: 'XRD', family: 'radix',
+    rpcUrl: 'https://mainnet.radixdlt.com',
+    explorerUrl: 'https://dashboard.radixdlt.com',
+    explorerTxPath: '/transaction/', explorerNFTPath: '/resource/',
+    nativeCurrency: { name: 'Radix', symbol: 'XRD', decimals: 18 },
+    blockTime: 5, confirmations: 1, color: '#052cc0', logo: '⚛️',
+    grant: 'Radix Booster Grants (tiered)',
+  },
+  'radix-stokenet': {
+    id: 'radix-stokenet', name: 'Radix Stokenet', shortName: 'XRD', family: 'radix',
+    rpcUrl: 'https://stokenet.radixdlt.com',
+    explorerUrl: 'https://stokenet-dashboard.radixdlt.com',
+    explorerTxPath: '/transaction/', explorerNFTPath: '/resource/',
+    nativeCurrency: { name: 'Radix', symbol: 'XRD', decimals: 18 },
+    blockTime: 5, confirmations: 1, color: '#052cc0', logo: '⚛️', testnet: true,
+  },
+
+  tezos: {
+    id: 'NetXdQprcVkpaWU', name: 'Tezos', shortName: 'XTZ', family: 'tezos',
+    rpcUrl: 'https://rpc.tzkt.io/mainnet', rpcUrlFallback: 'https://prod.tcinfra.net/rpc/mainnet',
+    // TzKT uses a flat root path for both operations and accounts.
+    explorerUrl: 'https://tzkt.io', explorerTxPath: '/', explorerNFTPath: '/',
+    nativeCurrency: { name: 'Tezos', symbol: 'XTZ', decimals: 6 },
+    blockTime: 8, confirmations: 1, color: '#2c7df7', logo: '🔷',
+    grant: 'Tezos Ecosystem Bounty / Foundation Grants',
+  },
+  'tezos-shadownet': {
+    // Ghostnet is GONE (DNS + teztnets.json). Shadownet is the current
+    // application-testing network.
+    id: 'NetXsqzbfFenSTS', name: 'Tezos Shadownet', shortName: 'XTZ', family: 'tezos',
+    rpcUrl: 'https://rpc.shadownet.teztnets.com',
+    explorerUrl: 'https://shadownet.tzkt.io', explorerTxPath: '/', explorerNFTPath: '/',
+    nativeCurrency: { name: 'Tezos', symbol: 'XTZ', decimals: 6 },
+    blockTime: 8, confirmations: 1, color: '#2c7df7', logo: '🔷', testnet: true,
+  },
+
+  // NOTE: Aztec is deliberately NOT configured. Aztec's own documentation states
+  // the stack is unaudited with "critical bugs expected", some circuits are
+  // "under-constrained, meaning soundness is not fully guaranteed", "privacy is
+  // not guaranteed", state does not survive rollup upgrades, and there is no
+  // standard NFT contract. It also has no arbitrary-message signing, so our
+  // wallet login flow cannot work there. Program #43 is documented as
+  // non-viable in grants.md rather than shipped as a broken build.
+  //
+  // Celestia is likewise absent: it is a data-availability layer, not a wallet
+  // chain, and program #32 needs a sovereign-rollup narrative, not a deployment.
 }
 
 export const CHAINS = Object.fromEntries(

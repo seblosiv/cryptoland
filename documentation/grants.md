@@ -52,24 +52,48 @@ Reviewers reward *actual* deployment over "we could support X"
 
 ## 2. Chain coverage
 
-| Family | Adapter | Chains |
+`src/lib/blockchain/config.js` defines **55 chain entries — 29 mainnet plus 26 testnet
+counterparts — across 13 adapter families**. One adapter serves an entire family, so adding
+an EVM chain is a config entry and nothing else.
+
+| Family | Adapter (registered in `index.js`) | Mainnet chains in `config.js` |
 |---|---|---|
-| EVM | `adapters/evm.js` | Polygon, Avalanche, Base, Arbitrum, Ronin, BNB, Ethereum, Optimism, Scroll, Celo, Moonbeam, Beam, Oasys, SKALE, Hedera, Injective, Kadena |
-| Solana | `adapters/solana.js` | Solana |
-| TON | `adapters/ton.js` | TON |
-| Aptos | `adapters/aptos.js` | Aptos |
-| Sui | `adapters/sui.js` | Sui |
-| Starknet | `adapters/starknet.js` | Starknet |
-| Cardano | `adapters/cardano.js` | Cardano |
-| NEAR | `adapters/near.js` | NEAR |
-| Stellar | `adapters/stellar.js` | Stellar (Soroban) |
-| Algorand | `adapters/algorand.js` | Algorand |
-| MultiversX | `adapters/multiversx.js` | MultiversX |
-| Radix | `adapters/radix.js` | Radix |
-| Tezos | `adapters/tezos.js` | Tezos |
+| `evm` | `adapters/evm.js` | Polygon, Avalanche, Base, Ethereum, Arbitrum One, Ronin, BNB Smart Chain, OP Mainnet, Scroll, Celo, Moonbeam, Beam, Oasys, SKALE Nebula Gaming Hub, SKALE Europa Hub, Hedera, Injective |
+| `solana` | `adapters/solana.js` | Solana |
+| `ton` | `adapters/ton.js` | TON |
+| `aptos` | `adapters/aptos.js` | Aptos |
+| `sui` | `adapters/sui.js` | Sui |
+| `starknet` | `adapters/starknet.js` | Starknet |
+| `cardano` | `adapters/cardano.js` | Cardano |
+| `near` | `adapters/near.js` | NEAR |
+| `stellar` | `adapters/stellar.js` | Stellar (Soroban) |
+| `algorand` | `adapters/algorand.js` | Algorand |
+| `multiversx` | `adapters/multiversx.js` | MultiversX |
+| `radix` | `adapters/radix.js` | Radix |
+| `tezos` | `adapters/tezos.js` | Tezos |
 
 Every adapter implements the identical interface (enforced by `src/test/chains.test.js`), so
 no chain can be half-added.
+
+**Shipped as builds.** `scripts/build-chain.sh` and `env/` agree on **27 chain build
+targets** — every mainnet chain above except `ethereum` (a general EVM target, not tied to a
+named grant) and `skale-europa` (the SKALE grant build is the Nebula gaming hub). Each ships
+to its own subdomain with its own backend and DB; see
+[multichain.md → Deployment topology](multichain.md#deployment-topology).
+
+### Deliberately NOT shipped
+
+Three programs in §3 have **no chain entry and no build**, on purpose. Each decision is
+recorded as a `NOTE` in `config.js` where the entry would otherwise sit.
+
+| Chain | Program | Why not |
+|---|---|---|
+| **Kadena** | #39 Kadena Eco Grants | The organization announced (Oct 2025) it is ending business activity and active maintenance. **Chainweb EVM never reached mainnet**, the documented testnet host no longer resolves in DNS, and Kadena has no entry in the canonical `ethereum-lists/chains` registry. There is nothing to deploy to. |
+| **Aztec** | #43 Aztec Grants (privacy) | Per **Aztec's own documentation**: the stack is unaudited with *critical bugs expected*; some circuits are *under-constrained, meaning soundness is not fully guaranteed*; *privacy is not guaranteed*; state does not survive rollup upgrades; and there is **no standard NFT contract**. It also offers **no arbitrary-message signing**, so our wallet-login flow (`signMessage` / `signPurchase`) cannot work there at all — the build would ship unable to log a user in. |
+| **Celestia** | #32 Celestia Foundation | Celestia is a **data-availability layer, not a wallet chain**. The program needs a sovereign-rollup / DA narrative, not a deployment — there is no "deploy CryptoLand on Celestia" to do. |
+
+These are documented as non-viable rather than shipped as broken builds. Revisit Aztec only
+if it ships an audited mainnet with an NFT standard and message signing.
 
 ---
 
@@ -114,7 +138,7 @@ no chain can be half-added.
 | 7 | SKALE $2M Indie Game Accelerator | SKALE | ~$100K | Zero-gas chain — pairs with gasless UX |
 | 38 | Hedera (HBAR Foundation) | Hedera (EVM) | ~$250K | Enterprise-formal process |
 | 40 | Injective — Ecosystem / AI fund | Injective (inEVM) | ~$150K | Needs finance or AI-agent hook |
-| 39 | Kadena Eco Grants ($100M) | Kadena | ~$100K | Less-crowded ecosystem |
+| 39 | Kadena Eco Grants ($100M) | Kadena | ~$100K | 🔴 **Not actionable** — org ceased operations Oct 2025, no EVM mainnet. Not configured; see §2 |
 | 6 | Radix Booster Grants (tiered) | Radix | ~$160K | $5K MVP → $140K Growth ladder |
 
 ### Non-EVM chains
@@ -141,8 +165,8 @@ no chain can be half-added.
 | 17 | MultiversX Growth Games | MultiversX | ~$1.5M | Competition format — traction ranks |
 | 8 | Tezos Ecosystem Bounty | Tezos | ~$30K | Low-friction bounties |
 | 45 | Tezos Foundation Grants | Tezos | ~$50K | ~8% base rate — completeness matters |
-| 43 | Aztec Grants (privacy) | Aztec | ~$50K | Needs a privacy/Noir mechanic |
-| 32 | Celestia Foundation | Celestia (DA) | ~$100K | Needs a sovereign-rollup/DA story |
+| 43 | Aztec Grants (privacy) | Aztec | ~$50K | 🔴 **Not shipped** — unaudited stack, no NFT standard, no message signing. See §2 |
+| 32 | Celestia Foundation | Celestia (DA) | ~$100K | 🟠 DA layer, not a wallet chain — needs a sovereign-rollup/DA story, not a deployment. See §2 |
 
 ---
 
@@ -199,8 +223,11 @@ Beyond a chain deployment, several programs gate on capabilities. Status in this
   engineering for `seed-vault-sdk` unless shipping a wallet.
 
 ### Other
-- **Aztec (#43)** — privacy mechanic in Noir; confirm ecosystem maturity before investing.
-- **Celestia (#32)** — needs a sovereign-rollup / DA narrative rather than a deployment.
+- **Aztec (#43)** — deliberately not shipped. A Noir privacy mechanic is not the blocker;
+  the blockers are structural (unaudited stack, under-constrained circuits, no NFT standard,
+  no arbitrary-message signing → no wallet login). Full reasoning in §2.
+- **Celestia (#32)** — needs a sovereign-rollup / DA narrative rather than a deployment; it is
+  a data-availability layer, not a wallet chain. See §2.
 
 ---
 

@@ -11,11 +11,34 @@ export default defineConfig({
       // marked external so the bundler doesn't fail when the package isn't
       // installed (each per-chain deployment installs only the SDK it needs).
       external: [
-        '@solana/web3.js',   // Solana
-        '@tonconnect/sdk',   // TON
-        '@tonconnect/ui',    // TON (UI variant)
-        '@mysten/sui',       // Sui (if used by a future adapter revision)
-        '@aptos-labs/ts-sdk',// Aptos (if used by a future adapter revision)
+        // Solana
+        '@solana/web3.js', '@solana-mobile/wallet-standard-mobile',
+        // TON
+        '@tonconnect/sdk', '@tonconnect/ui',
+        // Sui / Aptos
+        '@mysten/sui', '@aptos-labs/ts-sdk',
+        // Starknet
+        'starknet', '@starknet-io/get-starknet', '@starknet-io/get-starknet-core',
+        // Cardano
+        '@meshsdk/core', '@lucid-evolution/lucid', '@emurgo/cardano-serialization-lib-browser',
+        // NEAR
+        '@near-wallet-selector/core', '@near-wallet-selector/modal-ui',
+        '@near-wallet-selector/meteor-wallet', '@near-wallet-selector/my-near-wallet',
+        '@near-wallet-selector/sender', '@near-wallet-selector/nightly',
+        '@hot-labs/near-connect', 'near-api-js',
+        // Stellar
+        '@stellar/freighter-api', '@stellar/stellar-sdk', '@creit.tech/stellar-wallets-kit',
+        // Algorand
+        'algosdk', '@txnlab/use-wallet', '@perawallet/connect',
+        '@blockshake/defly-connect', 'lute-connect',
+        // MultiversX
+        '@multiversx/sdk-dapp', '@multiversx/sdk-core',
+        '@multiversx/sdk-extension-provider', '@multiversx/sdk-native-auth-client',
+        // Radix
+        '@radixdlt/radix-dapp-toolkit', '@radixdlt/babylon-gateway-api-sdk',
+        // Tezos
+        '@airgap/beacon-sdk', '@airgap/beacon-dapp',
+        '@taquito/taquito', '@taquito/beacon-wallet', '@taquito/utils',
       ],
     },
   },

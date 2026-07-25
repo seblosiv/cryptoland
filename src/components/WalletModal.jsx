@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useWalletStore } from '../store/walletStore'
 import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
 import { explorerTxUrl } from '../lib/blockchain/config.js'
+import { PROFILE, WALLETS_BY_FAMILY } from '../lib/chainProfile.js'
 import { useIsMobile } from '../lib/hooks'
 
 const C_UP = '#4ade80'
@@ -235,38 +236,13 @@ export default function WalletModal() {
 
   const isConnected = !!address
 
-  // Per-family wallet options so every chain build shows its native wallets.
+  // Wallet options come from the chain profile, which already resolves the
+  // per-family fallback (and lets a profile name its own ecosystem wallets).
   // Detected wallets (from the adapter's detectWallets()) are merged/prioritized
-  // over this static fallback list below.
-  const WALLETS_BY_FAMILY = {
-    evm: [
-      { id: 'metamask',  name: 'MetaMask',        icon: '🦊' },
-      { id: 'coinbase',  name: 'Coinbase Wallet', icon: '🔵' },
-      { id: 'rabby',     name: 'Rabby',           icon: '🐰' },
-      { id: 'injected',  name: 'Browser Wallet',  icon: '🌐' },
-    ],
-    solana: [
-      { id: 'phantom',   name: 'Phantom',  icon: '👻' },
-      { id: 'solflare',  name: 'Solflare', icon: '🌟' },
-      { id: 'backpack',  name: 'Backpack', icon: '🎒' },
-    ],
-    ton: [
-      { id: 'tonkeeper', name: 'Tonkeeper',       icon: '🔑' },
-      { id: 'tonconnect',name: 'TON Connect',     icon: '💎' },
-      { id: 'telegram',  name: 'Telegram Wallet', icon: '✈️' },
-    ],
-    aptos: [
-      { id: 'petra',     name: 'Petra',   icon: '🪨' },
-      { id: 'martian',   name: 'Martian', icon: '👽' },
-      { id: 'pontem',    name: 'Pontem',  icon: '🌉' },
-    ],
-    sui: [
-      { id: 'sui-wallet', name: 'Sui Wallet', icon: '🌊' },
-      { id: 'suiet',      name: 'Suiet',      icon: '🩵' },
-      { id: 'ethos',      name: 'Ethos',      icon: '⚡' },
-    ],
-  }
-  const allOptions = WALLETS_BY_FAMILY[ACTIVE_CHAIN.family] ?? WALLETS_BY_FAMILY.evm
+  // over this static list below.
+  const allOptions = PROFILE.wallets?.length
+    ? PROFILE.wallets
+    : (WALLETS_BY_FAMILY[ACTIVE_CHAIN.family] ?? WALLETS_BY_FAMILY.evm)
 
   const detectedIds = new Set(detectedWallets.map(w => w.id))
 
@@ -319,7 +295,9 @@ export default function WalletModal() {
               {isConnected ? 'Wallet' : 'Connect Wallet'}
             </div>
             <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 1 }}>
-              {isConnected ? `${ACTIVE_CHAIN.name} · On-Chain` : `Connect to ${ACTIVE_CHAIN.name}`}
+              {isConnected
+                ? `${ACTIVE_CHAIN.name} · On-Chain`
+                : (PROFILE.connectLabel || `Connect to ${ACTIVE_CHAIN.name}`)}
             </div>
           </div>
           <button

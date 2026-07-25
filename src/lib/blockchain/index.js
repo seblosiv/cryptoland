@@ -20,11 +20,19 @@
 import { ACTIVE_CHAIN } from './config.js'
 
 const ADAPTERS = {
-  evm:    () => import('./adapters/evm.js'),
-  solana: () => import('./adapters/solana.js'),
-  ton:    () => import('./adapters/ton.js'),
-  aptos:  () => import('./adapters/aptos.js'),
-  sui:    () => import('./adapters/sui.js'),
+  evm:        () => import('./adapters/evm.js'),
+  solana:     () => import('./adapters/solana.js'),
+  ton:        () => import('./adapters/ton.js'),
+  aptos:      () => import('./adapters/aptos.js'),
+  sui:        () => import('./adapters/sui.js'),
+  starknet:   () => import('./adapters/starknet.js'),
+  cardano:    () => import('./adapters/cardano.js'),
+  near:       () => import('./adapters/near.js'),
+  stellar:    () => import('./adapters/stellar.js'),
+  algorand:   () => import('./adapters/algorand.js'),
+  multiversx: () => import('./adapters/multiversx.js'),
+  radix:      () => import('./adapters/radix.js'),
+  tezos:      () => import('./adapters/tezos.js'),
 }
 
 const loadAdapter = ADAPTERS[ACTIVE_CHAIN.family]

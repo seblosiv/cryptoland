@@ -177,7 +177,11 @@ Each adapter's `detectWallets()` enumerates what's available for its family.
 
 ### Connection Flow
 1. User clicks "Connect" in HUD
-2. `WalletModal` opens, `detectWallets()` lists installed wallets
+2. `WalletModal` opens. The option list is `PROFILE.wallets` from
+   `lib/chainProfile.js` (a profile may name its own ecosystem wallets; otherwise
+   the profile resolves the per-family fallback in `WALLETS_BY_FAMILY`), and the
+   header CTA uses `PROFILE.connectLabel`. `detectWallets()` then marks which of
+   those are actually installed
 3. `walletStore.connect()` calls `blockchain.connect()`
 4. EVM adapter: `eth_requestAccounts` + auto-switch to active chain
 5. Chain mismatch: `wallet_switchEthereumChain` or `wallet_addEthereumChain`

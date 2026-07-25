@@ -159,6 +159,120 @@ the moment `VITE_CONTRACT_<CHAIN>` is set. The EVM adapter follows the same
 
 ---
 
+## Per-chain presentation (chain profiles)
+
+### The problem it solves
+
+The plumbing was already per-chain — adapters, RPCs, contract addresses — but a
+Polygon build and an Algorand build still *looked* identical apart from a logo
+swap. A grant reviewer opening `algorand.cryptoland.game` should feel the app was
+built for Algorand, not see a generic multichain app with their logo bolted on.
+
+Forking the UI per chain would fix the perception and destroy the codebase. The fix
+is a **single declarative profile per chain**: everything ecosystem-specific (copy,
+accent colour, wallet naming, feature emphasis) becomes data, and every component
+reads the same merged object.
+
+That leaves a deployment with three separable layers:
+
+| Layer | Where it lives | Selected by |
+|---|---|---|
+| **Chain plumbing** | `src/lib/blockchain/` — adapters + `config.js` | `VITE_CHAIN`, at build time |
+| **Presentation** | `src/config/profiles.js` + `src/lib/chainProfile.js` | `PROFILES[ACTIVE_CHAIN_KEY]` — the same build-time key |
+| **Data** | its own backend + SQLite DB per deployment | `VITE_API_BASE` — see [Deployment topology](#deployment-topology) |
+
+### Where it lives
+
+```
+src/config/profiles.js    ← PROFILES: per-chain overrides, keyed by the VITE_CHAIN key
+src/lib/chainProfile.js   ← DEFAULTS + WALLETS_BY_FAMILY → merged PROFILE, applyProfileTheme()
+```
+
+`chainProfile.js` takes `PROFILES[ACTIVE_CHAIN_KEY] ?? {}` and merges it over
+neutral defaults. **Import `PROFILE` from `src/lib/chainProfile.js` — never
+`PROFILES` directly**, the same discipline as importing from `../lib/blockchain`
+rather than an adapter. `chainProfile.js` also re-exports `ACTIVE_CHAIN` and
+`ACTIVE_CHAIN_KEY`, so a component needs one import for both profile and chain
+config.
+
+### The PROFILE contract
+
+Every field has a neutral default derived from the chain's `CHAINS` entry, so a
+brand-new chain looks correct before anyone writes a profile for it.
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `ecosystem` | string | `ACTIVE_CHAIN.name` | Ecosystem display name, e.g. `"Algorand"` |
+| `tagline` | string | `'OWN THE WORLD · ON-CHAIN'` | Short hero line under the wordmark |
+| `pitch` | string \| null | `null` | One sentence on *why this chain* — intro copy, reused in grant applications |
+| `connectLabel` | string | `Connect to <chain name>` | Call-to-action on the wallet button |
+| `accent` | `#rrggbb` | `ACTIVE_CHAIN.color` | Accent colour — see the theming rule below |
+| `mark` | string | `ACTIVE_CHAIN.logo` | Mark shown next to the wordmark |
+| `wallets` | array \| null | `WALLETS_BY_FAMILY[family]` | Preferred wallets, most-likely-installed first |
+| `features.gasless` | bool | `Boolean(ACTIVE_CHAIN.gasless)` | True only for the SKALE hubs today |
+| `features.miniApp` | bool | `ACTIVE_CHAIN.family === 'ton'` | Telegram Mini App surface |
+| `features.mobileFirst` | bool | `false` | Mobile-first framing (Solana Mobile, Celo) |
+| `features.aiAgents` | bool | `true` | Guardian agents are core gameplay on every build |
+| `grantProgram` | string \| null | `ACTIVE_CHAIN.grant ?? null` | Informational — which program this deployment targets |
+
+Merge semantics: the override is spread over `DEFAULTS`; `features` is merged one
+level deep (so a profile can set `mobileFirst` without redeclaring `aiAgents`); and
+`wallets` resolves `override.wallets → WALLETS_BY_FAMILY[family] → WALLETS_BY_FAMILY.evm`.
+
+### Wallet naming (`WALLETS_BY_FAMILY`)
+
+`chainProfile.js` ships fallback wallet lists for all 13 adapter families, each
+entry `{ id, name, icon }`, ordered most-likely-installed first. Correct wallet
+naming is a large part of feeling native: a Starknet user expects *Ready (Argent X)*,
+*Braavos*, *Cartridge* — not a generic "Connect Wallet". Nami is deliberately absent
+from the Cardano list (it was absorbed into Lace and can no longer connect to dApps).
+
+### The theming rule — accent and copy ONLY
+
+`applyProfileTheme()` writes the accent into CSS custom properties on
+`document.documentElement`, once at boot:
+
+```js
+--chain-accent      = PROFILE.accent          // e.g. #00d1b2 on Algorand
+--chain-accent-dim  = PROFILE.accent + '22'   // the same colour at ~13% alpha
+data-chain          = ACTIVE_CHAIN_KEY        // CSS hook: [data-chain="ton"]
+data-family         = ACTIVE_CHAIN.family     // CSS hook: [data-family="evm"]
+```
+
+Components then use `var(--chain-accent)` and re-tint automatically per deployment —
+no per-chain CSS files, no per-chain components, no conditional rendering on chain.
+
+> **The rule: theming means swapping the ACCENT colour and the WORDS — never a
+> different visual language.** The UI stays **solid dark** on every chain: solid
+> surfaces, hairline borders, no glass, no `backdrop-filter`, no blur. A profile that
+> reaches for a new surface treatment is out of contract.
+
+Because `--chain-accent-dim` is produced by string concatenation, `accent` must be a
+6-digit `#rrggbb` hex. Every `color` in `config.js` already is — a 3-digit or `rgba()`
+value would silently produce an invalid custom property.
+
+### Adding a profile for a new chain
+
+1. The chain needs a `CHAINS` entry first — see
+   [How to add a new chain](#how-to-add-a-new-chain).
+2. Add an entry to `PROFILES` in `src/config/profiles.js`, keyed by the **same
+   `VITE_CHAIN` key** (`'algorand'`, `'ton'`, `'skale'` …).
+3. Override only what differs. A profile is usually three or four fields —
+   `tagline`, `pitch`, `connectLabel`, sometimes `features` — because `accent`,
+   `mark`, `ecosystem` and `grantProgram` already come from `config.js`.
+4. That's all. No component, CSS file, route or build change.
+
+### Fallbacks preserve universality
+
+A chain with **no** `PROFILES` entry is neither broken nor half-branded: it renders
+neutral CryptoLand branding using the chain's own name, colour, mark and grant
+string from `config.js`, plus its family's wallet list. Universality is preserved
+*by construction* — the profile layer can only add specificity, never remove the
+working default. Adding chain #30 is still one `CHAINS` entry; writing its profile
+is an optional polish pass afterwards.
+
+---
+
 ## Environment templates
 
 Per-chain env templates live in `env/.env.<chain>` (committed as blanks; real values
@@ -197,12 +311,68 @@ overwrite each other. It stages `env/.env.<chain>` → `.env.production`, then r
 ```bash
 npm run build:chain base        # → dist-base/
 npm run build:chain solana      # → dist-solana/
-npm run build:all-chains        # build all 10 grant chains
+npm run build:all-chains        # build every chain in the script's list
 ```
 
-The script's chain list is: `ton polygon avalanche ronin base arbitrum solana bnb
-aptos sui`. Until a chain's `VITE_CONTRACT_<CHAIN>` is filled in, the build still
-works — ownership is DB-backed and the on-chain mint is skipped.
+The script's `CHAINS` list is **27 chains**, and `env/` holds exactly one template
+per entry:
+
+```
+EVM      polygon avalanche base arbitrum ronin bnb optimism scroll celo moonbeam
+         beam oasys skale hedera injective
+non-EVM  solana ton aptos sui starknet cardano near stellar algorand multiversx
+         radix tezos
+```
+
+Until a chain's `VITE_CONTRACT_<CHAIN>` is filled in, the build still works —
+ownership is DB-backed and the on-chain mint is skipped.
+
+---
+
+## Deployment topology
+
+### One subdomain per chain
+
+Each build gets its own subdomain, named after its `VITE_CHAIN` key:
+
+| Subdomain | Build command | Served directory |
+|---|---|---|
+| `algorand.cryptoland.game` | `npm run build:chain algorand` | `dist-algorand/` |
+| `ton.cryptoland.game` | `npm run build:chain ton` | `dist-ton/` |
+| `base.cryptoland.game` | `npm run build:chain base` | `dist-base/` |
+| … one per chain in `scripts/build-chain.sh` | `npm run build:all-chains` | `dist-<chain>/` |
+
+`dist-<chain>/` is a plain static bundle — any static host works, with the usual
+SPA rewrite (unknown paths → `index.html`). Point `VITE_API_BASE` in
+`env/.env.<chain>` at that deployment's API origin *before* building. The TON build
+additionally needs `public/tonconnect-manifest.json` reachable over HTTPS at its own
+origin, with `url` matching the subdomain exactly — see [grants.md](grants.md) §5.
+
+### Each deployment is its own world
+
+A deployment is a *complete* CryptoLand: its own frontend bundle, its own backend,
+its own SQLite DB. Because tile ownership is DB-canonical, separate DBs mean the
+same tile can be owned by different players on Algorand and on TON with no
+cross-chain reconciliation to do — and `GET /metrics/grant` on a deployment reports
+only that chain's DAU/retention/volume, which is exactly the number a grant report
+asks for. (The `blocks.chain` column still records which chain wrote the row, so a
+deployment stays self-describing if DBs are ever merged for analysis.)
+
+### Why build-time-per-subdomain beats runtime hostname detection
+
+The alternative — ship one bundle, read `window.location.hostname`, switch chains at
+runtime — is cheaper to operate and worse on the three axes that matter:
+
+| | Build-time per subdomain | Runtime hostname detection |
+|---|---|---|
+| **What a reviewer sees** | A chain-native app: one chain, one wallet flow, that ecosystem's language and accent | A multichain app with a dropdown, where their chain is one option among ~30 |
+| **Bundle** | Only the active family's adapter is ever loaded, and only that chain's wallet SDK is installed (`vite.config.js` marks every optional chain SDK `external`) | Every adapter and every wallet SDK must ship; for any one visitor, nearly all of it is dead code |
+| **Data & metrics** | Own backend + DB per deployment; ownership cannot collide across chains and per-chain metrics are clean by construction | One shared DB; ownership collides on the same tile key and every metric must be filtered by `chain` |
+| **Operational cost** | N builds, N deploys, N DBs, N DNS records | One of each |
+
+The cost column is the honest trade-off — and it is paid by a script
+(`npm run build:all-chains`) and by DNS records, not by engineering time. The other
+three columns are what a grant is actually judged on.
 
 ---
 

@@ -35,6 +35,7 @@ import { useAffiliateStore } from './store/affiliateStore'
 import { useAuthStore } from './store/authStore'
 import { useStreakStore } from './store/streakStore'
 import { analytics } from './lib/analytics'
+import { PROFILE, applyProfileTheme } from './lib/chainProfile.js'
 
 function parseRoute(path) {
   const m = /^\/u\/([^/?#]+)/.exec(path || '')
@@ -95,6 +96,10 @@ export default function App() {
     return false
   })
   const flyToRef = useRef(null)
+
+  // Chain theming: push the active profile's accent into CSS custom properties
+  // once at boot, so every var(--chain-accent) consumer tints per deployment.
+  useEffect(() => { applyProfileTheme() }, [])
 
   // Listen for back/forward + custom navigation events
   useEffect(() => {
@@ -270,9 +275,21 @@ function IntroOverlay({ onEnter }) {
         animation: 'scale-in 0.4s cubic-bezier(0.34,1.05,0.64,1)',
         boxShadow: 'var(--sh-lg)',
       }}>
-        {/* Beta badge */}
-        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
-          <span className="badge badge-dim">Blockchain Land Registry · Beta</span>
+        {/* Beta badge + chain capability chips */}
+        <div style={{
+          marginBottom: 24, display: 'flex', justifyContent: 'center',
+          flexWrap: 'wrap', gap: 6,
+        }}>
+          <span className="badge" style={{
+            background: 'var(--chain-accent-dim, var(--green-d))',
+            color: 'var(--chain-accent, var(--green))',
+          }}>Blockchain Land Registry · Beta</span>
+          {PROFILE.features?.gasless && (
+            <span className="badge badge-dim">Zero gas · you never pay to claim</span>
+          )}
+          {PROFILE.features?.miniApp && (
+            <span className="badge badge-dim">Runs inside Telegram</span>
+          )}
         </div>
 
         {/* Logo */}
@@ -290,7 +307,7 @@ function IntroOverlay({ onEnter }) {
           textAlign: 'center', fontSize: 11, color: 'var(--t3)',
           letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 36,
         }}>
-          Own the World · On-Chain
+          {PROFILE.tagline || 'Own the World · On-Chain'}
         </p>
 
         {/* Stats row */}
@@ -314,13 +331,24 @@ function IntroOverlay({ onEnter }) {
 
         <p style={{
           fontSize: 'clamp(13px,2.8vw,14px)', color: 'var(--t2)',
-          lineHeight: 1.75, textAlign: 'center', marginBottom: 28,
+          lineHeight: 1.75, textAlign: 'center',
+          marginBottom: PROFILE.pitch ? 12 : 28,
         }}>
           The planet is divided into{' '}
           <strong style={{ color: 'var(--t1)', fontWeight: 600 }}>268,435,456 blocks</strong>.
           Each one is real Earth territory — permanently ownable on the blockchain.
           Click a tile, pay in crypto, own it forever.
         </p>
+
+        {/* Why this chain — one line, chain-accented */}
+        {PROFILE.pitch && (
+          <p style={{
+            fontSize: 12, fontWeight: 600, lineHeight: 1.6, textAlign: 'center',
+            color: 'var(--chain-accent, var(--green))', marginBottom: 28,
+          }}>
+            {PROFILE.pitch}
+          </p>
+        )}
 
         <button className="btn-hero" onClick={onEnter}>
           Enter CryptoLand →
