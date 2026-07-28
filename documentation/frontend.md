@@ -22,24 +22,27 @@ Mounts the React tree into `#root`. No StrictMode.
 - Owns `mousePos` state (tracks cursor position for tooltip)
 - Renders full layout: map, HUD, panels, overlays
 - Handles `dbError` — shows retry banner if backend unreachable
-- Manages `IntroOverlay` visibility via `showIntro` state
+- Manages first-load onboarding visibility via `showIntro` state
 - Calls `applyProfileTheme()` from `lib/chainProfile.js` in a mount effect, which
-  sets `--chain-accent` / `--chain-accent-dim` plus `data-chain` / `data-family`
-  on `<html>` so every per-chain build tints itself. Consumers always pass a
-  fallback (`var(--chain-accent, var(--green))`) so the first frame is correct.
+  sets `--chain-accent`, `--chain-accent-dim`, `--chain-accent-ink` and
+  `--chain-accent-ui`, plus `data-chain` / `data-family` on `<html>`, so every
+  per-chain build tints itself. Consumers always pass a fallback
+  (`var(--chain-accent, var(--green))`) so the first frame is correct.
 
-### `IntroOverlay`
-Inner component. First-load splash screen. Chain-native: all ecosystem copy comes
-from `PROFILE` (`lib/chainProfile.js`), never hardcoded.
+### First-load onboarding
 
-- Shows logo, tagline, key stats (sold tiles, volume, owners)
-- Tagline line renders `PROFILE.tagline` (falls back to "Own the World · On-Chain")
-- `PROFILE.pitch`, when set, renders as one accent-coloured line under the description
-- Registry chip uses the chain accent; `PROFILE.features.gasless` and
-  `.miniApp` add `badge badge-dim` chips ("Zero gas · you never pay to claim",
-  "Runs inside Telegram"). The `btn-hero` CTA is deliberately **not** re-tinted —
-  accent colours vary per chain and would break its contrast.
-- "Enter CryptoLand" button sets `showIntro = false` and persists `cl-intro-seen`
+`showIntro` renders **`ChainOnboarding`** — the 3-step chain-native flow documented
+in [multichain.md](multichain.md#chain-native-onboarding), not a separate splash
+component. (An earlier `IntroOverlay` was replaced by it and no longer exists.)
+Forced with `?intro=1`, skipped with `?intro=0`, otherwise shown once and
+remembered as `cl-intro-seen`.
+
+Its CTA **is** re-tinted, via `background: var(--chain-accent)` +
+`color: var(--chain-accent-ink)`. It used to be left CryptoLand-green on the
+grounds that per-chain accents "would break its contrast" — a real concern,
+solved properly by deriving the label colour from the accent's luminance rather
+than by opting out. Leaving it green put a bright green button in the middle of
+an otherwise entirely blue Base screen, on the largest element of every step.
 
 ### `Corner`
 Inner component. Renders one decorative L-shaped border corner.
@@ -88,8 +91,28 @@ The `overlay` div is created as a local `const` inside `map.on('load', () => { .
 
 On mount: creates `maplibregl.Map` with:
 - Style: custom object (no default MapLibre style; OSM raster source added manually)
-- Center: `[20, 40]`, Zoom: `4`, min: `2`, max: `16`
+- Center: `[20, 40]`, Zoom: `4`, min: `2`, max: `16` — the **initial** camera only;
+  `fitToWorldOnce()` reframes it as soon as tiles arrive (below)
 - Navigation control (zoom buttons only, no compass) at `bottom-right`
+
+#### `fitToWorldOnce(map, blocks)` — the opening frame
+
+Runs once, on the first non-empty block set. The hardcoded `[20,40] / zoom 4` showed
+Europe, Türkiye and the Levant and nothing else, while the leaderboard on the same
+screen headlined *"United States: 1,075 tiles — 1st"* — a country that was off-screen.
+For a game pitched as "own the world", the first frame argued the opposite.
+
+- Bounds are the **2nd–98th percentile** of tile longitude/latitude, not min/max: one
+  tile in Alaska or New Zealand would otherwise zoom the camera out to fit a single
+  dot.
+- Left padding is `--market-w + 40px`. The market sidebar is an opaque overlay pinned
+  to the left edge, so padding only for the window chrome fitted the bounds *underneath
+  it* — technically correct, and the Americas were still invisible behind the signal
+  feed.
+- `maxZoom: 4.5` so a sparse world never opens closer than the old default;
+  `duration: 0` so it is a frame, not an animation the user watches.
+- Guarded by `map.__didFitWorld`, so later block updates never yank the camera away
+  from wherever the player has navigated to.
 
 #### Map Sources & Layers
 
@@ -103,15 +126,34 @@ On mount: creates `maplibregl.Map` with:
 
 | Layer | Type | Zoom | Purpose |
 |-------|------|------|---------|
-| `block-dots` | fill | max 10 | Solid colored squares at world view |
-| `block-dots-border` | line | max 10 | Border around low-zoom squares |
-| `blocks-recency` | fill | 5–13 | Color glow, opacity driven by `recency` property |
+| `lights-halo` | circle | max 11 | Outer atmosphere — widest, faintest, sells the bloom |
+| `lights-glow` | circle | max 11 | Body of the glow |
+| `lights-core` | circle | max 11 | Near-white filament so each light has a centre |
+| `blocks-recency` | fill | 11–13 | Color glow, opacity driven by `recency` property |
 | `blocks-fill` | fill | min 9 | Dark tinted interior at close zoom |
 | `blocks-border-outer` | line | min 9 | Blurred glow border at close zoom |
 | `blocks-border` | line | min 9 | Sharp crisp border at close zoom |
 | `grid-lines` | line | all | Subtle white tile grid, opacity increases with zoom |
 | `hover-fill` / `hover-border` | fill+line | all | Hover highlight |
 | `selected-fill` / `selected-border` / `selected-border-glow` | fill+line | all | Selection highlight |
+
+**City lights (`lights-*`).** Three stacked blurred circle layers over one point per
+tile (`blocksToPoints`). At world zoom a tile is sub-pixel, so drawing each as its own
+coloured polygon turned a dense cluster into multicoloured static — "smoke". Overlapping
+translucent circles accumulate instead, so a cluster blooms into a single glow with a hot
+core, the way a city looks from orbit. Deliberately **one** palette, not `['get','color']`.
+
+The palette is `mixWhite(0.35 / 0.68 / 0.93)` from `src/lib/chainProfile.js` — hue from
+the chain accent, luminance from the mix toward white. It was three fixed greens, which
+meant the map (the actual product) looked identical on all 29 builds: a purple Starknet
+intro handing over to a green world. Mixing rather than using the raw accent is what
+keeps a navy Cardano accent legible: a light is defined by being bright, and `#0033ad`
+dots on a near-black map are invisible. On the default green the mix reproduces the
+previous palette almost exactly.
+
+Interaction affordances — `hover-*`, `selected-*` and the country highlight — take
+`ACCENT_UI_HEX` (the contrast-corrected variant) for the same reason. Guardian
+personality colours and per-tile owner colours stay fixed: they encode data, not brand.
 
 #### Helper Functions
 

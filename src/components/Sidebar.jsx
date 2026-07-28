@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { api } from '../lib/api'
-import { ACTIVE_CHAIN_CANONICAL } from '../lib/blockchain/config.js'
 import { useIsMobile } from '../lib/hooks'
 
 const PALETTE = ['#A78BFA','#60A5FA','#34D399','#F472B6','#FB923C','#FBBF24','#38BDF8','#E879F9','#4ADE80','#F87171']
@@ -20,7 +19,7 @@ export default function Sidebar() {
     // Scope to this build's chain when several per-chain frontends share one
     // backend — otherwise the leaderboard shows every chain's totals and
     // contradicts this build's own "tiles sold" counter.
-    api.fetchCountryStats(import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null)
+    api.fetchCountryStats()
       .then(d => setCountries(d))
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -35,8 +34,15 @@ export default function Sidebar() {
         onClick={() => setOpen(o => !o)}
         style={{
           position: 'fixed',
+          // Desktop: sit to the right of the market sidebar. Mobile: --market-w
+          // is unset there, so this collapsed onto MarketSidebar's own pill —
+          // same left, same bottom, same z-index — and the two labels rendered
+          // through each other ("Sig**nals**⭕board") with one unreachable.
+          // Stack instead: Leaderboard above Signals (36px pill + 8px gap).
           left: 'calc(var(--market-w, 0px) + max(14px, var(--sal)))',
-          bottom: 'calc(var(--feed-h) + max(12px, var(--sab)))',
+          bottom: isMobile
+            ? 'calc(var(--feed-h) + max(12px, var(--sab)) + 44px)'
+            : 'calc(var(--feed-h) + max(12px, var(--sab)))',
           zIndex: 20,
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '0 16px',

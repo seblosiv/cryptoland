@@ -20,13 +20,20 @@
 
 import { useState, useEffect } from 'react'
 import { PROFILE, ACTIVE_CHAIN_KEY } from '../lib/chainProfile.js'
-import { ACTIVE_CHAIN, ACTIVE_CHAIN_CANONICAL } from '../lib/blockchain/config.js'
+import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
 import { api } from '../lib/api'
 import { logoFor } from './logos'
 import ChainHero from './ChainHero'
 import ChainStatus from './ChainStatus'
 
+// ACCENT is the brand hex — correct for FILLS (dots, the live pulse, the ring).
+// ACCENT_UI is the same colour lightened until it clears 4.5:1 on --s1 — correct
+// for INK (logomark, headings, body copy, badge labels). They are the same value
+// on the ~20 chains whose brand colour already passes; on Cardano (#0033ad,
+// 1.82:1) and Radix (#052cc0, 1.87:1) the raw hex is close to invisible as text.
+// See applyProfileTheme() in src/lib/chainProfile.js.
 const ACCENT = 'var(--chain-accent, var(--green))'
+const ACCENT_UI = 'var(--chain-accent-ui, var(--green))'
 const ACCENT_DIM = 'var(--chain-accent-dim, var(--green-d))'
 
 /**
@@ -52,7 +59,7 @@ function ChainMark({ size = 60 }) {
       animation: 'scale-in .45s cubic-bezier(.34,1.2,.64,1)',
       // The logomarks are monochrome and paint with `currentColor`, so setting
       // colour here is what tints each chain's mark to its own accent.
-      color: ACCENT,
+      color: ACCENT_UI,
     }}>
       {ChainLogo
         ? <ChainLogo size={Math.round(size * 0.52)} />
@@ -61,20 +68,43 @@ function ChainMark({ size = 60 }) {
   )
 }
 
+/**
+ * The dot is a <span> inside the <button>, not the button itself.
+ *
+ * `src/index.css` gives every button a 44×44 minimum on mobile — a real
+ * accessibility requirement, and `min-width`/`min-height` beat the `width`/
+ * `height` set here, so styling the button directly turned the three progress
+ * dots into three 44px squares (the active one a large accent block) on every
+ * chain. Separating target from indicator keeps a real tap area while the
+ * indicator stays 6px, so the rule and the design stop fighting.
+ *
+ * 28×28 rather than 44×44: three 44px cells space the dots ~46px apart, which
+ * stops reading as a progress indicator. 28px still clears the WCAG 2.2 AA
+ * "Target Size (Minimum)" bar of 24×24 CSS px, and these dots are a shortcut —
+ * the full-width Next / Back buttons remain the primary way through the flow.
+ */
 function StepDots({ step, total, onGo }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 18 }}>
+    <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 18 }}>
       {Array.from({ length: total }, (_, i) => (
         <button
           key={i}
           onClick={() => onGo(i)}
           aria-label={`Step ${i + 1}`}
+          aria-current={i === step ? 'step' : undefined}
           style={{
-            width: i === step ? 20 : 6, height: 6, borderRadius: 3, border: 'none',
-            padding: 0, cursor: 'pointer', transition: 'width .2s, background .2s',
-            background: i === step ? ACCENT : 'var(--b2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 28, height: 28, minWidth: 28, minHeight: 28,
+            padding: 0, border: 'none', background: 'transparent', cursor: 'pointer',
           }}
-        />
+        >
+          <span style={{
+            display: 'block',
+            width: i === step ? 20 : 6, height: 6, borderRadius: 3,
+            transition: 'width .2s, background .2s',
+            background: i === step ? ACCENT : 'var(--b2)',
+          }} />
+        </button>
       ))}
     </div>
   )
@@ -96,8 +126,7 @@ function useWorldProof() {
 
   useEffect(() => {
     let alive = true
-    const scope = import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null
-    api.fetchStats(scope)
+    api.fetchStats()
       .then(s => {
         if (!alive) return
         const owners = Number(s?.owners) || 0
@@ -135,12 +164,19 @@ export default function ChainOnboarding({ onEnter }) {
   const why      = ob.why ?? PROFILE.pitch
   const wallets  = (PROFILE.wallets ?? []).slice(0, 3)
   const help     = ob.walletHelp
-  // Some chains' nativeTerm already carries its own "on <network>" clause
-  // (Moonbeam: "an ERC-721 NFT on Polkadot"; Hedera: "…on Hedera"). Appending
-  // the ecosystem again produced "…on Polkadot on Moonbeam", so only append
-  // when the term doesn't already say where it lives.
+  // A nativeTerm may already say where the asset lives, in two different ways:
+  //   an explicit clause — Moonbeam "an ERC-721 NFT on Polkadot", Hedera "…on
+  //     Hedera" — which appending to gave "…on Polkadot on Moonbeam";
+  //   or the chain's name inside the term itself — Cardano "a native Cardano
+  //     asset", Algorand "an Algorand Standard Asset (ASA)" — which appending to
+  //     gave "held as a native Cardano asset on Cardano".
+  // Only append when the term names neither.
+  const namesChain = ob.nativeTerm && (
+    /\bon\s/i.test(ob.nativeTerm) ||
+    new RegExp(`\\b${eco.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(ob.nativeTerm)
+  )
   const heldAs = ob.nativeTerm
-    ? (/\bon\s/i.test(ob.nativeTerm) ? ob.nativeTerm : `${ob.nativeTerm} on ${eco}`)
+    ? (namesChain ? ob.nativeTerm : `${ob.nativeTerm} on ${eco}`)
     : null
 
   const feeNote  = ob.feeNote
@@ -162,7 +198,7 @@ export default function ChainOnboarding({ onEnter }) {
             lineHeight: 1, textAlign: 'center', marginBottom: 10,
             color: 'var(--t1)', whiteSpace: 'nowrap',
           }}>
-            CRYPTO<span style={{ color: ACCENT }}>LAND</span>
+            CRYPTO<span style={{ color: ACCENT_UI }}>LAND</span>
           </div>
 
           <p style={{
@@ -224,7 +260,7 @@ export default function ChainOnboarding({ onEnter }) {
           {why && (
             <p style={{
               fontSize: 12.5, fontWeight: 600, lineHeight: 1.65, textAlign: 'center',
-              color: ACCENT, margin: 0,
+              color: ACCENT_UI, margin: 0,
             }}>
               {why}
             </p>
@@ -242,8 +278,14 @@ export default function ChainOnboarding({ onEnter }) {
           <ChainMark size={48} />
 
           <p style={{ fontSize: 13, color: 'var(--t2)', lineHeight: 1.7, marginBottom: 18, textAlign: 'center' }}>
-            Buy a tile with crypto — BTC, ETH, SOL, USDT and more. A wallet is
-            optional to start, and lets you hold the tile on {eco}.
+            {/* Lead with THIS chain's token. The line used to read "BTC, ETH,
+                SOL, USDT and more" on all 29 builds, so the Avalanche build
+                advertised SOL and the Solana build advertised ETH — on the one
+                screen whose whole job is to say "this is your chain". The list
+                is still true (NOWPayments settles many assets); it just stops
+                putting a rival chain's ticker first. */}
+            Buy a tile with crypto{cur ? <> — {cur} and 100+ other assets</> : ' — 100+ assets'}.
+            A wallet is optional to start, and lets you hold the tile on {eco}.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
@@ -286,7 +328,7 @@ export default function ChainOnboarding({ onEnter }) {
             <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--t3)', margin: 0 }}>
               No wallet yet?{' '}
               <a href={help.url} target="_blank" rel="noopener noreferrer"
-                 style={{ color: ACCENT, fontWeight: 600, textDecoration: 'none' }}>
+                 style={{ color: ACCENT_UI, fontWeight: 600, textDecoration: 'none' }}>
                 Get {help.name} ↗
               </a>
             </p>
@@ -314,7 +356,7 @@ export default function ChainOnboarding({ onEnter }) {
             }}>
               <span style={{
                 flexShrink: 0, width: 22, height: 22, borderRadius: '50%',
-                background: ACCENT_DIM, color: ACCENT,
+                background: ACCENT_DIM, color: ACCENT_UI,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 11, fontWeight: 800, fontFamily: 'var(--mono)',
               }}>{n}</span>
@@ -332,7 +374,7 @@ export default function ChainOnboarding({ onEnter }) {
               marginTop: 4, padding: '12px 14px', borderRadius: 12,
               background: ACCENT_DIM, border: '1px solid var(--b0)',
             }}>
-              <div className="label" style={{ color: ACCENT, marginBottom: 4 }}>
+              <div className="label" style={{ color: ACCENT_UI, marginBottom: 4 }}>
                 On {eco}
               </div>
               <div style={{ fontSize: 12.5, color: 'var(--t2)', lineHeight: 1.6 }}>
@@ -373,7 +415,7 @@ export default function ChainOnboarding({ onEnter }) {
         <div style={{ position: 'relative' }}>
           {/* Chips */}
           <div style={{ marginBottom: 22, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }}>
-            <span className="badge" style={{ background: ACCENT_DIM, color: ACCENT }}>
+            <span className="badge" style={{ background: ACCENT_DIM, color: ACCENT_UI }}>
               {eco} · Land Registry
             </span>
             {PROFILE.features?.gasless && <span className="badge badge-dim">Zero gas</span>}

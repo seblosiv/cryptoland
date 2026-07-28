@@ -174,6 +174,33 @@ const PROBES = {
   },
 
   async cardano(url, signal) {
+    // Two endpoint shapes, because Cardano has no keyless public API that is
+    // both live AND readable from a browser:
+    //
+    //   Koios /tip   — the true tip, but sends no Access-Control-Allow-Origin,
+    //                  so it only works server-side or from curl.
+    //   Mithril      — Cardano's own certification network. CORS-enabled and
+    //                  keyless, but certifies at a lag (~100 blocks / ~35 min),
+    //                  so the figure is flagged `certified` and ChainStatus
+    //                  labels it as certified rather than as the live tip.
+    //                  Claiming a certified height is the tip would be the kind
+    //                  of small dishonesty a Cardano reviewer would catch.
+    if (/mithril/i.test(url)) {
+      const certs = await req(`${base(url)}/certificates`, { signal })
+      const list = Array.isArray(certs) ? certs : []
+      for (const c of list) {
+        // signed_entity_type: { CardanoTransactions: [epoch, blockNumber] }
+        const tx = c?.signed_entity_type?.CardanoTransactions
+        if (Array.isArray(tx) && tx.length >= 2 && toNum(tx[1]) > 0) {
+          return {
+            height: toNum(tx[1]),
+            extra: { epoch: toNum(tx[0]), certified: true },
+          }
+        }
+      }
+      return { height: null }
+    }
+
     const j = await req(`${base(url)}/tip`, { signal })
     const tip = Array.isArray(j) ? j[0] : j
     return {
@@ -261,8 +288,13 @@ export async function fetchChainStatus() {
     const label = LABELS[chain?.family]
     if (!probe || !label) return OFFLINE
 
-    // rpcUrlFallback defaults to rpcUrl in config.js, hence the dedupe.
-    const urls = [...new Set([chain.rpcUrl, chain.rpcUrlFallback].filter(Boolean))]
+    // statusUrl first when present: it exists precisely because that chain's
+    // rpcUrl cannot be read from a browser, and trying rpcUrl first would log a
+    // CORS error on every page load before succeeding. rpcUrlFallback defaults
+    // to rpcUrl in config.js, hence the dedupe.
+    const urls = [...new Set(
+      [chain.statusUrl, chain.rpcUrl, chain.rpcUrlFallback].filter(Boolean)
+    )]
 
     for (const url of urls) {
       try {

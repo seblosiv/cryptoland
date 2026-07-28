@@ -1,9 +1,27 @@
+import { ACTIVE_CHAIN_CANONICAL } from './blockchain/config'
+
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
 // Exported so components doing raw fetches (LiveFeed, MarketSidebar) resolve
 // against the same API origin — otherwise off-origin deployments silently lose
 // those endpoints.
 export const API_BASE = BASE
+
+/**
+ * This build's chain, or `null` when the deployment has its own database and
+ * scoping is unnecessary. Every scoped endpoint takes this verbatim.
+ *
+ * Derived once, here, rather than at each call site: it used to be re-derived in
+ * five components, and the two that fetched `/feed/signals` simply forgot — so
+ * the Injective build streamed a Radix `account_rdx1…` owner into its ticker.
+ * A single constant makes forgetting impossible for the next component.
+ */
+export const CHAIN_SCOPE = import.meta.env.VITE_SCOPE_TO_CHAIN
+  ? ACTIVE_CHAIN_CANONICAL
+  : null
+
+const scoped = (path, chain) =>
+  chain ? `${path}${path.includes('?') ? '&' : '?'}chain=${encodeURIComponent(chain)}` : path
 
 function _getToken() {
   try { return localStorage.getItem('cl-auth-token') } catch { return null }
@@ -31,30 +49,27 @@ const tk = (key) => encodeURIComponent(key)
 
 export const api = {
   /** Load all purchased blocks from DB (optionally scoped to one chain) */
-  fetchBlocks: (chain = null) =>
-    req("GET", chain ? `/blocks?chain=${encodeURIComponent(chain)}` : "/blocks"),
+  fetchBlocks: (chain = CHAIN_SCOPE) => req("GET", scoped("/blocks", chain)),
 
   /** Record a purchase — returns the saved block */
   purchaseBlock: (data) => req("POST", "/blocks", data),
 
   /** Global stats */
-  fetchStats: (chain = null) =>
-    req("GET", chain ? `/stats?chain=${encodeURIComponent(chain)}` : "/stats"),
+  fetchStats: (chain = CHAIN_SCOPE) => req("GET", scoped("/stats", chain)),
 
   /** Country leaderboard */
-  fetchCountryStats: (chain = null) =>
-    req("GET", chain ? `/stats/countries?chain=${encodeURIComponent(chain)}` : "/stats/countries"),
+  fetchCountryStats: (chain = CHAIN_SCOPE) => req("GET", scoped("/stats/countries", chain)),
 
   /**
    * Grant traction metrics — DAU/WAU/MAU, D1/D7 retention, economy totals, a
    * per-chain breakdown and a daily activity timeseries over `days`.
-   * NOTE: the endpoint takes no `chain` param — it reports whatever is in THIS
-   * deployment's database. Under the shared-backend model, scope client-side
-   * via the `by_chain` array (see EcosystemPage).
+   * Pass a chain to scope every figure to that chain's world.
    */
-  /** Grant traction metrics. Pass a chain to scope to one chain's world. */
-  fetchGrantMetrics: (days = 30, chain = null) =>
-    req("GET", `/metrics/grant?days=${days}` + (chain ? `&chain=${encodeURIComponent(chain)}` : "")),
+  fetchGrantMetrics: (days = 30, chain = CHAIN_SCOPE) =>
+    req("GET", scoped(`/metrics/grant?days=${days}`, chain)),
+
+  /** Composite signal feed for the live ticker, scoped to this build's chain. */
+  fetchSignals: (chain = CHAIN_SCOPE) => req("GET", scoped("/feed/signals", chain)),
 
   /** Update image_url / label on an owned block */
   customizeBlock: (tileKey, data) => req("PATCH", `/blocks/${tileKey}`, data),

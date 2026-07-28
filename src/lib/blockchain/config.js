@@ -24,7 +24,11 @@
  */
 function defineChain(key, cfg) {
   const K = key.toUpperCase().replace(/-/g, '_')
-  const env = import.meta.env
+  // `import.meta.env` only exists under Vite. Falling back to an empty object
+  // lets plain Node import this module — which is what `scripts/check-rpcs.mjs`
+  // needs in order to read the endpoint list without standing up a build. Every
+  // lookup below already treats a missing value as "use the default".
+  const env = import.meta.env ?? {}
   return {
     key,
     id:                 cfg.id,
@@ -34,6 +38,13 @@ function defineChain(key, cfg) {
     // A paid/private RPC can be injected per deployment without touching code.
     rpcUrl:             env[`VITE_RPC_${K}`] || cfg.rpcUrl,
     rpcUrlFallback:     cfg.rpcUrlFallback ?? cfg.rpcUrl,
+    // Optional read-only endpoint for the live chain-head badge, tried BEFORE
+    // rpcUrl. Exists for chains whose main API is unusable from a browser:
+    // Cardano's Koios answers fine but sends no Access-Control-Allow-Origin, so
+    // every page load logged a CORS error before falling back. The adapter still
+    // needs Koios (it calls rpcUrl/tx_status), hence a separate field rather
+    // than reordering rpcUrl.
+    statusUrl:          cfg.statusUrl ?? null,
     explorerUrl:        cfg.explorerUrl,
     explorerTxPath:     cfg.explorerTxPath  ?? '/tx/',
     explorerNFTPath:    cfg.explorerNFTPath ?? '/token/',
@@ -60,7 +71,7 @@ const CHAIN_DEFS = {
 
   polygon: {
     id: 137, name: 'Polygon', shortName: 'MATIC', family: 'evm',
-    rpcUrl: 'https://polygon-rpc.com', rpcUrlFallback: 'https://rpc.ankr.com/polygon',
+    rpcUrl: 'https://polygon-bor-rpc.publicnode.com', rpcUrlFallback: 'https://polygon.drpc.org',
     explorerUrl: 'https://polygonscan.com',
     nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
     blockTime: 2, confirmations: 3, color: '#8247e5', logo: '⬡',
@@ -76,7 +87,7 @@ const CHAIN_DEFS = {
 
   avalanche: {
     id: 43114, name: 'Avalanche', shortName: 'AVAX', family: 'evm',
-    rpcUrl: 'https://api.avax.network/ext/bc/C/rpc', rpcUrlFallback: 'https://rpc.ankr.com/avalanche',
+    rpcUrl: 'https://api.avax.network/ext/bc/C/rpc', rpcUrlFallback: 'https://avalanche-c-chain-rpc.publicnode.com',
     explorerUrl: 'https://snowtrace.io',
     nativeCurrency: { name: 'Avalanche', symbol: 'AVAX', decimals: 18 },
     blockTime: 2, confirmations: 3, color: '#e84142', logo: '🔺',
@@ -84,7 +95,7 @@ const CHAIN_DEFS = {
   },
   'avalanche-fuji': {
     id: 43113, name: 'Avalanche Fuji', shortName: 'AVAX', family: 'evm',
-    rpcUrl: 'https://api.avax-test.network/ext/bc/C/rpc', rpcUrlFallback: 'https://rpc.ankr.com/avalanche_fuji',
+    rpcUrl: 'https://api.avax-test.network/ext/bc/C/rpc', rpcUrlFallback: 'https://avalanche-fuji-c-chain-rpc.publicnode.com',
     explorerUrl: 'https://testnet.snowtrace.io',
     nativeCurrency: { name: 'Avalanche', symbol: 'AVAX', decimals: 18 },
     blockTime: 2, confirmations: 2, color: '#e84142', logo: '🔺', testnet: true,
@@ -92,7 +103,7 @@ const CHAIN_DEFS = {
 
   base: {
     id: 8453, name: 'Base', shortName: 'ETH', family: 'evm',
-    rpcUrl: 'https://mainnet.base.org', rpcUrlFallback: 'https://rpc.ankr.com/base',
+    rpcUrl: 'https://mainnet.base.org', rpcUrlFallback: 'https://base-rpc.publicnode.com',
     explorerUrl: 'https://basescan.org',
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     blockTime: 2, confirmations: 3, color: '#0052ff', logo: '🔵',
@@ -108,7 +119,7 @@ const CHAIN_DEFS = {
 
   ethereum: {
     id: 1, name: 'Ethereum', shortName: 'ETH', family: 'evm',
-    rpcUrl: 'https://eth.llamarpc.com', rpcUrlFallback: 'https://rpc.ankr.com/eth',
+    rpcUrl: 'https://ethereum-rpc.publicnode.com', rpcUrlFallback: 'https://eth.drpc.org',
     explorerUrl: 'https://etherscan.io',
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     blockTime: 12, confirmations: 12, color: '#627eea', logo: '⟠',
@@ -116,7 +127,7 @@ const CHAIN_DEFS = {
 
   arbitrum: {
     id: 42161, name: 'Arbitrum One', shortName: 'ARB', family: 'evm',
-    rpcUrl: 'https://arb1.arbitrum.io/rpc', rpcUrlFallback: 'https://rpc.ankr.com/arbitrum',
+    rpcUrl: 'https://arb1.arbitrum.io/rpc', rpcUrlFallback: 'https://arbitrum-one-rpc.publicnode.com',
     explorerUrl: 'https://arbiscan.io',
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     blockTime: 0.25, confirmations: 5, color: '#28a0f0', logo: '🔹',
@@ -132,7 +143,7 @@ const CHAIN_DEFS = {
 
   ronin: {
     id: 2020, name: 'Ronin', shortName: 'RON', family: 'evm',
-    rpcUrl: 'https://api.roninchain.com/rpc', rpcUrlFallback: 'https://ronin.lgns.net/rpc',
+    rpcUrl: 'https://api.roninchain.com/rpc', rpcUrlFallback: 'https://ronin.drpc.org',
     explorerUrl: 'https://app.roninchain.com',
     nativeCurrency: { name: 'Ronin', symbol: 'RON', decimals: 18 },
     blockTime: 3, confirmations: 5, color: '#1273ea', logo: '⚔️',
@@ -148,7 +159,7 @@ const CHAIN_DEFS = {
 
   bnb: {
     id: 56, name: 'BNB Smart Chain', shortName: 'BNB', family: 'evm',
-    rpcUrl: 'https://bsc-dataseed.binance.org', rpcUrlFallback: 'https://rpc.ankr.com/bsc',
+    rpcUrl: 'https://bsc-dataseed.bnbchain.org', rpcUrlFallback: 'https://bsc-rpc.publicnode.com',
     explorerUrl: 'https://bscscan.com',
     nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
     blockTime: 3, confirmations: 6, color: '#f0b90b', logo: '🟡',
@@ -340,7 +351,7 @@ const CHAIN_DEFS = {
 
   solana: {
     id: 'mainnet-beta', name: 'Solana', shortName: 'SOL', family: 'solana',
-    rpcUrl: 'https://api.mainnet-beta.solana.com', rpcUrlFallback: 'https://solana-mainnet.rpc.extrnode.com',
+    rpcUrl: 'https://solana-rpc.publicnode.com', rpcUrlFallback: 'https://api.mainnet-beta.solana.com',
     explorerUrl: 'https://solscan.io',
     nativeCurrency: { name: 'Solana', symbol: 'SOL', decimals: 9 },
     blockTime: 0.4, confirmations: 32, color: '#9945ff', logo: '◎',
@@ -356,7 +367,11 @@ const CHAIN_DEFS = {
 
   ton: {
     id: 'ton-mainnet', name: 'TON', shortName: 'TON', family: 'ton',
-    rpcUrl: 'https://toncenter.com/api/v2/jsonRPC', rpcUrlFallback: 'https://ton.access.orbs.network/mainnet',
+    // NOTE: no rpcUrlFallback. The previous one (ton.access.orbs.network/mainnet)
+    // 404s, and no other keyless endpoint speaks toncenter's JSON-RPC shape.
+    // defineChain() defaults the fallback to rpcUrl, so TON degrades to a
+    // single-endpoint chain rather than to a URL guaranteed to fail.
+    rpcUrl: 'https://toncenter.com/api/v2/jsonRPC',
     explorerUrl: 'https://tonviewer.com', explorerTxPath: '/transaction/', explorerNFTPath: '/',
     nativeCurrency: { name: 'Toncoin', symbol: 'TON', decimals: 9 },
     blockTime: 5, confirmations: 1, color: '#0098ea', logo: '💎',
@@ -372,7 +387,7 @@ const CHAIN_DEFS = {
 
   aptos: {
     id: 'aptos-mainnet', name: 'Aptos', shortName: 'APT', family: 'aptos',
-    rpcUrl: 'https://fullnode.mainnet.aptoslabs.com/v1', rpcUrlFallback: 'https://aptos-mainnet.pontem.network/v1',
+    rpcUrl: 'https://fullnode.mainnet.aptoslabs.com/v1', rpcUrlFallback: 'https://api.mainnet.aptoslabs.com/v1',
     explorerUrl: 'https://explorer.aptoslabs.com', explorerTxPath: '/txn/',
     nativeCurrency: { name: 'Aptos', symbol: 'APT', decimals: 8 },
     blockTime: 0.5, confirmations: 1, color: '#06f7c9', logo: '🅰️',
@@ -388,7 +403,7 @@ const CHAIN_DEFS = {
 
   sui: {
     id: 'sui-mainnet', name: 'Sui', shortName: 'SUI', family: 'sui',
-    rpcUrl: 'https://fullnode.mainnet.sui.io', rpcUrlFallback: 'https://sui-mainnet.public.blastapi.io',
+    rpcUrl: 'https://fullnode.mainnet.sui.io', rpcUrlFallback: 'https://sui-rpc.publicnode.com',
     explorerUrl: 'https://suiscan.xyz/mainnet', explorerNFTPath: '/object/',
     nativeCurrency: { name: 'Sui', symbol: 'SUI', decimals: 9 },
     blockTime: 0.5, confirmations: 1, color: '#4da2ff', logo: '🌊',
@@ -429,6 +444,16 @@ const CHAIN_DEFS = {
   cardano: {
     id: 'cardano-mainnet', name: 'Cardano', shortName: 'ADA', family: 'cardano',
     rpcUrl: 'https://api.koios.rest/api/v1',
+    // Koios answers 200 but sends no Access-Control-Allow-Origin, so a browser
+    // can never read it — the Cardano build was the only one of 29 with no live
+    // block badge, and it logged two CORS errors on every load. Mithril is
+    // Cardano's own certification network: CORS-enabled, keyless, and it
+    // certifies at a lag (~100 blocks), which ChainStatus labels as certified
+    // rather than passing off as the tip.
+    //
+    // statusUrl, not rpcUrl: the adapter calls rpcUrl/tx_status, which only
+    // Koios serves. The badge reads Mithril; everything else keeps using Koios.
+    statusUrl: 'https://aggregator.release-mainnet.api.mithril.network/aggregator',
     explorerUrl: 'https://cardanoscan.io', explorerTxPath: '/transaction/',
     nativeCurrency: { name: 'Cardano', symbol: 'ADA', decimals: 6 },
     blockTime: 20, confirmations: 1, color: '#0033ad', logo: '💠',
@@ -569,8 +594,11 @@ export const CHAINS = Object.fromEntries(
 // Active chain — set VITE_CHAIN in .env to select which chain THIS build
 // targets. Unknown/unset falls back to the Polygon testnet so a misconfigured
 // build still boots instead of crashing.
-export const ACTIVE_CHAIN_KEY = (import.meta.env.VITE_CHAIN in CHAINS)
-  ? import.meta.env.VITE_CHAIN
+// `?? {}` for the same reason as in defineChain: plain Node (tooling) has no
+// import.meta.env, and an unset VITE_CHAIN already means "use the fallback".
+const _env = import.meta.env ?? {}
+export const ACTIVE_CHAIN_KEY = (_env.VITE_CHAIN in CHAINS)
+  ? _env.VITE_CHAIN
   : 'polygon-amoy'
 export const ACTIVE_CHAIN = CHAINS[ACTIVE_CHAIN_KEY]
 

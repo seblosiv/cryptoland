@@ -6,14 +6,26 @@ import {
   PURCHASE_ZOOM, lngLatToTile, tilePoly, tileNW, tileCenter, tileKey, tileBasePrice, emptyFC,
 } from '../lib/tiles'
 import { tinyAddr } from '../lib/addr'
+import { ACCENT_UI_HEX, mixWhite } from '../lib/chainProfile'
 
 // ── City-lights palette (low-zoom bloom) ──────────────────────────────────────
-// Warm-to-white, the way real city lights photograph from orbit. Kept as one
+// Hue from the chain accent, luminance from the mix toward white — so the glow
+// is chain-native on all 29 builds while still reading as light. Kept as ONE
 // palette rather than per-tile colours: random per-tile hues turned dense
 // clusters into multicoloured static instead of light.
-const LIGHT_WARM = '#7ee6a8'   // outer atmosphere — cool green, matches the accent
-const LIGHT_CORE = '#b6f5cd'   // body of the glow
-const LIGHT_HOT  = '#f2fff7'   // filament — near-white so each light has a centre
+//
+// These were fixed greens, which meant the map — the actual product — looked
+// identical on every build: a purple Starknet intro handing over to a green
+// world. On the default accent the mix reproduces almost exactly the previous
+// palette, so the look that was signed off does not regress.
+const LIGHT_WARM = mixWhite(0.35)   // outer atmosphere — soft, faint, sells the bloom
+const LIGHT_CORE = mixWhite(0.68)   // body of the glow
+const LIGHT_HOT  = mixWhite(0.93)   // filament — near-white so each light has a centre
+
+// Interaction affordances (hover, selection, country highlight). The UI variant,
+// not the raw accent: these are read against the near-black map, where Cardano's
+// and Radix's brand navy is all but invisible.
+const ACCENT_MAP = ACCENT_UI_HEX
 
 // ── Map style definitions ─────────────────────────────────────────────────────
 
@@ -130,6 +142,53 @@ function blocksToPoints(blocksMap) {
     })
   }
   return { type: 'FeatureCollection', features }
+}
+
+/**
+ * Frame the opening shot on where the world is actually owned — once.
+ *
+ * The map used to open hardcoded at `center [20,40] / zoom 4`, which is Europe,
+ * Türkiye and the Levant and nothing else. The seeded worlds span 58 countries,
+ * and the leaderboard sitting on the same screen headlines "United States: 1,075
+ * tiles — 1st" — a country that was off-screen. For a game whose pitch is "own
+ * the world", the first frame was arguing the opposite.
+ *
+ * Percentile bounds rather than min/max: a single tile in New Zealand or Alaska
+ * would otherwise zoom the camera all the way out to fit one dot. The 2nd–98th
+ * percentile frames the body of the distribution and lets the rare outlier fall
+ * outside the initial view.
+ */
+function fitToWorldOnce(map, blocksMap) {
+  if (map.__didFitWorld || !blocksMap?.size) return
+  map.__didFitWorld = true
+
+  const lngs = [], lats = []
+  for (const b of blocksMap.values()) {
+    const [lng, lat] = tileCenter(b.tx, b.ty)
+    lngs.push(lng); lats.push(lat)
+  }
+  lngs.sort((a, z) => a - z); lats.sort((a, z) => a - z)
+  const at = (arr, p) => arr[Math.min(arr.length - 1, Math.floor(arr.length * p))]
+  const west = at(lngs, 0.02), east = at(lngs, 0.98)
+  const south = at(lats, 0.02), north = at(lats, 0.98)
+  if (!(east > west) || !(north > south)) return
+
+  // The market sidebar is an opaque overlay pinned to the left edge, so the
+  // usable canvas starts at --market-w, not at 0. Padding only for the chrome
+  // put the fitted bounds under the sidebar: the frame was technically correct
+  // and the Americas were still invisible behind the signal feed.
+  let leftPad = 40
+  try {
+    const w = parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--market-w'))
+    if (Number.isFinite(w) && w > 0) leftPad = w + 40
+  } catch { /* no computed style (SSR/tests) — the 40px default is fine */ }
+
+  map.fitBounds([[west, south], [east, north]], {
+    padding: { top: 80, bottom: 90, left: leftPad, right: 40 },
+    duration: 0,
+    maxZoom: 4.5,   // never open closer than the old default
+  })
 }
 
 // Blocks purchased in last hour — reserved for future pulse/notification use
@@ -694,25 +753,25 @@ export default function GameMap({ onBlockClick, flyToRef }) {
       // ── Hover — subtle fill + sharp border ────────────────────────────────
       map.addLayer({
         id: 'hover-fill', type: 'fill', source: 'hover',
-        paint: { 'fill-color': '#4ade80', 'fill-opacity': 0.07 },
+        paint: { 'fill-color': ACCENT_MAP, 'fill-opacity': 0.07 },
       })
       map.addLayer({
         id: 'hover-border', type: 'line', source: 'hover',
-        paint: { 'line-color': '#4ade80', 'line-width': 1, 'line-opacity': 0.5 },
+        paint: { 'line-color': ACCENT_MAP, 'line-width': 1, 'line-opacity': 0.5 },
       })
 
       // ── Selection — green fill + glowing border ────────────────────────────
       map.addLayer({
         id: 'selected-fill', type: 'fill', source: 'selected',
-        paint: { 'fill-color': '#4ade80', 'fill-opacity': 0.12 },
+        paint: { 'fill-color': ACCENT_MAP, 'fill-opacity': 0.12 },
       })
       map.addLayer({
         id: 'selected-border-glow', type: 'line', source: 'selected',
-        paint: { 'line-color': '#4ade80', 'line-width': 6, 'line-opacity': 0.2, 'line-blur': 4 },
+        paint: { 'line-color': ACCENT_MAP, 'line-width': 6, 'line-opacity': 0.2, 'line-blur': 4 },
       })
       map.addLayer({
         id: 'selected-border', type: 'line', source: 'selected',
-        paint: { 'line-color': '#4ade80', 'line-width': 1.5, 'line-opacity': 1 },
+        paint: { 'line-color': ACCENT_MAP, 'line-width': 1.5, 'line-opacity': 1 },
       })
 
       // ── Block image overlay ───────────────────────────────────────────────
@@ -763,7 +822,7 @@ export default function GameMap({ onBlockClick, flyToRef }) {
       // style reload drops them. setPaintProperty throws "Cannot style
       // non-existing layer" in that window, so guard on the layer existing —
       // the getSource call above was already optional-chained for this reason.
-      const hoverColor = owned?.color ?? '#4ade80'
+      const hoverColor = owned?.color ?? ACCENT_MAP
       if (map.getLayer('hover-fill')) {
         map.setPaintProperty('hover-fill', 'fill-color',   hoverColor)
         map.setPaintProperty('hover-fill', 'fill-opacity', owned ? 0.1 : 0.06)
@@ -791,7 +850,7 @@ export default function GameMap({ onBlockClick, flyToRef }) {
 
       const owned = store.getState().blocks.get(key) ?? null
       const price = owned?.price ?? tileBasePrice(tx, ty)
-      const color = owned?.color ?? '#4ade80'
+      const color = owned?.color ?? ACCENT_MAP
 
       map.setPaintProperty('selected-fill',        'fill-color', color)
       map.setPaintProperty('selected-border-glow', 'line-color', color)
@@ -803,6 +862,11 @@ export default function GameMap({ onBlockClick, flyToRef }) {
 
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
 
+    // Blocks usually arrive after 'load', so the subscription below does the
+    // framing — but cover the case where the store was already populated (a
+    // cached fetch, or a remount) and no change event will ever fire.
+    fitToWorldOnce(map, store.getState().blocks)
+
     let prevBlocks     = store.getState().blocks
     let prevSelectedKey = store.getState().selectedKey
 
@@ -812,6 +876,7 @@ export default function GameMap({ onBlockClick, flyToRef }) {
         map.getSource('blocks')?.setData(blocksToFC(state.blocks))
         map.getSource('block-points')?.setData(blocksToPoints(state.blocks))
         map.getSource('recent-points')?.setData(recentBlocksPoints(state.blocks))
+        fitToWorldOnce(map, state.blocks)
         if (map.isStyleLoaded()) {
           syncOverlayEls(state.blocks)
           positionOverlayEls(map)

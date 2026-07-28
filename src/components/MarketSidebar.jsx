@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { usePriceStore } from '../store/priceStore'
 import { useIsMobile } from '../lib/hooks'
 import { useGameStore } from '../store/gameStore'
-import { API_BASE } from '../lib/api'
+import { API_BASE, api } from '../lib/api'
 
 const PANEL_W = 260
 
@@ -277,10 +277,9 @@ function LiveDot({ active }) {
 }
 
 async function fetchGameSignals() {
+  // Scoped — see api.CHAIN_SCOPE.
   try {
-    const res = await fetch(`${API_BASE}/feed/signals`)
-    if (!res.ok) return []
-    return await res.json()
+    return await api.fetchSignals()
   } catch { return [] }
 }
 

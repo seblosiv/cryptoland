@@ -210,6 +210,39 @@ FROM blocks
 
 ---
 
+#### `GET /feed/signals`
+
+Composite signal feed for the live ticker — recent purchases, the Country War
+scoreboard, scarcity, milestones, price surges, streaks, affiliate events.
+
+**Query params:**
+- `chain` — optional; scopes every underlying `blocks` query to one chain.
+
+Scoping matters as much here as on `/blocks` and `/stats`. Unscoped, a shared
+backend streamed every chain's rows into every build's ticker — the **Injective**
+build was rendering `account_rdx12g5sszy…`, a **Radix** address, on its own page.
+The frontend always passes it: `api.fetchSignals()` defaults to
+`CHAIN_SCOPE` (see [multichain.md](multichain.md#one-constant-not-five)).
+
+#### `_shorten(owner)` — chain-aware address truncation
+
+Used by the feed to render an owner. The original returned the string untouched
+unless it started with `0x`, so every non-EVM owner went in at full length and was
+clipped mid-string by CSS — a 65-char Radix or 58-char Cardano address in an
+EVM-shaped UI is exactly the tell a reviewer of that chain notices.
+
+It is now a port of `shortAddr()` in `src/lib/addr.js` and must stay in step with
+it:
+
+- head length adapts to the chain's own prefix (`account_rdx`, `addr1`, `erd1`,
+  `tz1`, `EQ`, `0x`), so the result still reads as that chain's address —
+  `addr1qwzt…4yky`, `account_rdx12…0q7x`, `erd1l8q2…6n6h`;
+- NEAR/ENS names are returned **whole** — `sable5867.near` is an identity, not a
+  hash, and chopping its middle destroys the thing worth showing;
+- anything already short is left alone.
+
+---
+
 ### Database Helper: `row_to_dict(row)`
 Converts `aiosqlite.Row` to `dict`. Used to build Pydantic model from query result.
 

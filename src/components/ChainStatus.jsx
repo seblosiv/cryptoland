@@ -30,6 +30,8 @@ import { useEffect, useRef, useState } from 'react'
 import { fetchChainStatus, formatHeight } from '../lib/chainStatus.js'
 
 const ACCENT = 'var(--chain-accent, var(--green))'
+// Text on --s2, so the UI variant — the raw brand hex is under 2:1 on Cardano.
+const ACCENT_UI = 'var(--chain-accent-ui, var(--green))'
 const REFRESH_MS = 30_000
 /** Consecutive failed refreshes tolerated before the badge is withdrawn. */
 const MAX_MISSES = 3
@@ -69,8 +71,14 @@ export default function ChainStatus({ style }) {
   if (!status?.ok) return null
 
   const from = status.extra?.rpcHost
+  // Cardano's browser-reachable source (Mithril) publishes a CERTIFIED height,
+  // ~100 blocks behind the tip, not the live tip. Say so rather than passing it
+  // off as live — it is checkable, and being caught rounding up on a verifiable
+  // number costs more than the word costs.
+  const certified = status.extra?.certified === true
+  const liveness = certified ? 'certified' : 'live'
   const title = from
-    ? `${status.extra?.chain ?? ''} — live ${status.label.toLowerCase()} ${formatHeight(status.height)}, read from ${from}`.trim()
+    ? `${status.extra?.chain ?? ''} — ${liveness} ${status.label.toLowerCase()} ${formatHeight(status.height)}, read from ${from}`.trim()
     : undefined
 
   return (
@@ -95,12 +103,20 @@ export default function ChainStatus({ style }) {
           fontSize: 11.5,
           fontWeight: 700,
           letterSpacing: '-0.01em',
-          color: ACCENT,
+          color: ACCENT_UI,
           whiteSpace: 'nowrap',
         }}
       >
         {status.label} #{formatHeight(status.height)}
       </span>
+      {certified && (
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: 9.5, fontWeight: 700,
+          letterSpacing: '0.04em', color: 'var(--t3)', textTransform: 'uppercase',
+        }}>
+          certified
+        </span>
+      )}
     </div>
   )
 }

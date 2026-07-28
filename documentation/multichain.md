@@ -286,6 +286,8 @@ from the Cardano list (it was absorbed into Lace and can no longer connect to dA
 ```js
 --chain-accent      = PROFILE.accent          // e.g. #00d1b2 on Algorand
 --chain-accent-dim  = PROFILE.accent + '22'   // the same colour at ~13% alpha
+--chain-accent-ink  = '#0f0f0f' | '#ffffff'   // a label readable ON the accent
+--chain-accent-ui   = accent lightened to ≥4.5:1 on --s1
 data-chain          = ACTIVE_CHAIN_KEY        // CSS hook: [data-chain="ton"]
 data-family         = ACTIVE_CHAIN.family     // CSS hook: [data-family="evm"]
 ```
@@ -298,9 +300,45 @@ no per-chain CSS files, no per-chain components, no conditional rendering on cha
 > surfaces, hairline borders, no glass, no `backdrop-filter`, no blur. A profile that
 > reaches for a new surface treatment is out of contract.
 
+#### Why one hex is not enough — `-ink` and `-ui`
+
+A chain's brand colour is chosen for that chain's own (usually white) site. Ours is
+near-black, and the accent has to do two jobs that pull in opposite directions:
+
+| Role | Sits on | Needs |
+|---|---|---|
+| **fill** — the primary CTA, the active step dot, the live pulse | the surface | the real brand colour |
+| **ink** — the "why" sentence, step numbers, the `ON <CHAIN>` label, the logomark | `--s1 #141414` | ≥4.5:1 against `--s1` |
+
+Four accents failed the second job outright: Cardano `#0033ad` at **1.82:1**, Radix
+`#052cc0` at **1.87:1**, Stellar `#7d00ff` at **2.91:1**, Base `#0052ff` at **3.20:1**.
+As 12.5px body copy those are close to unreadable.
+
+`applyProfileTheme()` therefore **derives** rather than overrides:
+
+- `--chain-accent-ink` picks `#0f0f0f` or `#ffffff` by whichever has more contrast
+  against the accent, so the CTA label is legible on a mint-green Algorand button
+  *and* on a navy Cardano one.
+- `--chain-accent-ui` binary-searches the accent toward white and stops the moment it
+  clears 4.5:1 — so the ~20 chains that already pass keep their **exact brand hex**
+  and only the failing ones move, as little as they have to.
+
+Deriving beats the two hand-written `accent: '#ffffff'` overrides that already existed
+for `skale` and `hedera`, because it survives chain #30 without anyone remembering to
+check. `src/test/theme.test.js` asserts the property for every mainnet chain — 90
+assertions — so an unreadable accent fails `npm test` rather than shipping.
+
 Because `--chain-accent-dim` is produced by string concatenation, `accent` must be a
 6-digit `#rrggbb` hex. Every `color` in `config.js` already is — a 3-digit or `rgba()`
-value would silently produce an invalid custom property.
+value would silently produce an invalid custom property. The test enforces this too.
+
+**Non-CSS consumers.** MapLibre paint properties are evaluated by WebGL and cannot
+read a custom property, so `chainProfile.js` also exports the resolved
+`ACCENT_HEX`, `ACCENT_UI_HEX` and `mixWhite(t)`. The map's city-lights palette is
+`mixWhite(0.35 / 0.68 / 0.93)`: hue from the accent, luminance from the mix. Painting
+the raw accent would give Cardano invisible navy dots on a near-black map — a light is
+defined by being bright. On the default green the mix reproduces the previous fixed
+palette almost exactly, so the signed-off look does not regress.
 
 ### Adding a profile for a new chain
 
@@ -349,12 +387,16 @@ renders one quiet line — `<accent dot> 3,291 owners hold 7,629 blocks` — so 
 first-time visitor registers that the world is already inhabited before they
 ever see the map. It is not a profile field and not a constant:
 
-- Source is `api.fetchStats(scope)` → `GET /stats`, the same endpoint the HUD's
+- Source is `api.fetchStats()` → `GET /stats`, the same endpoint the HUD's
   *Sold* / *Owners* cells read. `owners` is `COUNT(DISTINCT owner)` and `sold` is
   `COUNT(*)` over the `blocks` table.
-- `scope` is `VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null`, matching
-  `gameStore.loadBlocksFromServer` and the country leaderboard — a shared-backend
-  Algorand build never advertises Polygon's owner count.
+- Scoping is automatic — see [One constant, not five](#one-constant-not-five)
+  below. Until that constant existed this line was the single worst bug in the
+  build: `VITE_SCOPE_TO_CHAIN` was missing from all 27 `env/` templates, so
+  `npm run build:chain <chain>` shipped an unscoped bundle and **every chain
+  printed the same "3,291 owners hold 7,629 blocks"** — against a real per-chain
+  count of ~270. A ~27× overstatement, byte-identical across builds, on the one
+  line whose whole job is to be believed.
 - It renders **nothing** while loading, **nothing** on a failed request, and
   **nothing** when either count is zero. A fresh deployment shows no line rather
   than "0 owners", and no placeholder number is ever substituted for a real one.
@@ -388,7 +430,7 @@ the native signal — "Slot" on Solana, "Round" on Algorand, "Level" on Tezos:
 | `aptos` | GET `<rpc>` (ledger info root) | `ledger_version` | Version |
 | `sui` | POST `sui_getLatestCheckpointSequenceNumber` | result | Checkpoint |
 | `starknet` | POST `starknet_blockNumber` | result | Block |
-| `cardano` | GET `<rpc>/tip` | `[0].block_no` | Block |
+| `cardano` | GET `<rpc>/tip` (Koios) **or** GET `<statusUrl>/certificates` (Mithril) | `[0].block_no` / `signed_entity_type.CardanoTransactions[1]` | Block |
 | `near` | POST `status` | `sync_info.latest_block_height` | Block |
 | `stellar` | GET `<rpc>/` (Horizon root) | `core_latest_ledger` | Ledger |
 | `algorand` | GET `<rpc>/v2/status` | `last-round` | Round |
@@ -396,9 +438,60 @@ the native signal — "Slot" on Solana, "Round" on Algorand, "Level" on Tezos:
 | `radix` | POST `<rpc>/status/gateway-status` | `ledger_state.state_version` | State |
 | `tezos` | GET `<rpc>/chains/main/blocks/head/header` | `level` | Level |
 
-Endpoints come from `ACTIVE_CHAIN.rpcUrl`, so a deployment that sets
-`VITE_RPC_<KEY>` to a paid endpoint moves the badge onto it with no code change.
-`rpcUrlFallback` is tried if the primary fails.
+Endpoints are tried in order: **`statusUrl` → `rpcUrl` → `rpcUrlFallback`**. A
+deployment that sets `VITE_RPC_<KEY>` to a paid endpoint moves the badge onto it
+with no code change.
+
+#### `statusUrl` — and why Cardano needed it
+
+`statusUrl` is an optional read-only endpoint for the badge alone, tried first. It
+exists for one situation: the chain's main API is healthy but **unusable from a
+browser**.
+
+Cardano is that case. Koios answers `/tip` with a 200 and the true tip, but sends
+no `Access-Control-Allow-Origin`, so the browser discards the response. From curl
+it looks perfect — which is why it survived review. The Cardano build was the only
+one of 29 with no badge, and it logged two CORS errors on every page load, in front
+of any reviewer with DevTools open.
+
+The fix is **Mithril**, Cardano's own certification network: CORS-enabled, keyless,
+and about as native a source as exists. It publishes a *certified* height that lags
+the tip by ~100 blocks (~35 min), so the badge renders a `CERTIFIED` marker beside
+it and the tooltip says "certified block", never "live". Claiming a certified
+height is the tip would be a small lie on a number anyone can check in ten seconds.
+
+It is a separate field rather than a reordering of `rpcUrl` because
+`adapters/cardano.js` calls `rpcUrl/tx_status`, a path only Koios serves. The badge
+reads Mithril; everything else keeps using Koios.
+
+#### Keeping the endpoints alive: `scripts/check-rpcs.mjs`
+
+Public RPCs rot, silently. One audit pass found **six** chains pointing at
+`rpc.ankr.com/*`, which had begun answering **HTTP 200 with a JSON-RPC error body**
+("Unauthorized: you must authenticate") — so any status-code check called them
+healthy. Also found: `eth.llamarpc.com` returning Cloudflare 521,
+`solana-mainnet.rpc.extrnode.com` gone from DNS, and Polygon's **primary**
+`polygon-rpc.com` answering 401.
+
+```bash
+node scripts/check-rpcs.mjs      # ~50 live calls, run before a submission round
+```
+
+It checks the three things that together matter, because passing only the first
+two is exactly what let those endpoints sit unnoticed:
+
+1. it responds at all;
+2. the **body** is a real result, not an error wearing a 200;
+3. it sends `Access-Control-Allow-Origin` — without which the browser cannot read
+   it however healthy the server is.
+
+Exit code 1 if any chain has **no** working endpoint. A dead spare is reported but
+not fatal. Two endpoints are listed as expected failures with their reason
+(Solana's canonical node 403s browser origins but serves wallet adapters; Koios has
+no CORS but backs the adapter) so a real regression is not lost in noise.
+
+Not wired into `npm test`: 50 network calls should not fail CI because an unrelated
+public node is having a bad afternoon.
 
 Rules the badge holds to — all four exist to keep it *evidence* rather than
 decoration:
@@ -606,6 +699,46 @@ cross-chain reconciliation to do — and `GET /metrics/grant` on a deployment re
 only that chain's DAU/retention/volume, which is exactly the number a grant report
 asks for. (The `blocks.chain` column still records which chain wrote the row, so a
 deployment stays self-describing if DBs are ever merged for analysis.)
+
+### One constant, not five
+
+Under the shared-backend model every read must carry this build's chain, or the
+Algorand deployment renders Polygon's world. That check used to be re-derived at
+each call site:
+
+```js
+const scope = import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null
+api.fetchStats(scope)
+```
+
+Five components did it. The two that fetched `/feed/signals` did not — so the
+Injective build streamed `account_rdx1…`, a **Radix** address, into its own live
+ticker. It is not a bug anyone spots by reading either file; it is a bug of
+omission, and omission repeats.
+
+So it is derived **once**, in `src/lib/api.js`:
+
+```js
+export const CHAIN_SCOPE = import.meta.env.VITE_SCOPE_TO_CHAIN
+  ? ACTIVE_CHAIN_CANONICAL
+  : null
+
+fetchBlocks:       (chain = CHAIN_SCOPE) => …
+fetchStats:        (chain = CHAIN_SCOPE) => …
+fetchCountryStats: (chain = CHAIN_SCOPE) => …
+fetchSignals:      (chain = CHAIN_SCOPE) => …
+fetchGrantMetrics: (days = 30, chain = CHAIN_SCOPE) => …
+```
+
+Callers write `api.fetchStats()` and are scoped by default. A new scoped endpoint
+gets it by adding one parameter default; forgetting is no longer possible from the
+call site.
+
+`VITE_SCOPE_TO_CHAIN=1` now ships in **all 27 `env/` templates**. It is a no-op
+under one-DB-per-chain — every row in that database is already this chain — and
+required against a shared backend, so defaulting it on is never wrong. Previously
+only `scripts/deploy-chain.sh` set it, which meant the two documented build paths
+disagreed and the documented one (`npm run build:chain`) was the unsafe one.
 
 ### Why build-time-per-subdomain beats runtime hostname detection
 

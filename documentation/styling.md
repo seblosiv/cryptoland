@@ -63,8 +63,27 @@ All defined in `:root` in `src/index.css`.
 | `--green-b` | `rgba(74,222,128,0.22)` | Accent border |
 | `--red` | `#f87171` | Error, danger, sold |
 | `--amber` | — | Warning / scarcity |
-| `--chain-accent` | per-deployment | Set at runtime by `applyProfileTheme()` |
-| `--chain-accent-dim` | `--chain-accent` + `22` | Low-opacity variant of the above |
+| `--chain-accent` | per-deployment | The chain's brand hex. **Fills only** — buttons, dots, the live pulse |
+| `--chain-accent-dim` | `--chain-accent` + `22` | Low-opacity variant, for badge/panel backgrounds |
+| `--chain-accent-ink` | `#0f0f0f` or `#ffffff` | A label readable **on** the accent — picked by whichever wins on contrast |
+| `--chain-accent-ui` | accent lightened to ≥4.5:1 on `--s1` | **Ink** — any accent-coloured text, icon or logomark |
+
+> **Fill vs ink.** `--chain-accent` is the brand colour and is right for a solid
+> shape. It is *not* automatically right for text: Cardano `#0033ad` is **1.82:1**
+> against `--s1`, Radix `#052cc0` is **1.87:1**, Stellar `#7d00ff` is **2.91:1**,
+> Base `#0052ff` is **3.20:1** — all below the 4.5:1 AA bar, as 12.5px body copy.
+> Use `--chain-accent-ui` for anything you read and `--chain-accent-ink` for a
+> label sitting on the accent. Both are derived from the brand hex at boot, so the
+> ~20 chains that already pass keep their exact colour and nothing is hand-tuned
+> per chain. `src/test/theme.test.js` fails the build if a chain resolves to an
+> unreadable pair.
+
+`.btn` and `.btn-hero` therefore read `background: var(--chain-accent, var(--green))`
+and `color: var(--chain-accent-ink, #0f0f0f)`. Before that they were hardcoded to
+`var(--green)` with `#0f0f0f` text, which put a CryptoLand-green CTA in the middle of
+an otherwise entirely blue Base screen — on the largest element of every onboarding
+step, on all 29 builds. The `var(--x, fallback)` form keeps the generic (non-chain)
+build green.
 
 ### Radii, shadows, layout
 

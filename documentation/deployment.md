@@ -91,10 +91,18 @@ Restart=always
 `systemctl enable --now cryptoland@algorand`.
 
 ### The cheaper alternative — one shared backend
-Run a single backend and set `VITE_SCOPE_TO_CHAIN=1` in each build (the deploy
-script does this already). The frontend then passes its chain to `/blocks` and
-`/stats`, so an Algorand build never renders Polygon's tiles. Isolation is
-enforced by query scoping rather than by separate files.
+Run a single backend. `VITE_SCOPE_TO_CHAIN=1` now ships in **every** `env/`
+template, so the frontend passes its chain to `/blocks`, `/stats`,
+`/stats/countries`, `/feed/signals` and `/metrics/grant`, and an Algorand build
+never renders Polygon's tiles, owners, ticker or traction. Isolation is enforced by
+query scoping rather than by separate files.
+
+> It used to be set only by `scripts/deploy-chain.sh`, which meant the documented
+> `npm run build:chain <chain>` path shipped an **unscoped** bundle — every chain's
+> onboarding printed the same "3,291 owners hold 7,629 blocks" against a real
+> per-chain count of ~270. Defaulting it on is safe in both models: under
+> one-DB-per-chain it is a no-op, since every row in that database is already this
+> chain's.
 
 | | Backend per chain | One shared backend |
 |---|---|---|
@@ -162,6 +170,9 @@ ton.cryptoland.game      → "CryptoLand on TON — Own the World"
 Before pointing a reviewer at a subdomain:
 
 - [ ] `npm test` green and `npm run build:chain <chain>` clean
+- [ ] `node scripts/check-rpcs.mjs` — every chain has a browser-usable endpoint
+      (public RPCs rot silently; six chains were once pointing at endpoints that
+      answered 200 with a JSON-RPC error body)
 - [ ] DNS `A`/`AAAA` record for `<chain>.<domain>`
 - [ ] TLS issued; `https://<chain>.<domain>/tonconnect-manifest.json` returns 200
       cross-origin with no auth

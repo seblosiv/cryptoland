@@ -103,8 +103,7 @@ export const useGameStore = create((set, get) => ({
       // only its own chain's world — otherwise the Algorand map would render
       // Polygon's tiles and stats. Deployments that give each chain its own
       // database can leave VITE_SCOPE_TO_CHAIN unset.
-      const scope = import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null
-      const [rows, stats] = await Promise.all([api.fetchBlocks(scope), api.fetchStats(scope)])
+      const [rows, stats] = await Promise.all([api.fetchBlocks(), api.fetchStats()])
       const map = new Map()
       for (const row of rows) {
         const b = rowToBlock(row)

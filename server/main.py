@@ -3,7 +3,7 @@ CryptoLand backend — FastAPI + SQLite (aiosqlite)
 Blocks are persisted in ./cryptoland.db — survives restarts forever.
 NOWPayments API calls are proxied here to keep the API key server-side.
 """
-import asyncio, json, time, hashlib, hmac, os, secrets as _secrets
+import asyncio, json, time, hashlib, hmac, os, re, secrets as _secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -3129,13 +3129,49 @@ _FLAGS_SHORT = {
 def _flag(country: str) -> str:
     return _FLAGS.get(country) or _FLAGS_SHORT.get(country.upper()) or "🌍"
 
-def _shorten(owner: str) -> str:
-    if owner.startswith("0x") and len(owner) > 12:
-        return f"{owner[:6]}…{owner[-4:]}"
-    return owner
+# Longest first — 'account_rdx' must win over '0x', 'addr_test' over 'addr1'.
+_ADDR_PREFIXES = (
+    "account_rdx", "account_tdx",
+    "addr_test", "addr1", "stake1",
+    "erd1", "KT1", "tz1", "tz2", "tz3",
+    "EQ", "UQ", "0x",
+)
+# alice.near / whale.eth — an on-chain human-readable name, not a hash.
+_ADDR_NAME_RE = re.compile(
+    r"^[a-z0-9][a-z0-9_-]{0,30}(\.[a-z0-9][a-z0-9_-]{0,30})+$", re.I)
+
+
+def _shorten(owner: str, tail: int = 4, max_name: int = 24) -> str:
+    """
+    Truncate an owner for the feed.
+
+    The previous version only handled `0x…` and returned everything else raw, so
+    a 65-char Radix or 58-char Cardano owner went into the ticker at full length
+    and got clipped mid-string by CSS — an EVM-shaped shortener on a non-EVM
+    chain is exactly the kind of detail a reviewer of that chain notices.
+
+    This is a port of `shortAddr()` in src/lib/addr.js and must stay in step with
+    it: the head length adapts to the chain's own prefix so the result still
+    reads as that chain's address (`addr1qxyz…k4m2`, `account_rdx12…9wqz`), and
+    NEAR/ENS names are returned whole because the name IS the identity.
+    """
+    if not owner:
+        return ""
+    a = str(owner).strip()
+    if not a:
+        return ""
+
+    if _ADDR_NAME_RE.match(a):
+        return a if len(a) <= max_name else a[: max_name - 1] + "…"
+
+    prefix = next((p for p in _ADDR_PREFIXES if a.startswith(p)), "")
+    head = min(13, max(6, len(prefix) + 4))
+    if len(a) <= head + tail + 1:
+        return a
+    return f"{a[:head]}…{a[-tail:]}"
 
 @app.get("/feed/signals")
-async def feed_signals():
+async def feed_signals(chain: Optional[str] = None):
     """
     Composite signal feed for the live ticker.
     Returns a list of signal objects ready to render.
@@ -3148,13 +3184,20 @@ async def feed_signals():
 
     signals = []
 
+    # Scoped exactly like /blocks and /stats. Without it a shared backend streamed
+    # every chain's rows into every build's ticker — the Injective page was showing
+    # a Radix `account_rdx1…` owner, which reads as "this is one shared demo".
+    cargs = (chain,) if chain else ()
+    cw    = " AND chain = ?" if chain else ""
+    cwh   = " WHERE chain = ?" if chain else ""
+
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
 
         # ── 1. Recent purchases (kept to 10–15% of feed) ─────────────────────
         async with db.execute(
-            "SELECT tile_key, owner, country, price, purchased_at, color FROM blocks "
-            "ORDER BY purchased_at DESC LIMIT 4"
+            "SELECT tile_key, owner, country, price, purchased_at, color FROM blocks"
+            f"{cwh} ORDER BY purchased_at DESC LIMIT 4", cargs
         ) as cur:
             recent = await cur.fetchall()
         for r in recent:
@@ -3175,9 +3218,9 @@ async def feed_signals():
                      'US','UK','FR','DE','JP','KR'}
         async with db.execute(
             "SELECT country, COUNT(*) as cnt, SUM(price) as vol "
-            "FROM blocks WHERE country NOT IN ('Unknown','Test') AND country != '' "
+            f"FROM blocks WHERE country NOT IN ('Unknown','Test') AND country != ''{cw} "
             "AND LENGTH(country) > 3 "
-            "GROUP BY country ORDER BY cnt DESC LIMIT 10"
+            "GROUP BY country ORDER BY cnt DESC LIMIT 10", cargs
         ) as cur:
             war_rows_raw = await cur.fetchall()
         war_rows = [r for r in war_rows_raw if r["country"] not in _EXCLUDED][:6]
@@ -3233,7 +3276,7 @@ async def feed_signals():
         }
         async with db.execute(
             "SELECT country, COUNT(*) as cnt, MAX(price) as max_p "
-            "FROM blocks GROUP BY country ORDER BY cnt DESC LIMIT 20"
+            f"FROM blocks{cwh} GROUP BY country ORDER BY cnt DESC LIMIT 20", cargs
         ) as cur:
             country_counts = await cur.fetchall()
 
@@ -3264,7 +3307,9 @@ async def feed_signals():
                 })
 
         # ── 4. Milestones ──────────────────────────────────────────────────────
-        async with db.execute("SELECT COUNT(*), SUM(price), COUNT(DISTINCT owner), COUNT(DISTINCT country) FROM blocks") as cur:
+        async with db.execute(
+            "SELECT COUNT(*), SUM(price), COUNT(DISTINCT owner), COUNT(DISTINCT country) "
+            f"FROM blocks{cwh}", cargs) as cur:
             total_tiles, total_vol, total_owners, total_countries = await cur.fetchone()
         total_tiles   = total_tiles or 0
         total_vol     = total_vol or 0
@@ -3286,7 +3331,8 @@ async def feed_signals():
 
         # Tiles in last hour
         async with db.execute(
-            "SELECT COUNT(*), SUM(price) FROM blocks WHERE purchased_at > ?", (now_ms - hour_ms,)
+            f"SELECT COUNT(*), SUM(price) FROM blocks WHERE purchased_at > ?{cw}",
+            (now_ms - hour_ms, *cargs)
         ) as cur:
             tiles_1h, vol_1h = await cur.fetchone()
         tiles_1h = tiles_1h or 0

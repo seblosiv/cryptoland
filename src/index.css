@@ -118,8 +118,9 @@ body {
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s, transform 0.12s;
-  background: var(--green);
-  color: #0f0f0f;
+  /* Falls back to CryptoLand green when no chain accent is set (generic build). */
+  background: var(--chain-accent, var(--green));
+  color: var(--chain-accent-ink, #0f0f0f);
   box-shadow: var(--sh-sm);
 }
 
@@ -169,8 +170,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   transition: opacity 0.15s, transform 0.12s;
   width: 100%;
-  background: var(--green);
-  color: #0f0f0f;
+  background: var(--chain-accent, var(--green));
+  color: var(--chain-accent-ink, #0f0f0f);
 }
 
 .btn-hero:hover  { opacity: 0.88; }

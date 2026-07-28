@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useGameStore } from '../store/gameStore'
-import { API_BASE } from '../lib/api'
+import { api } from '../lib/api'
 import { shortAddr } from '../lib/addr'
 
 function timeAgo(ts) {
@@ -32,10 +32,10 @@ const TYPE_LABEL = {
 }
 
 async function fetchSignals() {
+  // api.fetchSignals() carries CHAIN_SCOPE, so a shared backend never streams
+  // another chain's owners into this build's ticker.
   try {
-    const res = await fetch(`${API_BASE}/feed/signals`)
-    if (!res.ok) return []
-    return await res.json()
+    return await api.fetchSignals()
   } catch {
     return []
   }

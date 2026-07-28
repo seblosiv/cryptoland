@@ -78,7 +78,7 @@ as a first-class native app on each chain.
 ```bash
 # Frontend (repo root)
 npm run dev                     # vite dev server on :5173, opens browser, proxies API → 127.0.0.1:8000
-npm test                        # vitest run — 3 files, 125 tests, all passing
+npm test                        # vitest run — 6 files, 250 tests, all passing
 npm run test:watch
 npm run test:coverage           # v8, scoped to src/lib/nowpayments.js + src/store/gameStore.js
 npm run lint                    # eslint . — see §8, ~90 PRE-EXISTING errors
@@ -89,6 +89,11 @@ npm run build:all-chains        # all 27 chain targets
 # Per-chain deployment (build + seed + nginx/Caddy config → deploy/out/)
 ./scripts/deploy-chain.sh <chain> --seed
 ./scripts/deploy-chain.sh all --seed
+
+# Pre-flight before a submission round: is every chain's RPC reachable FROM A
+# BROWSER? (checks response + body + Access-Control-Allow-Origin, exits 1 if any
+# chain has no working endpoint). ~50 live calls, deliberately NOT in npm test.
+node scripts/check-rpcs.mjs
 
 # Seed one chain's world (chain-correct addresses, realistic retention)
 python3 server/seed_chain.py --chain algorand --db server/cryptoland.db --users 120 --reset
@@ -356,7 +361,24 @@ Done and working:
   build time from `config.js` / `profiles.js`.
 - `LICENSE` (MIT) and `public/{terms,privacy}.html` — the latter two are referenced by
   `tonconnect-manifest.json` and previously 404'd.
-- `npm test` green: 3 files, 125 tests. All 29 chains build clean.
+- `npm test` green: 6 files, **250 tests**. All 27 chain build targets clean.
+- **Derived accent palette.** `applyProfileTheme()` writes `--chain-accent` (brand
+  hex, for fills), `--chain-accent-ink` (a label readable ON it) and
+  `--chain-accent-ui` (the accent lightened only as far as needed to clear 4.5:1
+  on `--s1`). Four brand colours were unreadable as body text — Cardano 1.82:1,
+  Radix 1.87:1, Stellar 2.91:1, Base 3.20:1 — and deriving beats hand-overriding
+  because it survives chain #30. `src/test/theme.test.js` (90 assertions) fails
+  the build on an unreadable accent. **Use `-ui` for text, `-ink` for a label on
+  the accent, plain `--chain-accent` only for fills.**
+- **Scoping is one constant.** `CHAIN_SCOPE` in `src/lib/api.js` is the single
+  derivation of `VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null`, and every
+  scoped helper defaults to it. `VITE_SCOPE_TO_CHAIN=1` now ships in all 27 `env/`
+  templates (a no-op under one-DB-per-chain, required against a shared backend).
+- **The map is chain-native.** City lights are `mixWhite(0.35/0.68/0.93)` from the
+  accent — hue from the chain, luminance from the mix, so a navy accent still
+  reads as light. Interaction affordances take `ACCENT_UI_HEX`. `fitToWorldOnce()`
+  frames the opening shot on the 2nd–98th percentile of tile positions, padded
+  past the market sidebar.
 
 Known gaps — be honest about these, do not paper over them:
 
@@ -369,13 +391,24 @@ Known gaps — be honest about these, do not paper over them:
   wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days). Competing needs
   recurring gameplay (daily check-in, upgrade, transfer) moved on-chain — a product
   decision, written up in `documentation/grants.md` §7. Not a config change.
-- **~90 ESLint errors + 27 warnings are pre-existing, not regressions**: 58
+- **94 ESLint errors + 27 warnings are pre-existing, not regressions**: 58
   `no-unused-vars`, 18 `no-empty` (empty catch blocks), plus `react-hooks` warnings.
   `npm run lint` is therefore not a clean gate — compare counts before/after your
   change rather than expecting zero.
 - **No CI** (`.github/` does not exist), **no Dockerfile / compose**, **no backend
-  tests** (all 125 tests are frontend: `chains.test.js`, `gameStore.test.js`,
-  `nowpayments.test.js`).
+  tests** (all 250 tests are frontend: `chains.test.js`, `gameStore.test.js`,
+  `nowpayments.test.js`, `chainStatus.test.js`, `addr.test.js`, `theme.test.js`).
+  The chain-scoping and payment-binding invariants in §4 are therefore verified by
+  hand against a running server, not by a suite — the highest-value gap to close.
+- **Public RPCs rot and it is invisible.** A single audit found six chains on
+  `rpc.ankr.com/*` returning **HTTP 200 with a JSON-RPC error body**, plus a
+  Cloudflare 521, an NXDOMAIN, and Polygon's own primary answering 401. All are
+  fixed and `scripts/check-rpcs.mjs` exists to catch the next round — but it is a
+  manual pre-flight, so **run it before every submission**.
+- **Cardano's live badge is a CERTIFIED height, not the tip.** Koios sends no
+  `Access-Control-Allow-Origin`, so the browser cannot read it; the badge uses
+  Mithril (`statusUrl`), which lags ~100 blocks and is labelled as such. Do not
+  "fix" the label to say live.
 - **Stale docs to distrust:** root `README.md` is still the stock Vite template, and
   `.env.example` lists only the original 11 chains (the per-chain templates in `env/`
   are current — note they are dotfiles, so use `ls -A env/`).

@@ -43,7 +43,7 @@ export default defineConfig([
   // tool configs, and contracts/deploy.js (the hardhat config, scripts and
   // tests all use require, so they stay commonjs above).
   {
-    files: ['vite.config.js', 'eslint.config.js', 'contracts/deploy.js'],
+    files: ['vite.config.js', 'eslint.config.js', 'contracts/deploy.js', 'scripts/**/*.mjs'],
     languageOptions: { sourceType: 'module' },
   },
 ])

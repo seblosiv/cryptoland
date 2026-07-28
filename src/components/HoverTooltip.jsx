@@ -81,7 +81,10 @@ export function MapTooltip({ mousePos }) {
               background: owned ? `${color}1a` : 'var(--green-d)',
               color: owned ? color : 'var(--green)',
             }}>
-              {owned ? 'OWNED' : 'FREE'}
+              {/* Not "FREE": this badge sits directly above a PRICE row, so
+                  "FREE / PRICE $25.68" read as a contradiction. It means
+                  nobody owns it yet, which is what it now says. */}
+              {owned ? 'OWNED' : 'UNCLAIMED'}
             </span>
           </div>
 

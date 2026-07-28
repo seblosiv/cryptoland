@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useGameStore, TOTAL_TILES, PURCHASE_ZOOM } from '../store/gameStore'
 import { KM_PER_TILE } from '../lib/tiles'
-import { useIsMobile } from '../lib/hooks'
+import { useIsMobile, useIsNarrow } from '../lib/hooks'
 import { useWalletStore } from '../store/walletStore'
 import { useUserStore } from '../store/userStore'
 import { useAuthStore } from '../store/authStore'
@@ -19,6 +19,7 @@ export default function HUD() {
   const stats    = useGameStore(s => s.stats)
   const myBlocks = useGameStore(s => s.myBlocks)
   const isMobile = useIsMobile()
+  const isNarrow = useIsNarrow()
 
   const openWallet    = useWalletStore(s => s.openWalletModal)
   const walletAddress = useWalletStore(s => s.address)
@@ -93,7 +94,11 @@ export default function HUD() {
             fontFamily: 'var(--font)', fontWeight: 800,
             fontSize: 14, letterSpacing: '-0.03em', color: 'var(--t1)',
           }}>
-            CRYPTO<span style={{ color: 'var(--green)' }}>LAND</span>
+            {/* --chain-accent-ui, not --chain-accent: this is 14px text on a dark
+                surface, and the raw brand hex is under 2:1 on Cardano and Radix.
+                Onboarding paints the wordmark in the accent, so using green here
+                made the brand colour change the moment you entered the map. */}
+            CRYPTO<span style={{ color: 'var(--chain-accent-ui, var(--green))' }}>LAND</span>
           </span>
         </div>
 
@@ -105,14 +110,20 @@ export default function HUD() {
           borderRadius: 'var(--r-pill)',
           overflowX: 'auto', overflowY: 'hidden',
           scrollbarWidth: 'none', flexShrink: 1, minWidth: 0,
-          maxWidth: isMobile ? 'calc(100vw - 190px)' : 'min(520px, calc(100vw - 520px))',
+          // SearchBar is fixed, centred, and up to 360px wide, so it owns the
+          // band from 50vw-180px to 50vw+180px. `100vw - 520px` did not account
+          // for that and the search field covered the OWNERS / ~2.4KM / ZOOM
+          // cells at 1280, 1440 and 1600 — the traction numbers, buried under a
+          // search box, on every laptop. Stop the strip short of that band
+          // instead: 180px (half the field) + 16px gap + ~200px logo cluster.
+          maxWidth: isMobile ? 'calc(100vw - 190px)' : 'min(520px, calc(50vw - 396px))',
           boxShadow: 'var(--sh-sm)',
         }}>
           <StatCell v={soldCount.toLocaleString()} l="Sold" />
-          {!isMobile && <StatCell v={`${pct}%`} l="Claimed" />}
+          {!isNarrow && <StatCell v={`${pct}%`} l="Claimed" />}
           {!isMobile && <StatCell v={`$${Number(totalVol).toLocaleString('en',{maximumFractionDigits:0})}`} l="Volume" />}
           {!isMobile && <StatCell v={stats.owners || new Set([...blocks.values()].map(b=>b.owner)).size} l="Owners" />}
-          {!isMobile && <StatCell v={`Z${PURCHASE_ZOOM}`} l={`~${KM_PER_TILE}km`} />}
+          {!isNarrow && <StatCell v={`Z${PURCHASE_ZOOM}`} l={`~${KM_PER_TILE}km`} />}
           <StatCell v={zoom.toFixed(1)} l="Zoom" />
 
           {myBlocks.size > 0 && (

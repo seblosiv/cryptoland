@@ -175,18 +175,117 @@ export const PROFILE = {
   wallets:    override.wallets ?? WALLETS_BY_FAMILY[ACTIVE_CHAIN.family] ?? WALLETS_BY_FAMILY.evm,
 }
 
+// ── Deriving a usable palette from one brand hex ──────────────────────────────
+//
+// A chain's brand colour is chosen for a white website, not for our near-black
+// one, and it has to do two different jobs here that pull in opposite directions:
+//
+//   as a FILL  (the primary CTA) the label sits ON it, so we need to know
+//              whether that label should be near-black or white;
+//   as INK     (the "why" sentence, the step numbers, the ON <CHAIN> label) it
+//              sits on `--s1 #141414`, so it needs ≥4.5:1 against that.
+//
+// Cardano `#0033ad` is 1.82:1 on `--s1` and Radix `#052cc0` is 1.87:1 — as body
+// text both are close to unreadable. Hand-picking a lighter hex per chain (the
+// existing `#ffffff` overrides for skale and hedera) does not survive chain #30,
+// so both values are derived here instead: the brand colour is preserved for
+// fills, and a lightened sibling is computed for ink, only as far as it has to
+// go to clear the contrast bar.
+
+const hexToRgb = (h) => {
+  const s = String(h).replace('#', '')
+  const n = s.length === 3 ? s.split('').map(c => c + c).join('') : s
+  return [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16) || 0)
+}
+const rgbToHex = (r, g, b) =>
+  '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('')
+
+/** WCAG relative luminance. */
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map(v => {
+    const c = v / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+const contrast = (a, b) => {
+  const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+  return (l1 + 0.05) / (l2 + 0.05)
+}
+
+const SURFACE = hexToRgb('#141414')   // --s1, what accent-as-ink sits on
+const TARGET  = 4.5                   // WCAG AA for body text
+
+/**
+ * Lighten `rgb` toward white until it clears `TARGET` against `--s1`.
+ * Returns the brand colour untouched when it already passes, so the 20-odd
+ * chains whose accents are fine keep their exact brand hex.
+ */
+function readableInk(rgb) {
+  if (contrast(rgb, SURFACE) >= TARGET) return rgb
+  let lo = 0, hi = 1, best = [255, 255, 255]
+  for (let i = 0; i < 12; i++) {            // binary search on the mix ratio
+    const t = (lo + hi) / 2
+    const mixed = rgb.map(v => v + (255 - v) * t)
+    if (contrast(mixed, SURFACE) >= TARGET) { best = mixed; hi = t } else { lo = t }
+  }
+  return best
+}
+
 /**
  * Push the profile's accent into CSS custom properties once at boot. Components
  * then use var(--chain-accent) and re-tint automatically per deployment, with no
  * per-chain CSS files and no change to the solid-dark visual language.
+ *
+ * Three properties, because one hex cannot serve all three roles:
+ *   --chain-accent      the brand colour, for fills and large solid shapes
+ *   --chain-accent-ink  a foreground that is readable ON the accent
+ *   --chain-accent-ui   the accent lightened to ≥4.5:1 on --s1, for text/icons
  */
 export function applyProfileTheme() {
   if (typeof document === 'undefined') return
   const root = document.documentElement
+  const rgb  = hexToRgb(PROFILE.accent)
+
   root.style.setProperty('--chain-accent', PROFILE.accent)
   root.style.setProperty('--chain-accent-dim', PROFILE.accent + '22')
+  // Near-black on light accents (Algorand mint, BNB yellow), white on dark ones
+  // (Cardano navy, Radix blue) — otherwise the CTA label vanishes into its own
+  // button on roughly a third of the builds.
+  root.style.setProperty('--chain-accent-ink',
+    contrast(rgb, hexToRgb('#0f0f0f')) >= contrast(rgb, [255, 255, 255]) ? '#0f0f0f' : '#ffffff')
+  root.style.setProperty('--chain-accent-ui', rgbToHex(...readableInk(rgb)))
+
   root.dataset.chain  = ACTIVE_CHAIN_KEY
   root.dataset.family = ACTIVE_CHAIN.family
 }
+
+// ── Resolved values for non-CSS consumers ─────────────────────────────────────
+// MapLibre paint properties are evaluated by WebGL, not by CSS, so they cannot
+// read var(--chain-accent). These are the same colours the custom properties
+// carry, as plain hex.
+
+const ACCENT_RGB = hexToRgb(PROFILE.accent)
+
+/** The brand accent, for fills. */
+export const ACCENT_HEX = PROFILE.accent
+
+/** The accent lightened to ≥4.5:1 on --s1 — for anything read against the map. */
+export const ACCENT_UI_HEX = rgbToHex(...readableInk(ACCENT_RGB))
+
+/**
+ * The accent mixed `t` of the way toward white (0 = accent, 1 = white).
+ *
+ * The map's city lights are built from this rather than from the accent
+ * directly. A light is defined by being BRIGHT — painting Cardano's `#0033ad`
+ * onto a near-black map produces invisible dots, not a city seen from orbit. So
+ * the accent supplies the hue and the mix supplies the luminance, which keeps
+ * the glow chain-native without giving 29 builds 29 different visual languages.
+ */
+export const mixWhite = (t) => rgbToHex(...ACCENT_RGB.map(v => v + (255 - v) * t))
+
+// Exported for the contract test, which asserts all 29 accents resolve to a
+// readable pair rather than trusting that they happen to.
+export const __theme = { hexToRgb, rgbToHex, luminance, contrast, readableInk, TARGET }
 
 export { ACTIVE_CHAIN, ACTIVE_CHAIN_KEY }
