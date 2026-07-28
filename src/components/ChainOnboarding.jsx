@@ -28,11 +28,18 @@ const ACCENT = 'var(--chain-accent, var(--green))'
 const ACCENT_DIM = 'var(--chain-accent-dim, var(--green-d))'
 
 /**
+ * Resolved once at module scope, not per render. ACTIVE_CHAIN_KEY is fixed for
+ * the whole build, and computing it inside the component made React treat
+ * `<Logo/>` as a brand-new component type on every render (react-hooks
+ * static-components), which forces a remount and restarts the badge animation.
+ */
+const ChainLogo = logoFor(ACTIVE_CHAIN_KEY)
+
+/**
  * The chain's own logomark, ringed so it reads as a badge. Falls back to the
  * emoji in ACTIVE_CHAIN.logo when we have no SVG for that chain.
  */
 function ChainMark({ size = 60 }) {
-  const Logo = logoFor(ACTIVE_CHAIN_KEY)
   return (
     <div style={{
       width: size, height: size, margin: '0 auto 16px',
@@ -45,8 +52,8 @@ function ChainMark({ size = 60 }) {
       // colour here is what tints each chain's mark to its own accent.
       color: ACCENT,
     }}>
-      {Logo
-        ? <Logo size={Math.round(size * 0.52)} />
+      {ChainLogo
+        ? <ChainLogo size={Math.round(size * 0.52)} />
         : <span style={{ fontSize: Math.round(size * 0.44) }}>{ACTIVE_CHAIN.logo}</span>}
     </div>
   )
@@ -94,6 +101,14 @@ export default function ChainOnboarding({ onEnter }) {
   const why      = ob.why ?? PROFILE.pitch
   const wallets  = (PROFILE.wallets ?? []).slice(0, 3)
   const help     = ob.walletHelp
+  // Some chains' nativeTerm already carries its own "on <network>" clause
+  // (Moonbeam: "an ERC-721 NFT on Polkadot"; Hedera: "…on Hedera"). Appending
+  // the ecosystem again produced "…on Polkadot on Moonbeam", so only append
+  // when the term doesn't already say where it lives.
+  const heldAs = ob.nativeTerm
+    ? (/\bon\s/i.test(ob.nativeTerm) ? ob.nativeTerm : `${ob.nativeTerm} on ${eco}`)
+    : null
+
   const feeNote  = ob.feeNote
     ?? (PROFILE.features?.gasless
       ? 'This chain sponsors gas — you never pay a fee to claim.'
@@ -233,10 +248,9 @@ export default function ChainOnboarding({ onEnter }) {
           {[
             ['1', 'Pick a tile', 'Zoom the map and click any unclaimed block on Earth.'],
             ['2', 'Pay in crypto', 'Prices start at $12 and rise as a region fills up.'],
-            ['3', 'It’s yours',
-              ob.nativeTerm
-                ? `Your tile is held as ${ob.nativeTerm} on ${eco}. Customise it, deploy an AI Guardian, trade it, or hold it.`
-                : 'Customise it, deploy an AI Guardian, trade it, or hold it.'],
+            ['3', 'It’s yours', heldAs
+              ? `Your tile is held as ${heldAs}. Customise it, deploy an AI Guardian, trade it, or hold it.`
+              : 'Customise it, deploy an AI Guardian, trade it, or hold it.'],
           ].map(([n, t, d]) => (
             <div key={n} style={{
               display: 'flex', gap: 12, alignItems: 'flex-start',

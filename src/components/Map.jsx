@@ -6,6 +6,14 @@ import {
   PURCHASE_ZOOM, lngLatToTile, tilePoly, tileNW, tileCenter, tileKey, tileBasePrice, emptyFC,
 } from '../lib/tiles'
 
+// ── City-lights palette (low-zoom bloom) ──────────────────────────────────────
+// Warm-to-white, the way real city lights photograph from orbit. Kept as one
+// palette rather than per-tile colours: random per-tile hues turned dense
+// clusters into multicoloured static instead of light.
+const LIGHT_WARM = '#7ee6a8'   // outer atmosphere — cool green, matches the accent
+const LIGHT_CORE = '#b6f5cd'   // body of the glow
+const LIGHT_HOT  = '#f2fff7'   // filament — near-white so each light has a centre
+
 // ── Map style definitions ─────────────────────────────────────────────────────
 
 const MAP_STYLES = {
@@ -98,6 +106,27 @@ function blocksToFC(blocksMap) {
       recency: recencyOpacity(b.purchasedAt),
     }
     features.push(f)
+  }
+  return { type: 'FeatureCollection', features }
+}
+
+/**
+ * One point per owned tile — the source behind the low-zoom "city lights" look.
+ *
+ * At world/country zoom a tile is sub-pixel, so drawing each one as its own
+ * coloured polygon turned a dense cluster into multicoloured static. Points +
+ * blurred circles let clusters additively bloom into a single glow instead,
+ * which is what actual city lights look like from orbit.
+ */
+function blocksToPoints(blocksMap) {
+  const features = []
+  for (const b of blocksMap.values()) {
+    const [lng, lat] = tileCenter(b.tx, b.ty)
+    features.push({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lng, lat] },
+      properties: { key: b.key, recency: recencyOpacity(b.purchasedAt) },
+    })
   }
   return { type: 'FeatureCollection', features }
 }
@@ -557,48 +586,67 @@ export default function GameMap({ onBlockClick, flyToRef }) {
       map.addSource('hover', { type: 'geojson', data: emptyFC() })
       map.addSource('selected', { type: 'geojson', data: emptyFC() })
 
-      // ── Z2-Z7: large vivid fill — owned tiles pop hard at world view ───────
+      // ── Z2-Z11: CITY LIGHTS ────────────────────────────────────────────────
+      // Three stacked blurred circle layers on one point per tile. Overlapping
+      // translucent circles accumulate, so a dense cluster blooms into a single
+      // warm glow with a hot core — the way a city looks from orbit.
+      //
+      // Deliberately ONE colour, not ['get','color']: per-tile random colours
+      // made a cluster read as multicoloured static ("smoke") rather than light.
+      map.addSource('block-points', { type: 'geojson', data: blocksToPoints(store.getState().blocks) })
+
+      // 1. Far outer atmosphere — very soft, very faint, sells the bloom.
       map.addLayer({
-        id: 'block-dots', type: 'fill', source: 'blocks',
+        id: 'lights-halo', type: 'circle', source: 'block-points',
         maxzoom: 11,
         paint: {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.92, 8, 0.85, 10, 0.7, 11, 0],
+          'circle-color': LIGHT_WARM,
+          'circle-blur': 1,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 9, 5, 15, 8, 26, 11, 34],
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.1, 6, 0.13, 10, 0.1, 11, 0],
         },
       })
-      // Glow border — makes clusters visible even at Z3
+      // 2. Mid glow — the body of the light.
       map.addLayer({
-        id: 'block-dots-border', type: 'line', source: 'blocks',
+        id: 'lights-glow', type: 'circle', source: 'block-points',
         maxzoom: 11,
         paint: {
-          'line-color': ['get', 'color'],
-          'line-width': ['interpolate', ['linear'], ['zoom'], 2, 1, 5, 2, 8, 3, 10, 4],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.5, 8, 0.9, 11, 0],
-          'line-blur': ['interpolate', ['linear'], ['zoom'], 2, 3, 7, 1.5],
+          'circle-color': LIGHT_CORE,
+          'circle-blur': 0.85,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 3.5, 5, 6, 8, 11, 11, 15],
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.3, 6, 0.38, 10, 0.3, 11, 0],
         },
       })
-      // Bloom halo — radiant glow at low zoom so clusters shine on dark map
+      // 3. Hot core — a small near-white point so each light has a filament.
+      //    Recent claims burn brighter, which makes activity legible at a glance.
       map.addLayer({
-        id: 'block-dots-glow', type: 'line', source: 'blocks',
-        maxzoom: 10,
+        id: 'lights-core', type: 'circle', source: 'block-points',
+        maxzoom: 11,
         paint: {
-          'line-color': ['get', 'color'],
-          'line-width': ['interpolate', ['linear'], ['zoom'], 2, 8, 7, 16],
-          'line-opacity': ['interpolate', ['linear'], ['zoom'], 2, 0.18, 7, 0.12, 10, 0],
-          'line-blur': 12,
+          'circle-color': LIGHT_HOT,
+          'circle-blur': 0.35,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 2, 1, 5, 1.6, 8, 2.6, 11, 3.4],
+          'circle-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            2,  ['+', 0.5, ['*', ['get', 'recency'], 0.45]],
+            8,  ['+', 0.6, ['*', ['get', 'recency'], 0.4]],
+            11, 0,
+          ],
         },
       })
 
       // ── Z8-Z12: recency pulse — recent tiles glow brighter ─────────────────
       map.addLayer({
         id: 'blocks-recency', type: 'fill', source: 'blocks',
-        minzoom: 5, maxzoom: 13,
+        // Starts at 11, where the city-lights layers fade out. It paints
+        // per-tile colours, so overlapping the lights range put stray coloured
+        // specks in among the glow — the exact "smoke" effect the lights fixed.
+        minzoom: 11, maxzoom: 13,
         paint: {
           'fill-color': ['get', 'color'],
           'fill-opacity': [
             'interpolate', ['linear'], ['zoom'],
-            5,  ['*', ['get', 'recency'], 0.45],
-            10, ['*', ['get', 'recency'], 0.65],
+            11, ['*', ['get', 'recency'], 0.55],
             13, ['*', ['get', 'recency'], 0.25],
           ],
         },
@@ -714,10 +762,18 @@ export default function GameMap({ onBlockClick, flyToRef }) {
       const owned = store.getState().blocks.get(key) ?? null
       store.getState().setHoveredKey(key)
 
+      // A mousemove can land before the hover layers are added, or after a
+      // style reload drops them. setPaintProperty throws "Cannot style
+      // non-existing layer" in that window, so guard on the layer existing —
+      // the getSource call above was already optional-chained for this reason.
       const hoverColor = owned?.color ?? '#4ade80'
-      map.setPaintProperty('hover-fill',   'fill-color',   hoverColor)
-      map.setPaintProperty('hover-border', 'line-color',   hoverColor)
-      map.setPaintProperty('hover-fill',   'fill-opacity', owned ? 0.1 : 0.06)
+      if (map.getLayer('hover-fill')) {
+        map.setPaintProperty('hover-fill', 'fill-color',   hoverColor)
+        map.setPaintProperty('hover-fill', 'fill-opacity', owned ? 0.1 : 0.06)
+      }
+      if (map.getLayer('hover-border')) {
+        map.setPaintProperty('hover-border', 'line-color', hoverColor)
+      }
     })
 
     // 'mouseout' is the map-level canvas-exit event; 'mouseleave' only fires
@@ -757,6 +813,7 @@ export default function GameMap({ onBlockClick, flyToRef }) {
       if (state.blocks !== prevBlocks) {
         prevBlocks = state.blocks
         map.getSource('blocks')?.setData(blocksToFC(state.blocks))
+        map.getSource('block-points')?.setData(blocksToPoints(state.blocks))
         map.getSource('recent-points')?.setData(recentBlocksPoints(state.blocks))
         if (map.isStyleLoaded()) {
           syncOverlayEls(state.blocks)

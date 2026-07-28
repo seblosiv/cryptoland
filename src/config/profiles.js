@@ -92,8 +92,10 @@ export const PROFILES = {
   },
 
   base: {
-    // Base writes it "onchain", one word. Their house style, not ours.
-    tagline:      'OWN THE WORLD · ONCHAIN',
+    // Base writes it "onchain", one word — their house style, not ours. The
+    // bare "OWN THE WORLD · ONCHAIN" was a hyphen away from the neutral default
+    // and read as un-themed, so lead with what Base is actually known for.
+    tagline:      'OWN THE WORLD · BUILT ONCHAIN ON BASE',
     pitch:        'Base pairs cheap L2 blockspace with Coinbase account onboarding, so a new player goes from signing up to owning a tile without bridging, seed phrases or an on-ramp detour.',
     connectLabel: 'Connect Coinbase Wallet',
     // Same set as the EVM fallback, reordered: on Base, Coinbase Wallet is the

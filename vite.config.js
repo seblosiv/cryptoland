@@ -100,7 +100,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: true,
+    // Do NOT auto-launch a browser. Automated/verification runs start the dev
+    // server dozens of times, and `open: true` popped a real Chrome window on
+    // the user's desktop every single time. Opt in per-run instead:
+    //   npm run dev -- --open
+    open: false,
     proxy: {
       '/blocks':         'http://127.0.0.1:8000',
       '/stats':          'http://127.0.0.1:8000',

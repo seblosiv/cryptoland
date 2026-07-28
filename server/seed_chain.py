@@ -124,6 +124,87 @@ CITIES = [
     ("Mexico City",  "Mexico",        -99.133,  19.433,  4, 1.3),
     ("Toronto",      "Canada",        -79.383,  43.653,  5, 1.8),
     ("Sydney",       "Australia",     151.209, -33.868,  5, 2.0),
+    # ── Second tier: keeps the map from looking like 30 hotspots on black ─────
+    ("Chicago",      "United States", -87.630,  41.878,  4, 1.7),
+    ("Austin",       "United States", -97.743,  30.267,  3, 1.6),
+    ("Seattle",      "United States",-122.335,  47.606,  3, 1.8),
+    ("Denver",       "United States",-104.991,  39.739,  2, 1.5),
+    ("Montreal",     "Canada",        -73.567,  45.501,  3, 1.5),
+    ("Vancouver",    "Canada",       -123.121,  49.283,  3, 1.7),
+    ("Madrid",       "Spain",          -3.703,  40.417,  4, 1.6),
+    ("Barcelona",    "Spain",           2.173,  41.385,  4, 1.7),
+    ("Milan",        "Italy",           9.190,  45.464,  4, 1.7),
+    ("Rome",         "Italy",          12.496,  41.903,  3, 1.6),
+    ("Munich",       "Germany",        11.582,  48.135,  3, 1.8),
+    ("Hamburg",      "Germany",         9.993,  53.551,  2, 1.5),
+    ("Vienna",       "Austria",        16.373,  48.208,  3, 1.6),
+    ("Prague",       "Czechia",        14.438,  50.076,  3, 1.4),
+    ("Budapest",     "Hungary",        19.040,  47.498,  2, 1.3),
+    ("Stockholm",    "Sweden",         18.069,  59.329,  3, 1.7),
+    ("Oslo",         "Norway",         10.752,  59.914,  2, 1.7),
+    ("Copenhagen",   "Denmark",        12.568,  55.676,  2, 1.7),
+    ("Helsinki",     "Finland",        24.941,  60.170,  2, 1.5),
+    ("Dublin",       "Ireland",        -6.260,  53.350,  3, 1.7),
+    ("Edinburgh",    "United Kingdom", -3.188,  55.953,  2, 1.5),
+    ("Manchester",   "United Kingdom", -2.244,  53.481,  2, 1.4),
+    ("Bucharest",    "Romania",        26.103,  44.427,  2, 1.2),
+    ("Athens",       "Greece",         23.728,  37.984,  2, 1.3),
+    ("Kyiv",         "Ukraine",        30.523,  50.450,  2, 1.1),
+    ("Tel Aviv",     "Israel",         34.781,  32.085,  3, 1.9),
+    ("Riyadh",       "Saudi Arabia",   46.674,  24.713,  3, 1.7),
+    ("Doha",         "Qatar",          51.531,  25.286,  2, 1.8),
+    ("Karachi",      "Pakistan",       67.010,  24.861,  3, 1.0),
+    ("Delhi",        "India",          77.209,  28.614,  5, 1.4),
+    ("Hyderabad",    "India",          78.487,  17.385,  3, 1.2),
+    ("Chennai",      "India",          80.271,  13.083,  3, 1.2),
+    ("Dhaka",        "Bangladesh",     90.407,  23.811,  3, 1.0),
+    ("Bangkok",      "Thailand",      100.502,  13.756,  4, 1.3),
+    ("Kuala Lumpur", "Malaysia",      101.687,   3.139,  3, 1.3),
+    ("Taipei",       "Taiwan",        121.565,  25.033,  3, 1.7),
+    ("Osaka",        "Japan",         135.502,  34.694,  4, 1.9),
+    ("Busan",        "South Korea",   129.075,  35.180,  2, 1.5),
+    ("Shenzhen",     "China",         114.058,  22.543,  4, 1.8),
+    ("Beijing",      "China",         116.407,  39.904,  4, 1.9),
+    ("Melbourne",    "Australia",     144.946, -37.840,  3, 1.8),
+    ("Auckland",     "New Zealand",   174.763, -36.848,  2, 1.6),
+    ("Rio",          "Brazil",        -43.173, -22.907,  3, 1.3),
+    ("Bogota",       "Colombia",      -74.072,   4.711,  3, 1.1),
+    ("Lima",         "Peru",          -77.043, -12.046,  2, 1.1),
+    ("Santiago",     "Chile",         -70.670, -33.449,  3, 1.3),
+    ("Accra",        "Ghana",          -0.187,   5.604,  2, 1.0),
+    ("Casablanca",   "Morocco",        -7.590,  33.573,  2, 1.1),
+    ("Cairo",        "Egypt",          31.236,  30.044,  3, 1.1),
+    ("Johannesburg", "South Africa",   28.034, -26.195,  3, 1.2),
+    ("Addis Ababa",  "Ethiopia",       38.746,   9.032,  2, 1.0),
+    ("Istanbul-Asia","Turkey",         29.100,  40.990,  2, 1.2),
+    ("Tbilisi",      "Georgia",        44.783,  41.716,  2, 1.1),
+    ("Almaty",       "Kazakhstan",     76.886,  43.238,  2, 1.0),
+]
+
+# Wider regions used to scatter a minority of tiles well away from any city, so
+# the world doesn't look like a handful of perfect hotspots on an empty globe.
+# (name, country, lng_min, lng_max, lat_min, lat_max, weight)
+SCATTER_REGIONS = [
+    ("US Midwest",     "United States", -104.0, -82.0,  33.0, 47.0, 6),
+    ("US West",        "United States", -122.0,-105.0,  32.0, 48.0, 4),
+    ("US East",        "United States",  -82.0, -70.0,  30.0, 44.0, 5),
+    ("Western Europe", "France",          -4.0,   8.0,  43.0, 51.0, 5),
+    ("Central Europe", "Germany",          8.0,  22.0,  45.0, 55.0, 5),
+    ("Iberia",         "Spain",           -9.0,   3.0,  37.0, 43.0, 3),
+    ("Nordics",        "Sweden",           8.0,  28.0,  55.0, 65.0, 3),
+    ("UK & Ireland",   "United Kingdom",  -9.0,   1.5,  50.0, 57.5, 3),
+    ("Turkey",         "Turkey",          27.0,  42.0,  36.0, 41.0, 2),
+    ("India",          "India",           70.0,  88.0,   9.0, 30.0, 5),
+    ("SE Asia",        "Thailand",        97.0, 120.0,  -8.0, 20.0, 4),
+    ("East China",     "China",          105.0, 122.0,  22.0, 41.0, 4),
+    ("Japan",          "Japan",          130.0, 141.0,  32.0, 43.0, 3),
+    ("Brazil",         "Brazil",         -52.0, -38.0, -25.0, -5.0, 3),
+    ("Southern Cone",  "Argentina",      -68.0, -55.0, -38.0,-25.0, 2),
+    ("Mexico",         "Mexico",        -105.0, -88.0,  16.0, 28.0, 2),
+    ("West Africa",    "Nigeria",         -8.0,  10.0,   5.0, 14.0, 2),
+    ("East Africa",    "Kenya",           30.0,  41.0, -6.0,   5.0, 2),
+    ("South Africa",   "South Africa",    18.0,  31.0, -34.0,-24.0, 2),
+    ("Australia East", "Australia",      141.0, 153.0, -38.0,-25.0, 3),
 ]
 
 LABELS = [
@@ -174,17 +255,35 @@ def build(chain, n_users, days, rng):
         holdings.append((o, k))
 
     city_weights = [c[4] for c in CITIES]
+    scatter_weights = [r[6] for r in SCATTER_REGIONS]
     blocks, used = [], set()
 
     for owner, k in holdings:
         # An owner tends to buy near where they already bought.
         home = rng.choices(CITIES, weights=city_weights, k=1)[0]
         for _ in range(k):
-            city = home if rng.random() < 0.72 else rng.choices(CITIES, weights=city_weights, k=1)[0]
-            name, country, lng, lat, _w, pmult = city
-            cx, cy = lng_lat_to_tile(lng, lat)
+            # ~28% of tiles land somewhere in a broad region rather than on a
+            # city centre. Without this the world reads as ~30 perfect hotspots
+            # on an empty globe, which looks generated rather than played.
+            if rng.random() < 0.28:
+                reg = rng.choices(SCATTER_REGIONS, weights=scatter_weights, k=1)[0]
+                _n, country, lo_lng, hi_lng, lo_lat, hi_lat, _w = reg
+                lng = rng.uniform(lo_lng, hi_lng)
+                lat = rng.uniform(lo_lat, hi_lat)
+                pmult = rng.uniform(0.75, 1.35)
+                cx, cy = lng_lat_to_tile(lng, lat)
+                # Loose spread — these are meant to look incidental, not clustered.
+                spread = rng.choice([18, 30, 55])
+            else:
+                city = home if rng.random() < 0.62 else rng.choices(CITIES, weights=city_weights, k=1)[0]
+                _name, country, lng, lat, _w, pmult = city
+                cx, cy = lng_lat_to_tile(lng, lat)
+                # Vary tightness per pick so clusters differ in shape and size
+                # instead of every city being an identical gaussian blob.
+                spread = rng.choice([6, 11, 11, 18, 28])
+
             for _try in range(12):
-                tx, ty = jitter(rng, cx, cy, 9)
+                tx, ty = jitter(rng, cx, cy, spread)
                 key = f"{tx}:{ty}"
                 if key not in used:
                     used.add(key)
