@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { api } from '../lib/api'
+import { ACTIVE_CHAIN_CANONICAL } from '../lib/blockchain/config.js'
 import { useIsMobile } from '../lib/hooks'
 
 const PALETTE = ['#A78BFA','#60A5FA','#34D399','#F472B6','#FB923C','#FBBF24','#38BDF8','#E879F9','#4ADE80','#F87171']
@@ -16,7 +17,10 @@ export default function Sidebar() {
   useEffect(() => {
     if (!open) return
     setLoading(true)
-    api.fetchCountryStats()
+    // Scope to this build's chain when several per-chain frontends share one
+    // backend — otherwise the leaderboard shows every chain's totals and
+    // contradicts this build's own "tiles sold" counter.
+    api.fetchCountryStats(import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null)
       .then(d => setCountries(d))
       .catch(() => {})
       .finally(() => setLoading(false))

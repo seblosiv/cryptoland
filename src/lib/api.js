@@ -42,7 +42,8 @@ export const api = {
     req("GET", chain ? `/stats?chain=${encodeURIComponent(chain)}` : "/stats"),
 
   /** Country leaderboard */
-  fetchCountryStats: () => req("GET", "/stats/countries"),
+  fetchCountryStats: (chain = null) =>
+    req("GET", chain ? `/stats/countries?chain=${encodeURIComponent(chain)}` : "/stats/countries"),
 
   /** Update image_url / label on an owned block */
   customizeBlock: (tileKey, data) => req("PATCH", `/blocks/${tileKey}`, data),

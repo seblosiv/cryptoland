@@ -845,12 +845,24 @@ async def customize_block(tile_key: str, req: CustomizeRequest, request: Request
     return dict(row)
 
 @app.get("/stats/countries")
-async def get_country_stats():
-    """Return block count grouped by country, sorted descending."""
+async def get_country_stats(chain: Optional[str] = None):
+    """
+    Block count grouped by country, sorted descending.
+
+    Pass ?chain= to scope to one chain. Without it a shared backend would show
+    every chain's totals in a single chain's build — the country leaderboard
+    would then contradict that build's own "tiles sold" counter.
+    """
     async with aiosqlite.connect(DB_PATH) as db:
-        async with db.execute(
-            "SELECT country, COUNT(*) as cnt FROM blocks GROUP BY country ORDER BY cnt DESC LIMIT 20"
-        ) as cur:
+        if chain:
+            sql = ("SELECT country, COUNT(*) AS cnt FROM blocks WHERE chain = ? "
+                   "GROUP BY country ORDER BY cnt DESC LIMIT 20")
+            args = (chain,)
+        else:
+            sql = ("SELECT country, COUNT(*) AS cnt FROM blocks "
+                   "GROUP BY country ORDER BY cnt DESC LIMIT 20")
+            args = ()
+        async with db.execute(sql, args) as cur:
             rows = await cur.fetchall()
     return [{"country": r[0], "blocks": r[1]} for r in rows]
 
