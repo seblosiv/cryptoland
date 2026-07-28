@@ -51,3 +51,6 @@ venv/
 *.njsproj
 *.sln
 *.sw?
+
+# Per-chain deployment staging output (bundles + seeded DBs)
+deploy/out/

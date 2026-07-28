@@ -1,0 +1,70 @@
+# ============================================================================
+# CryptoLand — nginx server block for one chain-native subdomain
+# ============================================================================
+# Generated per chain by scripts/deploy-chain.sh (placeholders substituted).
+# One block per chain: {{CHAIN}}.{{DOMAIN}} serves that chain's bundle only.
+#
+# Get certificates with:
+#   certbot --nginx -d {{CHAIN}}.{{DOMAIN}}
+# ----------------------------------------------------------------------------
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{CHAIN}}.{{DOMAIN}};
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name {{CHAIN}}.{{DOMAIN}};
+
+    ssl_certificate     /etc/letsencrypt/live/{{CHAIN}}.{{DOMAIN}}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{CHAIN}}.{{DOMAIN}}/privkey.pem;
+
+    root /srv/cryptoland/{{CHAIN}}/dist;
+    index index.html;
+
+    # ── Security headers ────────────────────────────────────────────────────
+    add_header X-Content-Type-Options    "nosniff"        always;
+    add_header X-Frame-Options           "SAMEORIGIN"     always;
+    add_header Referrer-Policy           "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # ── TON Connect manifest ────────────────────────────────────────────────
+    # Must be fetchable cross-origin with NO auth and NO challenge page, or
+    # wallets fail with MANIFEST_NOT_FOUND_ERROR.
+    location = /tonconnect-manifest.json {
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header Cache-Control "public, max-age=300";
+        try_files $uri =404;
+    }
+
+    # ── Hashed build assets — immutable, cache hard ─────────────────────────
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # ── API — proxied to this chain's backend ───────────────────────────────
+    # Each chain runs its own uvicorn with CRYPTOLAND_DB pointed at its own
+    # database, so worlds never mix. Change the port per chain.
+    location ~ ^/(blocks|stats|health|metrics|np|auth|account|sessions|affiliate|users|guardian|guardians|guardian-report|guardian-raids|guardian-profile|price-events|tile-price-context|nft|marketplace|analytics|dao|token|feed|streak|share|empire|search|agents|squads|drop|news|alerts|t|og)(/|$) {
+        proxy_pass         http://127.0.0.1:{{PORT}};
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # ── SPA fallback — every unknown path renders the app ───────────────────
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    access_log /var/log/nginx/{{CHAIN}}.access.log;
+    error_log  /var/log/nginx/{{CHAIN}}.error.log;
+}
