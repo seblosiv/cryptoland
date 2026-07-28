@@ -38,4 +38,12 @@ export default defineConfig([
       sourceType: 'commonjs',
     },
   },
+
+  // Node-side files that are written as ESM rather than CommonJS: the root
+  // tool configs, and contracts/deploy.js (the hardhat config, scripts and
+  // tests all use require, so they stay commonjs above).
+  {
+    files: ['vite.config.js', 'eslint.config.js', 'contracts/deploy.js'],
+    languageOptions: { sourceType: 'module' },
+  },
 ])

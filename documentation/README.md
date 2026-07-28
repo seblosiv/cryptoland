@@ -46,6 +46,7 @@ After that, pick the doc for the area you are changing from the index below.
 | [multichain.md](multichain.md) | One codebase → N chain-native builds: adapters, chain profiles, deployment topology, per-chain deploy steps |
 | [grants.md](grants.md) | The 52-program matrix — chain requirements, status corrections, non-chain gates, the on-chain-impact gap |
 | [submitting-grants.md](submitting-grants.md) | The practical playbook: prerequisites, per-application checklist, recommended order, application copy, tracker |
+| [deployment.md](deployment.md) | One subdomain per chain: `deploy-chain.sh`, nginx/Caddy configs, per-chain backends, seeding a chain's world, link previews, pre-flight checklist |
 
 ### Features
 

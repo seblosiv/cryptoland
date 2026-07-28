@@ -85,6 +85,13 @@ npm run lint                    # eslint . — see §8, ~90 PRE-EXISTING errors
 npm run build                   # generic build → dist/
 npm run build:chain <chain>     # chain-native build → dist-<chain>/
 npm run build:all-chains        # all 27 chain targets
+
+# Per-chain deployment (build + seed + nginx/Caddy config → deploy/out/)
+./scripts/deploy-chain.sh <chain> --seed
+./scripts/deploy-chain.sh all --seed
+
+# Seed one chain's world (chain-correct addresses, realistic retention)
+python3 server/seed_chain.py --chain algorand --db server/cryptoland.db --users 120 --reset
 npm run preview
 
 # Backend (from server/)
@@ -327,7 +334,19 @@ Done and working:
 - Grant matrix for 52 programs; `/metrics/grant`; conversion-funnel instrumentation
   (`page_view → tile_click → purchase_open → payment_start → payment_confirmed`, plus
   `nft_mint`, `guardian_deploy`, `raid_launched`).
-- `npm test` green: 3 files, 125 tests.
+- **Chain-native onboarding**: `ChainOnboarding` (3-step flow) + `ChainHero` (six CSS
+  motifs) + `src/components/logos/` (28 inline SVG logomarks). Copy, accent, wallets,
+  fee note and a player-facing `grantAngle` all come from `src/config/profiles.js`.
+- **Per-chain deployment**: `scripts/deploy-chain.sh` stages a bundle, a seeded DB, an
+  nginx block and a Caddyfile entry per subdomain, with a stable backend port per chain.
+- **Per-chain seed data**: `server/seed_chain.py` — chain-correct addresses, real city
+  clustering, long-tail holdings, and retention modelled per user (~D1 42% / D7 27%).
+  All 29 chains are seeded locally so no build shows an empty map.
+- **Per-chain link previews**: a vite plugin rewrites `<title>` + OG/Twitter tags at
+  build time from `config.js` / `profiles.js`.
+- `LICENSE` (MIT) and `public/{terms,privacy}.html` — the latter two are referenced by
+  `tonconnect-manifest.json` and previously 404'd.
+- `npm test` green: 3 files, 125 tests. All 29 chains build clean.
 
 Known gaps — be honest about these, do not paper over them:
 
@@ -355,17 +374,22 @@ Known gaps — be honest about these, do not paper over them:
   for the Z14 grid (268,435,456 tiles), the 13 adapter families, and the unified
   bit-packed tokenId. Treat them as current; if you find a contradiction, the code wins
   and the doc needs fixing.
-- No public git remote and no OSS licence yet — both are prerequisites for the Gitcoin
-  QF / public-good track (#2).
+- **`LICENSE` now exists (MIT), but there is still no public git remote** — Gitcoin/
+  Giveth QF (#2) needs the repo published, not just licensed.
+- **Seeded data is demo data.** All 29 chains are locally seeded so no build looks
+  empty, but those owners are generated addresses. Say plainly in any application
+  which numbers are seeded and which are organic — a reviewer who discovers the
+  difference on their own is a lost grant.
 
-Recent history (`git log --oneline`, newest first): `5d90c81` per-chain deployment
-isolation (`VITE_SCOPE_TO_CHAIN`, `CRYPTOLAND_DB`) · `f20358f` styling.md rewritten
-against the real CSS · `d0fbb56` 8 non-EVM adapters + presentation layer · `3f2db0c`
-`/auth/telegram` · `1cb9dcf` 10 EVM grant chains + Telegram layer · `b470b25` grants
-matrix + env templates · `476b441` conversion funnel · `0f2cd88` chain config scale +
-`/metrics/grant` · `1140cce` unified tokenId scheme · `67103be` initial commit.
+Recent history (`git log --oneline`, newest first): `812d6af` per-chain link previews +
+legal pages + licence · `d6fbe03` per-chain seed data + subdomain deploy tooling ·
+`cba0a78` 28 SVG logomarks + 3-step chain-native onboarding · `6db046b` CLAUDE.md +
+submission playbook + doc accuracy sweep · `5d90c81` per-chain deployment isolation ·
+`d0fbb56` 8 non-EVM adapters + presentation layer · `67103be` initial commit.
 
-Suggested next steps, in order of leverage: publish the repo + licence (unblocks #2/#34
-framing), deploy and verify one contract with a **retained** deployer key on the
-cheapest target and flip `VITE_CONTRACT_<CHAIN>`, then move daily check-in on-chain to
-start accruing the activity retroactive rounds actually score.
+Suggested next steps, in order of leverage: publish the repo (the licence is done —
+this unblocks #2/#34 framing), deploy and verify one contract with a **retained**
+deployer key on the cheapest target and flip `VITE_CONTRACT_<CHAIN>`, then move daily
+check-in on-chain to start accruing the activity retroactive rounds actually score.
+Deployment mechanics live in [documentation/deployment.md](documentation/deployment.md);
+which programme to target is in [documentation/submitting-grants.md](documentation/submitting-grants.md).

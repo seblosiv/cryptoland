@@ -304,6 +304,25 @@ string from `config.js`, plus its family's wallet list. Universality is preserve
 working default. Adding chain #30 is still one `CHAINS` entry; writing its profile
 is an optional polish pass afterwards.
 
+### Chain-native onboarding
+
+The profile drives a real first-run flow, not just a tinted splash.
+
+| Piece | File | What it does |
+|---|---|---|
+| Logomarks | `src/components/logos/` | 28 inline SVG marks + `logoFor(chainKey)`. Inline, so there is no network request and nothing to 404; testnets resolve to their mainnet mark, and a chain with no mark falls back to the emoji in `config.js`. |
+| Hero motif | `src/components/ChainHero.jsx` | Six pure-CSS gradient motifs — `grid`, `mesh`, `rays`, `orbit`, `waves`, `hex` — selected per chain via `PROFILE.hero.motif`. No images, **no blur** (the solid-dark rule still applies). |
+| Flow | `src/components/ChainOnboarding.jsx` | Three steps: *what this is* → *paying & your wallet* → *how owning works*. Renders `PROFILE.tagline`, `onboarding.why`, the native currency, `onboarding.feeNote`, that chain's wallets, a `walletHelp` install link, and `onboarding.grantAngle`. |
+
+`onboarding.grantAngle` deserves a note: it encodes what the chain's grant
+programme actually rewards, **written as a player-facing benefit**. SKALE's build
+says players never pay gas; the TON build says you claim without leaving Telegram.
+It never mentions grants or funding — fundraising copy inside a player flow would
+undercut the very reviewer it is meant to impress.
+
+Every field is optional. A chain with none still onboards correctly using values
+derived from `config.js`.
+
 ---
 
 ## Environment templates

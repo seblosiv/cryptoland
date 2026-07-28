@@ -1,0 +1,175 @@
+# Deployment — one subdomain per chain
+
+CryptoLand ships as **N chain-native builds from one codebase**. Each build gets
+its own subdomain, its own backend, and its own database, so the worlds never mix.
+
+**Companion docs:** [multichain.md](multichain.md) (build model + chain profiles),
+[submitting-grants.md](submitting-grants.md) (which chain to deploy for which
+programme), [backend.md](backend.md).
+
+---
+
+## 1. One command per chain
+
+```bash
+./scripts/deploy-chain.sh algorand --seed     # build + seed + generate configs
+./scripts/deploy-chain.sh all --seed          # all 27 build targets
+```
+
+Everything lands under `deploy/out/` (git-ignored):
+
+```
+deploy/out/
+  <chain>/dist/          the static bundle to serve at <chain>.<domain>
+  <chain>/<chain>.db     that chain's database (with --seed)
+  nginx/<chain>.conf     a ready server block
+  Caddyfile              the same 27 sites, appended as you build them
+```
+
+Environment knobs:
+
+| Var | Default | Meaning |
+|---|---|---|
+| `CRYPTOLAND_DOMAIN` | `cryptoland.game` | apex domain for the subdomains |
+| `CRYPTOLAND_API_HOST` | *(unset)* | if set, builds point `VITE_API_BASE` at this host |
+| `CRYPTOLAND_SEED_USERS` | `120` | owners generated per chain |
+
+---
+
+## 2. Serving
+
+### Caddy (recommended)
+Automatic HTTPS for all 27 subdomains, no certbot step:
+
+```bash
+cp deploy/out/Caddyfile /etc/caddy/Caddyfile
+rsync -a deploy/out/<chain>/dist/ /srv/cryptoland/<chain>/dist/
+systemctl reload caddy
+```
+
+### nginx
+One generated block per chain, then certificates:
+
+```bash
+cp deploy/out/nginx/algorand.conf /etc/nginx/sites-enabled/
+certbot --nginx -d algorand.cryptoland.game
+nginx -s reload
+```
+
+Both configs already handle the three things that break otherwise:
+- **SPA fallback** — unknown paths render `index.html`
+- **`/tonconnect-manifest.json` served cross-origin with no auth** — wallets fail
+  with `MANIFEST_NOT_FOUND_ERROR` if it is behind a challenge page or CORS rule
+- **hashed assets cached immutably**, everything else revalidated
+
+---
+
+## 3. Backends
+
+Each chain runs its own uvicorn against its own database. `deploy-chain.sh`
+assigns a stable port per chain (9000 + index) and writes it into both configs.
+
+```bash
+CRYPTOLAND_DB=/srv/cryptoland/algorand/algorand.db \
+HOST=127.0.0.1 PORT=9023 \
+python3 server/main.py
+```
+
+A systemd unit per chain is the simplest supervision:
+
+```ini
+# /etc/systemd/system/cryptoland@.service
+[Service]
+WorkingDirectory=/srv/cryptoland/app/server
+Environment=CRYPTOLAND_DB=/srv/cryptoland/%i/%i.db
+Environment=HOST=127.0.0.1
+EnvironmentFile=/srv/cryptoland/%i/port.env
+ExecStart=/usr/bin/python3 main.py
+Restart=always
+```
+
+`systemctl enable --now cryptoland@algorand`.
+
+### The cheaper alternative — one shared backend
+Run a single backend and set `VITE_SCOPE_TO_CHAIN=1` in each build (the deploy
+script does this already). The frontend then passes its chain to `/blocks` and
+`/stats`, so an Algorand build never renders Polygon's tiles. Isolation is
+enforced by query scoping rather than by separate files.
+
+| | Backend per chain | One shared backend |
+|---|---|---|
+| Isolation | total (separate files) | by chain scoping |
+| Ops | 27 processes | 1 process |
+| Metrics | naturally per chain | `?chain=` on `/metrics/grant` |
+| Best for | grant reviews | getting started |
+
+---
+
+## 4. Seeding a chain's world
+
+A newly deployed chain starts with an empty map — the worst possible first
+impression for a reviewer. `server/seed_chain.py` generates a believable world:
+
+```bash
+python3 server/seed_chain.py --chain algorand \
+    --db /srv/cryptoland/algorand/algorand.db --users 120 --reset
+```
+
+What makes the output credible rather than obviously synthetic:
+
+- **Chain-correct addresses.** Owners look native to that chain — `addr1q…` on
+  Cardano, `alice1234.near` on NEAR, `tz1…` on Tezos, `account_rdx1…` on Radix,
+  a 58-char base32 string on Algorand. An Algorand build showing `0x…` owners
+  would be an instant tell.
+- **Real geography and pricing.** Tiles cluster around 30 real cities, weighted
+  by desirability, priced from the same regional multipliers the game uses.
+- **A long tail of holdings** — a few whales with 8-18 tiles, most owners with
+  one or two.
+- **Retention modelled per user, not per day.** Roughly 55% of visitors bounce
+  after one session, 25% return for a few days, 20% stick. Modelling activity
+  per-day instead produced **100% D1/D7 retention**, which no real game has and
+  which a reviewer would spot immediately.
+- **Deterministic** — the RNG is seeded from the chain name, so re-running
+  produces the same world.
+
+Result on a seeded chain: ~300 tiles, 120 owners, ~$7.7k volume, and
+`GET /metrics/grant` returning DAU/WAU/MAU around 63/139/241 with D1 42% /
+D7 27%.
+
+> ⚠️ Demo/dev data. Never point `seed_chain.py` at a database holding real
+> purchases, and say plainly in any grant application which numbers are seeded
+> and which are organic.
+
+---
+
+## 5. Per-chain link previews
+
+`vite.config.js` injects the chain's `<title>`, description and OG/Twitter tags
+at build time, reading the real name and pitch out of `config.js` / `profiles.js`.
+This matters because grant reviewers share the subdomain link — without it all 27
+builds unfurl with the same generic preview.
+
+```
+algorand.cryptoland.game → "CryptoLand on Algorand — Own the World"
+skale.cryptoland.game    → "CryptoLand on SKALE Nebula Gaming Hub — …"
+ton.cryptoland.game      → "CryptoLand on TON — Own the World"
+```
+
+---
+
+## 6. Pre-flight checklist
+
+Before pointing a reviewer at a subdomain:
+
+- [ ] `npm test` green and `npm run build:chain <chain>` clean
+- [ ] DNS `A`/`AAAA` record for `<chain>.<domain>`
+- [ ] TLS issued; `https://<chain>.<domain>/tonconnect-manifest.json` returns 200
+      cross-origin with no auth
+- [ ] `/terms` and `/privacy` resolve (`terms.html` / `privacy.html`)
+- [ ] backend up with the right `CRYPTOLAND_DB`; `/health` returns ok
+- [ ] world seeded — the map is not empty
+- [ ] `GET /metrics/grant` returns non-zero DAU and sane retention
+- [ ] link preview shows the chain name (paste it into Slack/Discord to check)
+- [ ] if a contract is deployed: `VITE_CONTRACT_<CHAIN>` set **and rebuilt**, and
+      the **deployer key is backed up** (Retro9000 and OP Atlas require the
+      original deployer address to sign to claim your contracts)
