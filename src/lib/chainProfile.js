@@ -48,6 +48,34 @@ const DEFAULTS = {
   },
   /** The grant program this deployment targets (informational, shown in docs). */
   grantProgram: ACTIVE_CHAIN.grant ?? null,
+
+  /**
+   * Hero motif for the intro. Gives each chain a visually distinct first
+   * impression while the layout and components stay identical across builds.
+   * Rendered by <ChainHero> as pure CSS gradients — no images, and no blur or
+   * translucency (the solid-dark rule still applies).
+   *
+   *   motif  — 'grid' | 'mesh' | 'rays' | 'orbit' | 'waves' | 'hex'
+   *   colors — 1-2 hex stops; defaults to the chain accent when omitted
+   */
+  hero: { motif: 'grid', colors: null },
+
+  /**
+   * Chain-native onboarding copy, rendered by <ChainOnboarding> as a 3-step
+   * flow. Every field is optional — anything omitted falls back to neutral
+   * wording derived from the chain config, so a chain with no entry still
+   * onboards correctly.
+   *
+   *   why        — one sentence: why own land on THIS chain (must be true)
+   *   feeNote    — what the user pays in gas, in plain words
+   *   walletHelp — { name, url } for the primary wallet, so a first-timer
+   *                who has no wallet is not dead-ended
+   */
+  onboarding: {
+    why: null,
+    feeNote: null,
+    walletHelp: null,
+  },
 }
 
 /** Wallet fallbacks by adapter family, used when a profile doesn't name any. */
@@ -126,8 +154,10 @@ const override = PROFILES[ACTIVE_CHAIN_KEY] ?? {}
 export const PROFILE = {
   ...DEFAULTS,
   ...override,
-  features: { ...DEFAULTS.features, ...(override.features ?? {}) },
-  wallets:  override.wallets ?? WALLETS_BY_FAMILY[ACTIVE_CHAIN.family] ?? WALLETS_BY_FAMILY.evm,
+  features:   { ...DEFAULTS.features,   ...(override.features ?? {}) },
+  hero:       { ...DEFAULTS.hero,       ...(override.hero ?? {}) },
+  onboarding: { ...DEFAULTS.onboarding, ...(override.onboarding ?? {}) },
+  wallets:    override.wallets ?? WALLETS_BY_FAMILY[ACTIVE_CHAIN.family] ?? WALLETS_BY_FAMILY.evm,
 }
 
 /**

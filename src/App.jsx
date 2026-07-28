@@ -35,7 +35,8 @@ import { useAffiliateStore } from './store/affiliateStore'
 import { useAuthStore } from './store/authStore'
 import { useStreakStore } from './store/streakStore'
 import { analytics } from './lib/analytics'
-import { PROFILE, applyProfileTheme } from './lib/chainProfile.js'
+import { applyProfileTheme } from './lib/chainProfile.js'
+import ChainOnboarding from './components/ChainOnboarding'
 
 function parseRoute(path) {
   const m = /^\/u\/([^/?#]+)/.exec(path || '')
@@ -249,115 +250,11 @@ export default function App() {
       )}
 
       {showIntro && (
-        <IntroOverlay onEnter={() => {
+        <ChainOnboarding onEnter={() => {
           try { localStorage.setItem('cl-intro-seen', '1') } catch {}
           setShowIntro(false)
         }} />
       )}
-    </div>
-  )
-}
-
-function IntroOverlay({ onEnter }) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 300,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.92)',
-      padding: 'max(20px, var(--sat)) 20px max(20px, var(--sab))',
-      overflowY: 'auto',
-    }}>
-      <div style={{
-        width: '100%', maxWidth: 440,
-        background: 'var(--s1)',
-        borderRadius: 24,
-        padding: 'clamp(28px,5vw,44px) clamp(24px,4vw,40px)',
-        animation: 'scale-in 0.4s cubic-bezier(0.34,1.05,0.64,1)',
-        boxShadow: 'var(--sh-lg)',
-      }}>
-        {/* Beta badge + chain capability chips */}
-        <div style={{
-          marginBottom: 24, display: 'flex', justifyContent: 'center',
-          flexWrap: 'wrap', gap: 6,
-        }}>
-          <span className="badge" style={{
-            background: 'var(--chain-accent-dim, var(--green-d))',
-            color: 'var(--chain-accent, var(--green))',
-          }}>Blockchain Land Registry · Beta</span>
-          {PROFILE.features?.gasless && (
-            <span className="badge badge-dim">Zero gas · you never pay to claim</span>
-          )}
-          {PROFILE.features?.miniApp && (
-            <span className="badge badge-dim">Runs inside Telegram</span>
-          )}
-        </div>
-
-        {/* Logo */}
-        <div style={{
-          fontFamily: 'var(--font)', fontWeight: 900,
-          fontSize: 'clamp(36px,8vw,56px)',
-          letterSpacing: '-0.03em', lineHeight: 1,
-          textAlign: 'center', marginBottom: 10,
-          color: 'var(--t1)', whiteSpace: 'nowrap',
-        }}>
-          CRYPTO<span style={{ color: 'var(--green)' }}>LAND</span>
-        </div>
-
-        <p style={{
-          textAlign: 'center', fontSize: 11, color: 'var(--t3)',
-          letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 36,
-        }}>
-          {PROFILE.tagline || 'Own the World · On-Chain'}
-        </p>
-
-        {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 32 }}>
-          {[['268M', 'Total Blocks'], ['~2.4 km²', 'Per Block'], ['$12+', 'Starting']].map(([v, l]) => (
-            <div key={l} style={{
-              padding: '14px 8px', borderRadius: 12, textAlign: 'center',
-              background: 'var(--s2)',
-            }}>
-              <div style={{
-                fontFamily: 'var(--mono)', fontSize: 'clamp(15px,3.5vw,20px)',
-                fontWeight: 700, color: 'var(--t1)',
-                letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 5,
-              }}>{v}</div>
-              <div className="label">{l}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ height: 1, background: 'var(--b1)', marginBottom: 28 }} />
-
-        <p style={{
-          fontSize: 'clamp(13px,2.8vw,14px)', color: 'var(--t2)',
-          lineHeight: 1.75, textAlign: 'center',
-          marginBottom: PROFILE.pitch ? 12 : 28,
-        }}>
-          The planet is divided into{' '}
-          <strong style={{ color: 'var(--t1)', fontWeight: 600 }}>268,435,456 blocks</strong>.
-          Each one is real Earth territory — permanently ownable on the blockchain.
-          Click a tile, pay in crypto, own it forever.
-        </p>
-
-        {/* Why this chain — one line, chain-accented */}
-        {PROFILE.pitch && (
-          <p style={{
-            fontSize: 12, fontWeight: 600, lineHeight: 1.6, textAlign: 'center',
-            color: 'var(--chain-accent, var(--green))', marginBottom: 28,
-          }}>
-            {PROFILE.pitch}
-          </p>
-        )}
-
-        <button className="btn-hero" onClick={onEnter}>
-          Enter CryptoLand →
-        </button>
-
-        <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--t3)', marginTop: 14 }}>
-          BTC · ETH · SOL · USDT · XRP and more
-        </p>
-      </div>
     </div>
   )
 }
