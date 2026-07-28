@@ -58,6 +58,9 @@ export const CHAIN_LOGOS = {
   multiversx, radix, tezos,
   // Aliases for the extra hub / testnet keys that share a mark.
   'skale-europa': skale,
+  // Moonbeam's testnet is named after Moonbase, not Moonbeam, so the
+  // suffix-strip in logoFor() yields 'moonbase' and misses. Alias it explicitly.
+  'moonbase-alpha': moonbeam,
 }
 
 /**

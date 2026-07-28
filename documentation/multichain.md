@@ -419,6 +419,17 @@ disappears against `--bg`). The accent already carries the chain's identity; the
 silhouette only has to carry its shape. Swapping in an official asset is always one
 file's edit if a specific ecosystem requires it.
 
+> **A mark has to survive being one colour.** Because the fill collapses to a single
+> accent, any mark whose meaning lives in its *colour separation* rather than its
+> outline turns into a featureless blob. Two things to check when swapping in an
+> official asset: a knockout mark must keep its `fillRule="evenodd"` /
+> `clipRule="evenodd"` (drop them and the negative space fills in solid), and a mark
+> that is only a container — a plain disc, or a rounded square with the glyph knocked
+> out in white — must not be reduced to the container alone. Base is the worked
+> example: the brand kit's "Square" symbol is a solid rounded square filling the whole
+> viewBox, so `base.jsx` uses the flat-edged disc with the horizontal slot instead,
+> which still reads at 28px in one colour.
+
 ---
 
 ## Environment templates
