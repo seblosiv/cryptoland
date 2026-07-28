@@ -1,9 +1,65 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { readFileSync } from 'node:fs'
+
+/**
+ * Inject per-chain <title> and OG/Twitter meta into index.html at build time.
+ *
+ * Why this matters: grant reviewers share the subdomain link in Slack/Discord/X.
+ * Without this every one of the 29 builds unfurls with the same generic preview,
+ * which immediately reads as "one app with your logo on it". With it, the
+ * Algorand link previews as an Algorand product.
+ *
+ * Reads the chain's display name + tagline straight out of the source files so
+ * there is no second copy of the copy to keep in sync.
+ */
+function chainMeta() {
+  return {
+    name: 'cryptoland-chain-meta',
+    transformIndexHtml(html) {
+      const chain = process.env.VITE_CHAIN || 'polygon-amoy'
+      let name = 'CryptoLand'
+      let tagline = 'Own real Earth territory on-chain.'
+      try {
+        const cfg = readFileSync('src/lib/blockchain/config.js', 'utf8')
+        const block = cfg.split(new RegExp(`\\n  '?${chain}'?:\\s*\\{`))[1] ?? ''
+        name = (/name:\s*'([^']+)'/.exec(block)?.[1]) || name
+      } catch { /* fall back to defaults */ }
+      try {
+        const prof = readFileSync('src/config/profiles.js', 'utf8')
+        const block = prof.split(new RegExp(`\\n  '?${chain}'?:\\s*\\{`))[1] ?? ''
+        const pitch = /pitch:\s*'([^']*)'/.exec(block)?.[1]
+        if (pitch) tagline = pitch.replace(/\\'/g, "'")
+      } catch { /* fall back to defaults */ }
+
+      const title = `CryptoLand on ${name} — Own the World`
+      const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+      const extra = [
+        `<meta property="og:site_name" content="CryptoLand" />`,
+        `<meta name="twitter:title" content="${esc(title)}" />`,
+        `<meta name="twitter:description" content="${esc(tagline)}" />`,
+        `<meta name="cryptoland:chain" content="${esc(chain)}" />`,
+      ].join('\n    ')
+
+      // Rewrite the existing tags in place — appending would leave the generic
+      // originals earlier in <head>, and crawlers take the first occurrence.
+      return html
+        .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
+        .replace(/<meta name="description"[^>]*>/,
+                 `<meta name="description" content="${esc(tagline)}" />`)
+        .replace(/<meta property="og:title"[^>]*>/,
+                 `<meta property="og:title" content="${esc(title)}" />`)
+        .replace(/<meta property="og:description"[^>]*>/,
+                 `<meta property="og:description" content="${esc(tagline)}" />`)
+        .replace('</head>', `  ${extra}\n  </head>`)
+    },
+  }
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), chainMeta()],
   build: {
     rollupOptions: {
       // Optional per-chain wallet SDKs — never bundled. Each is dynamically
