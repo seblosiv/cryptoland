@@ -1,16 +1,27 @@
 /**
- * Arbitrum — the angular "A" on the navy disc.
- * The A is a hollow chevron split down the middle: pale left half, bright
- * Arbitrum blue right half.
+ * Arbitrum — official ARB brand mark.
+ * Real path data from the brand SVG, flattened to currentColor. The source's
+ * four colours become four opacity tiers so the overlapping shapes stay
+ * separable: hexagon body 0.35, outline ring 0.55, the two accent strokes
+ * 0.75, and the "A" bars at full strength. The empty bounding rect is dropped.
  */
 export default function ArbitrumLogo({ size = 28, className, style }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+    <svg width={size} height={size} viewBox="0 0 2500 2500" fill="none"
          xmlns="http://www.w3.org/2000/svg" className={className} style={style}
          role="img" aria-label="Arbitrum logo">
-      <circle cx="16" cy="16" r="14" fill="#213147" />
-      <polygon points="16,6.6 6.4,25.4 10.8,25.4 16,13.6" fill="#9DCCED" />
-      <polygon points="16,6.6 25.6,25.4 21.2,25.4 16,13.6" fill="#12AAFF" />
+      {/* hexagon body */}
+      <path fill="currentColor" opacity="0.35" d="M226,760v980c0,63,33,120,88,152l849,490c54,31,121,31,175,0l849-490c54-31,88-89,88-152V760c0-63-33-120-88-152l-849-490c-54-31-121-31-175,0L314,608c-54,31-87,89-87,152H226z" />
+      {/* accent strokes */}
+      <path fill="currentColor" opacity="0.75" d="M1435,1440l-121,332c-3,9-3,19,0,29l208,571l241-139l-289-793C1467,1422,1442,1422,1435,1440z" />
+      <path fill="currentColor" opacity="0.75" d="M1678,882c-7-18-32-18-39,0l-121,332c-3,9-3,19,0,29l341,935l241-139L1678,883V882z" />
+      {/* hexagon outline ring */}
+      <path fill="currentColor" opacity="0.55" d="M1250,155c6,0,12,2,17,5l918,530c11,6,17,18,17,30v1060c0,12-7,24-17,30l-918,530c-5,3-11,5-17,5s-12-2-17-5l-918-530c-11-6-17-18-17-30V719c0-12,7-24,17-30l918-530c5-3,11-5,17-5l0,0V155z M1250,0c-33,0-65,8-95,25L237,555c-59,34-95,96-95,164v1060c0,68,36,130,95,164l918,530c29,17,62,25,95,25s65-8,95-25l918-530c59-34,95-96,95-164V719c0-68-36-130-95-164L1344,25c-29-17-62-25-95-25l0,0H1250z" />
+      {/* notch between the two bars */}
+      <polygon fill="currentColor" opacity="0.35" points="642,2179 727,1947 897,2088 738,2234" />
+      {/* the "A" bars */}
+      <path fill="currentColor" d="M1172,644H939c-17,0-33,11-39,27L401,2039l241,139l550-1507c5-14-5-28-19-28L1172,644z" />
+      <path fill="currentColor" d="M1580,644h-233c-17,0-33,11-39,27L738,2233l241,139l620-1701c5-14-5-28-19-28V644z" />
     </svg>
   )
 }

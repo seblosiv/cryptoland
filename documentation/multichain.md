@@ -235,22 +235,40 @@ brand-new chain looks correct before anyone writes a profile for it.
 
 | Field | Type | Default | Purpose |
 |---|---|---|---|
-| `ecosystem` | string | `ACTIVE_CHAIN.name` | Ecosystem display name, e.g. `"Algorand"` |
+| `ecosystem` | string | `ACTIVE_CHAIN.name` | Ecosystem display name, e.g. `"Algorand"`. Overridden only where the config name is longer than the ecosystem's own short name (`"Arbitrum One"` → `Arbitrum`, `"BNB Smart Chain"` → `BNB Chain`, `"OP Mainnet"` → `Optimism`, the two SKALE hubs) |
 | `tagline` | string | `'OWN THE WORLD · ON-CHAIN'` | Short hero line under the wordmark |
 | `pitch` | string \| null | `null` | One sentence on *why this chain* — intro copy, reused in grant applications |
-| `connectLabel` | string | `Connect to <chain name>` | Call-to-action on the wallet button |
+| `connectLabel` | string | `Connect to <chain name>` | Call-to-action on the wallet button (read by `WalletModal.jsx`). **Set explicitly on all 29 mainnet profiles**, because the right words are ecosystem-specific: *Connect Pera Wallet*, *Open in Telegram*, *Connect Ready or Braavos* |
 | `accent` | `#rrggbb` | `ACTIVE_CHAIN.color` | Accent colour — see the theming rule below |
-| `mark` | string | `ACTIVE_CHAIN.logo` | Mark shown next to the wordmark |
+| `mark` | string | `ACTIVE_CHAIN.logo` | Emoji fallback mark. No profile overrides it: the onboarding resolves an SVG through `logoFor()` and falls back to `ACTIVE_CHAIN.logo` directly — see [The logomark system](#the-logomark-system) |
 | `wallets` | array \| null | `WALLETS_BY_FAMILY[family]` | Preferred wallets, most-likely-installed first |
 | `features.gasless` | bool | `Boolean(ACTIVE_CHAIN.gasless)` | True only for the SKALE hubs today |
 | `features.miniApp` | bool | `ACTIVE_CHAIN.family === 'ton'` | Telegram Mini App surface |
 | `features.mobileFirst` | bool | `false` | Mobile-first framing (Solana Mobile, Celo) |
 | `features.aiAgents` | bool | `true` | Guardian agents are core gameplay on every build |
 | `grantProgram` | string \| null | `ACTIVE_CHAIN.grant ?? null` | Informational — which program this deployment targets |
+| `hero.motif` | `'grid'` \| `'mesh'` \| `'rays'` \| `'orbit'` \| `'waves'` \| `'hex'` | `'grid'` | Which of the six CSS gradient motifs `<ChainHero>` paints |
+| `hero.colors` | `[hex]` \| `[hex, hex]` \| null | `null` → the accent, twice | 1–2 gradient stops from the chain's real brand palette. Stops render on a near-black surface, so nothing near-black goes here |
+| `onboarding.why` | string \| null | `null` → falls back to `pitch` | One sentence: *why own land on THIS chain*. Held to the same truth bar as `pitch` |
+| `onboarding.nativeTerm` | string \| null | `null` | What a tile **is** in this ecosystem's own token vocabulary — see below |
+| `onboarding.chainStat` | `{ value, label }` \| null | `null` → the generic `$12+ / Starting` tile | One true, checkable fact, rendered as the third stat tile — see below |
+| `onboarding.feeNote` | string \| null | `null` → *"This chain sponsors gas…"* when `features.gasless`, else *"Network fees are paid in `<symbol>`."* | What the player pays in gas, in plain words. Must name the chain's **real** native currency, and must never call a chain free unless `gasless` is set on it in `config.js` |
+| `onboarding.walletHelp` | `{ name, url }` \| null | `null` | Install link for the primary wallet, so a first-timer with no wallet is not dead-ended. Omitted rather than guessed — a wrong wallet link is worse than the neutral default |
+| `onboarding.grantAngle` | string \| null | `null` | The capability this chain's grant programme rewards, written as a player benefit — see below |
 
-Merge semantics: the override is spread over `DEFAULTS`; `features` is merged one
-level deep (so a profile can set `mobileFirst` without redeclaring `aiAgents`); and
+Merge semantics: the override is spread over `DEFAULTS`; `features`, `hero` and
+`onboarding` are each merged one level deep (so a profile can set `mobileFirst`
+without redeclaring `aiAgents`, or `hero.colors` without redeclaring `motif`); and
 `wallets` resolves `override.wallets → WALLETS_BY_FAMILY[family] → WALLETS_BY_FAMILY.evm`.
+
+Coverage today: all **29** mainnet entries in `PROFILES` set `tagline`, `pitch`,
+`connectLabel`, `hero` and a full `onboarding` block (`why`, `nativeTerm`,
+`chainStat`, `feeNote`, `grantAngle`); 28 of 29 also set `walletHelp` — Sui omits it
+on purpose, because its first-party wallet was renamed and rehosted and a wrong link
+is worse than no link. Only 4 profiles override `wallets`, 3 override `accent`, 5
+override `ecosystem` and 3 override `features` — everything else comes from
+`config.js`. Testnet keys are deliberately absent: a testnet build inherits the
+neutral defaults, which is the honest presentation for a non-production deployment.
 
 ### Wallet naming (`WALLETS_BY_FAMILY`)
 
@@ -290,9 +308,10 @@ value would silently produce an invalid custom property.
    [How to add a new chain](#how-to-add-a-new-chain).
 2. Add an entry to `PROFILES` in `src/config/profiles.js`, keyed by the **same
    `VITE_CHAIN` key** (`'algorand'`, `'ton'`, `'skale'` …).
-3. Override only what differs. A profile is usually three or four fields —
-   `tagline`, `pitch`, `connectLabel`, sometimes `features` — because `accent`,
-   `mark`, `ecosystem` and `grantProgram` already come from `config.js`.
+3. Override only what differs. In practice that is `tagline`, `pitch`,
+   `connectLabel`, a `hero` motif and the `onboarding` block — `accent`, `mark`,
+   `ecosystem` and `grantProgram` already come from `config.js`, and `wallets` and
+   `features` only appear where the family fallback is wrong.
 4. That's all. No component, CSS file, route or build change.
 
 ### Fallbacks preserve universality
@@ -310,18 +329,95 @@ The profile drives a real first-run flow, not just a tinted splash.
 
 | Piece | File | What it does |
 |---|---|---|
-| Logomarks | `src/components/logos/` | 28 inline SVG marks + `logoFor(chainKey)`. Inline, so there is no network request and nothing to 404; testnets resolve to their mainnet mark, and a chain with no mark falls back to the emoji in `config.js`. |
-| Hero motif | `src/components/ChainHero.jsx` | Six pure-CSS gradient motifs — `grid`, `mesh`, `rays`, `orbit`, `waves`, `hex` — selected per chain via `PROFILE.hero.motif`. No images, **no blur** (the solid-dark rule still applies). |
-| Flow | `src/components/ChainOnboarding.jsx` | Three steps: *what this is* → *paying & your wallet* → *how owning works*. Renders `PROFILE.tagline`, `onboarding.why`, the native currency, `onboarding.feeNote`, that chain's wallets, a `walletHelp` install link, and `onboarding.grantAngle`. |
+| Logomarks | `src/components/logos/` | 28 inline SVG marks + `logoFor(chainKey)` — see [The logomark system](#the-logomark-system). |
+| Hero motif | `src/components/ChainHero.jsx` | Six pure-CSS gradient motifs — `grid`, `mesh`, `rays`, `orbit`, `waves`, `hex` — selected per chain via `PROFILE.hero.motif`, painted in `PROFILE.hero.colors` (falling back to the accent). No images, **no blur** (the solid-dark rule still applies). Decorative only: `aria-hidden`, `pointer-events: none`, masked to fade out behind the copy. |
+| Flow | `src/components/ChainOnboarding.jsx` | Three steps: *what this is* → *paying & your wallet* → *how owning works*, with the same layout on every build. |
 
-`onboarding.grantAngle` deserves a note: it encodes what the chain's grant
-programme actually rewards, **written as a player-facing benefit**. SKALE's build
-says players never pay gas; the TON build says you claim without leaving Telegram.
-It never mentions grants or funding — fundraising copy inside a player flow would
-undercut the very reviewer it is meant to impress.
+Which profile field lands where in the flow:
+
+| Step | Reads |
+|---|---|
+| 1 · What this is | `ChainMark`, `tagline`, the stat row (`268M` / `~2.4 km²` / **`onboarding.chainStat`**), **`onboarding.nativeTerm`** in the "held as …" clause, then `onboarding.why` (falling back to `pitch`) in the accent colour |
+| 2 · Paying & your wallet | `ecosystem`, `ACTIVE_CHAIN.name`, `nativeCurrency.symbol`, a `Gas: FREE` row when `features.gasless`, `onboarding.feeNote`, the first three `wallets`, and the `onboarding.walletHelp` install link |
+| 3 · How owning works | the three-step loop, with **`onboarding.nativeTerm`** in "Your tile is held as … on `<ecosystem>`", then `onboarding.grantAngle` in an accent-tinted panel headed *On `<ecosystem>`* |
+
+The badge row above all three steps shows `<ecosystem> · Land Registry`, plus
+*Zero gas* when `features.gasless` and *Runs in Telegram* when `features.miniApp`.
+
+**`onboarding.nativeTerm`** — what a tile IS in that ecosystem's own vocabulary:
+`'an Algorand Standard Asset (ASA)'`, `'a Move object'`, `'an FA2 token'`,
+`'a NEP-171 token'`, `'a native non-fungible resource'`. This is the strongest
+native-platform signal in the whole flow, because it is the language that chain's
+own builders use — a reviewer from that ecosystem notices the precision (or its
+absence) before they notice anything else on the screen.
+
+> **Accuracy rule: `nativeTerm` must match what we actually deploy, not what would
+> sound most native.** The Hedera profile says *"an ERC-721 NFT on Hedera"* and
+> deliberately **not** *"a Hedera Token Service NFT"*, because the contract we deploy
+> is a plain ERC-721 reached over the JSON-RPC relay. Overclaiming here is the exact
+> kind of detail a chain's own grant reviewer catches, and it costs more credibility
+> than the generic term ever would.
+
+**`onboarding.chainStat`** — `{ value, label }`, rendered as the third tile in the
+stat row so that row itself differs per deployment instead of repeating the same
+three numbers on 29 builds. It must be **one true, checkable fact**, grounded in that
+chain's entry in `blockchain/config.js` (`blockTime`, `gasless`, `nativeCurrency`) or
+in a well-established property of the chain: `{ '~2s', 'Block time' }` on Polygon,
+`{ '$0.00', 'Gas fees' }` on the SKALE hubs, `{ '1 block', 'Finality' }` on Algorand,
+`{ 'STARK', 'Proof system' }` on Starknet. Omit it and the tile falls back to the
+generic `$12+ / Starting`.
+
+> **Hard rule: never a TPS figure, a user count or a funding number.** Those are
+> marketing numbers — unverifiable, contested between ecosystems, and stale the day
+> after they are written. A stat a reviewer can check against their own chain's docs
+> in ten seconds is worth more than a big one they have to take on faith.
+
+**`onboarding.grantAngle`** encodes what the chain's grant programme actually
+rewards, **written as a player-facing benefit**. SKALE's build says players never pay
+gas; the TON build says you claim without leaving Telegram. It never mentions grants
+or funding — fundraising copy inside a player flow would undercut the very reviewer
+it is meant to impress.
 
 Every field is optional. A chain with none still onboards correctly using values
 derived from `config.js`.
+
+### The logomark system
+
+`src/components/logos/` holds **one component per chain** — 28 files today — plus an
+`index.js` that exports the `CHAIN_LOGOS` registry and the `logoFor(chainKey)`
+resolver.
+
+```js
+import { logoFor } from './logos'
+
+const Logo = logoFor(ACTIVE_CHAIN_KEY)   // → component, or null
+```
+
+`logoFor()` returns the exact match first, then strips a testnet suffix and retries
+(`'polygon-amoy'` → `polygon`, `'near-testnet'` → `near`), so every testnet build
+inherits its mainnet mark for free. `'skale-europa'` is an explicit alias to the
+SKALE mark. When there is no mark at all it returns **`null`**, and the caller falls
+back to the emoji in `ACTIVE_CHAIN.logo` — the same fallback discipline as the rest
+of the profile layer, so a brand-new chain is never blank.
+
+Conventions every logo file follows: default export is a React component taking
+`{ size = 28, className, style }`, so the caller controls the rendered size and each
+file keeps whatever viewBox its geometry was drawn in; a `role="img"` +
+`aria-label`; and pure paths and shapes — no `<image>`, no external `<use>`, no
+fonts, no network request and nothing to 404.
+
+> **The marks are monochrome and painted with `currentColor`** — all 28 files, with
+> no hard-coded hex fill anywhere. `ChainMark` in `ChainOnboarding.jsx` sets
+> `color: var(--chain-accent, var(--green))` on the ringed badge that wraps them —
+> that, and nothing else, is what tints each chain's mark to its own accent.
+
+Keeping them monochrome is a deliberate design decision, not a shortcut. It is what
+makes 29 separate builds read as one design system rather than 29 skins, and it
+sidesteps the brand-colour clashes that official multi-colour assets cause on a
+solid-dark UI (several official marks are black-on-white, or use a hue that
+disappears against `--bg`). The accent already carries the chain's identity; the
+silhouette only has to carry its shape. Swapping in an official asset is always one
+file's edit if a specific ecosystem requires it.
 
 ---
 

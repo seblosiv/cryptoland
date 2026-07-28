@@ -1,19 +1,15 @@
 /**
- * Radix — the angular "R" prism: a stem, a faceted bowl and a diagonal leg
- * reading as overlapping planes. Radix blue is #052CC0, which disappears on
- * #141414, so the primary here is the lighter #3B6BF5 with a paler plane.
+ * Radix — official Radix Icon (the "√" radical mark).
+ * Source: radixdlt.com/radix-brand-pack → "Radix-Icon-SVG.svg". Source viewBox
+ * preserved. Monochromed: the solid backing rect, the drop-shadow filter node
+ * and its defs are removed, and the glyph fill becomes currentColor.
  */
 export default function RadixLogo({ size = 28, className, style }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+    <svg width={size} height={size} viewBox="0 0 400 400" fill="none"
          xmlns="http://www.w3.org/2000/svg" className={className} style={style}
          role="img" aria-label="Radix logo">
-      {/* stem */}
-      <rect x="4.5" y="4" width="5" height="24" fill="#3B6BF5" />
-      {/* faceted bowl */}
-      <polygon fill="#3B6BF5" points="9.5,4 22,4 26.5,9.5 20,15 9.5,15" />
-      {/* diagonal leg, the overlapping plane */}
-      <polygon fill="#7FA0FF" points="14.5,14 21.5,14 27,28 20,28" />
+      <path d="M170.912 306.613C166.762 306.613 162.817 304.63 160.343 301.216L108.688 229.63H75V203.567H115.352C119.542 203.567 123.467 205.57 125.92 208.964L168.132 267.447L232.543 120.309C234.628 115.566 239.309 112.5 244.481 112.5H325V138.563H253.005L182.85 298.804C180.969 303.097 176.942 306.04 172.281 306.531C171.852 306.592 171.382 306.613 170.912 306.613Z" fill="currentColor" />
     </svg>
   )
 }

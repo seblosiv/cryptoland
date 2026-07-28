@@ -75,6 +75,21 @@ const DEFAULTS = {
     why: null,
     feeNote: null,
     walletHelp: null,
+    /**
+     * What a tile IS in this ecosystem's own vocabulary — "an Algorand Standard
+     * Asset (ASA)", "a Move object", "an FA2 token". This is the strongest
+     * native-platform signal we have: it is the language that chain's own
+     * builders use. Must be accurate to what we actually deploy.
+     */
+    nativeTerm: null,
+    /**
+     * One true, checkable fact rendered as a stat tile — { value, label }.
+     * Grounded in config.js (blockTime / gasless / nativeCurrency) or a
+     * well-established property. Never TPS, user counts or funding figures.
+     */
+    chainStat: null,
+    /** The capability this chain's grant programme rewards, as a player benefit. */
+    grantAngle: null,
   },
 }
 

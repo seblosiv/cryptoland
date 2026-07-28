@@ -335,8 +335,18 @@ Done and working:
   (`page_view → tile_click → purchase_open → payment_start → payment_confirmed`, plus
   `nft_mint`, `guardian_deploy`, `raid_launched`).
 - **Chain-native onboarding**: `ChainOnboarding` (3-step flow) + `ChainHero` (six CSS
-  motifs) + `src/components/logos/` (28 inline SVG logomarks). Copy, accent, wallets,
-  fee note and a player-facing `grantAngle` all come from `src/config/profiles.js`.
+  motifs: `grid`/`mesh`/`rays`/`orbit`/`waves`/`hex`) + `src/components/logos/` (28
+  inline SVG logomarks, **monochrome and painted with `currentColor`** so `ChainMark`
+  tints them via the chain accent — that uniformity is what makes 29 builds read as
+  one design system). Copy, accent, wallets, fee note and a player-facing
+  `grantAngle` all come from `src/config/profiles.js`, plus two fields that carry the
+  native signal: `onboarding.nativeTerm` (what a tile IS in that ecosystem's own
+  vocabulary — "an Algorand Standard Asset (ASA)", "a Move object", "an FA2 token";
+  **must match what we actually deploy** — Hedera says "an ERC-721 NFT on Hedera",
+  not an HTS NFT) and `onboarding.chainStat` (`{ value, label }`, one true checkable
+  fact grounded in `config.js` — **never TPS, user counts or funding figures**). All
+  29 mainnet profiles set `connectLabel`, `hero` and a full `onboarding` block; see
+  `documentation/multichain.md` → "Chain-native onboarding" / "The logomark system".
 - **Per-chain deployment**: `scripts/deploy-chain.sh` stages a bundle, a seeded DB, an
   nginx block and a Caddyfile entry per subdomain, with a stable backend port per chain.
 - **Per-chain seed data**: `server/seed_chain.py` — chain-correct addresses, real city

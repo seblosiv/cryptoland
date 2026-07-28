@@ -1,20 +1,24 @@
 /**
- * Ronin — Sky Mavis gaming chain.
- * Angular katana-guard shield: hexagonal outline with a solid inner core.
- * Brand blue #1273EA.
+ * Ronin — the official Sky Mavis brand mark, rendered monochrome.
+ * Real path data from the official Ronin logomark: the shield outline plus the
+ * "R" glyph that the source knocks out in white. Colour separated them there,
+ * so here the shield drops to opacity 0.55 and the R stays at full opacity —
+ * the two never share a value, so the glyph stays legible. The white-stop
+ * gradient def is dropped; the R's counter is a reverse-wound subpath, so the
+ * default nonzero fill rule still renders it as a hole.
  */
 export default function RoninLogo({ size = 28, className, style }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+    <svg width={size} height={size} viewBox="0 0 22 30.8" fill="none"
          xmlns="http://www.w3.org/2000/svg" className={className} style={style}
          role="img" aria-label="Ronin logo">
-      <polygon
-        points="16,2.8 27.2,8.4 27.2,18.4 16,29.2 4.8,18.4 4.8,8.4"
-        stroke="#1273EA" strokeWidth="2.2" strokeLinejoin="round"
+      <path
+        fill="currentColor" opacity="0.55" fillRule="evenodd" clipRule="evenodd"
+        d="M0,2.4v19c0,0.4,0.1,0.7,0.2,1c0.2,0.3,0.4,0.6,0.7,0.8l9,7.2c0.3,0.3,0.7,0.4,1.1,0.4s0.8-0.1,1.1-0.4l9-7.2c0.3-0.2,0.5-0.5,0.7-0.8c0.2-0.3,0.2-0.7,0.2-1v-19c0-0.6-0.3-1.2-0.7-1.7C20.9,0.2,20.3,0,19.6,0H2.4C1.7,0,1.1,0.2,0.7,0.7C0.3,1.1,0,1.7,0,2.4z"
       />
-      <polygon
-        points="16,9.6 21.4,12.3 21.4,17.4 16,22.4 10.6,17.4 10.6,12.3"
-        fill="#1273EA"
+      <path
+        fill="currentColor"
+        d="M17.4,11V6.8c0-0.5-0.2-1.1-0.6-1.5c-0.4-0.4-0.9-0.6-1.5-0.6H6.6C6.1,4.8,5.6,5,5.2,5.4C4.8,5.8,4.6,6.3,4.6,6.8v12c0,0.3,0.1,0.6,0.2,0.9c0.1,0.3,0.3,0.5,0.6,0.7L8.5,23c0,0,0.1,0.1,0.1,0.1c0,0,0.1,0,0.1,0c0,0,0.1-0.1,0.1-0.1c0,0,0-0.1,0-0.1v-8.5c0-0.1,0-0.1,0.1-0.2c0,0,0.1-0.1,0.2-0.1h2.3c0.4,0,0.8,0.2,1.1,0.5c0.3,0.3,0.5,0.7,0.5,1.1v7.2c0,0,0,0.1,0,0.1c0,0,0.1,0.1,0.1,0.1c0,0,0.1,0,0.1,0c0,0,0.1,0,0.1-0.1l3.2-2.6c0.2-0.2,0.4-0.4,0.6-0.7c0.1-0.3,0.2-0.6,0.2-0.9v-3.7c0-0.5-0.2-1.1-0.6-1.5c-0.4-0.4-0.9-0.6-1.5-0.6c0.5,0,1.1-0.2,1.4-0.6C17.2,12.1,17.4,11.5,17.4,11z M11.5,12H9.2c-0.1,0-0.1,0-0.2-0.1c0,0-0.1-0.1-0.1-0.2V7.1C8.9,7,9,7,9,6.9c0,0,0.1-0.1,0.2-0.1h3.6c0.1,0,0.1,0,0.2,0.1c0,0,0.1,0.1,0.1,0.2v3.4c0,0.4-0.2,0.8-0.5,1.1C12.3,11.9,11.9,12,11.5,12z"
       />
     </svg>
   )

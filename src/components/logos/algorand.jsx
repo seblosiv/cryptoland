@@ -1,18 +1,9 @@
-/**
- * Algorand — the angular "A": two long parallel diagonals crossed by a
- * shorter counter-diagonal. The brand mark is pure black, so it is drawn in
- * #ffffff here (the teal #00D1B2 is the alternate accent).
- */
 export default function AlgorandLogo({ size = 28, className, style }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
          xmlns="http://www.w3.org/2000/svg" className={className} style={style}
          role="img" aria-label="Algorand logo">
-      <g stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="butt">
-        <path d="M6.5 28.5 L16.2 3.5" />
-        <path d="M14.4 28.5 L24.1 3.5" />
-        <path d="M11.6 13.2 L20.4 28.5" />
-      </g>
+      <path fill="currentColor" d="M13.874 0h3.673l1.61 5.963h3.789l-2.588 4.5 3.624 13.533h-3.757l-2.44-9.077-5.247 9.079H8.345l8.107-14.051-1.304-4.878L4.215 24H.018Z"/>
     </svg>
   )
 }

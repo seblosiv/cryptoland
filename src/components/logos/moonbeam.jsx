@@ -1,26 +1,23 @@
 /**
- * Moonbeam — Polkadot's EVM parachain.
- * A crescent moon casting two concentric beams, in brand teal #53CBC9.
+ * Moonbeam — the official brand mark, rendered monochrome.
+ * Real path data from the official Moonbeam logomark. The source is the dark
+ * glyph knocked out of a purple disc; the backing circle is deleted so the
+ * ring-and-beams glyph itself renders in currentColor. Both source paths were
+ * the same single colour, so both stay full opacity; the second keeps its
+ * evenodd fill rule, without which its knockouts collapse.
  */
 export default function MoonbeamLogo({ size = 28, className, style }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none"
+    <svg width={size} height={size} viewBox="0 0 395 395" fill="none"
          xmlns="http://www.w3.org/2000/svg" className={className} style={style}
          role="img" aria-label="Moonbeam logo">
-      {/* crescent: outer left semicircle, inner ellipse edge */}
-      <path
-        d="M16 4.5A11.5 11.5 0 1 0 16 27.5A6.8 11.5 0 1 1 16 4.5Z"
-        fill="#53CBC9"
-      />
-      {/* beams */}
-      <path
-        d="M20.5 8.5A10 10 0 0 1 20.5 23.5"
-        stroke="#53CBC9" strokeWidth="2.1" strokeLinecap="round" opacity="0.8"
-      />
-      <path
-        d="M25.5 12A6.4 6.4 0 0 1 25.5 20"
-        stroke="#53CBC9" strokeWidth="2.1" strokeLinecap="round" opacity="0.5"
-      />
+      <g transform="scale(2.46875)">
+        <path
+          fill="currentColor"
+          d="m 135.912,80.0686 c 0,-30.5655 -24.89,-55.3426 -55.5892,-55.3426 -30.6989,0 -55.5956,24.7771 -55.5956,55.3426 0,6.3192 1.0664,12.3886 3.0235,18.0458 0.0126,0.025 0.1192,0.3497 0.1192,0.3497 0.7904,2.5039 -3.1301,3.4839 -3.1301,4.9829 0,2.348 8.2675,2.029 8.2675,4.758 0,2.379 -8.1797,3.116 -8.1797,5.514 0,3.315 18.1095,2.16 18.3416,5.008 0.1756,2.198 -6.2289,2.335 -6.2665,4.683 -0.0627,3.753 24.7147,2.522 24.7147,5.02 0,1.892 -11.2722,1.205 -11.2722,3.441 0,2.235 14.8352,3.646 31.1883,3.646 16.3531,0 27.6315,-1.81 27.6315,-3.765 0,-1.954 -10.5257,-1.555 -10.3061,-3.316 0.3764,-3.078 23.7421,-1.504 23.7421,-5.07 0,-1.879 -6.423,-2.316 -6.216,-4.34 0.295,-2.859 19.527,-2.435 19.527,-5.407 0,-2.335 -9.534,-2.91 -9.516,-5.339 0.013,-2.479 9.516,-2.373 9.453,-4.696 -0.05,-1.785 -4.252,-1.742 -2.935,-5.5257 1.944,-5.6386 3.011,-11.6892 3.011,-17.9897 z m -17.664,15.7168 c -1.932,4.3526 -6.273,3.478 -6.762,5.3076 -0.508,1.892 5.351,2.167 5.351,4.146 0,2.404 -17.8589,1.443 -17.6833,4.615 0.1129,1.998 12.6833,2.335 12.4453,4.421 -0.345,3.022 -19.4771,1.511 -19.6653,4.408 -0.138,2.123 9.3403,2.198 9.3593,4.134 0.019,1.629 -7.4398,2.516 -21.7292,2.516 -16.2715,0 -24.1878,-0.874 -23.2845,-2.691 0.8405,-1.699 15.2491,-1.386 15.1048,-4.059 -0.1442,-2.666 -25.5866,-1.886 -26.3519,-4.477 -0.6398,-2.154 8.3616,-2.598 8.3052,-4.646 -0.0565,-2.085 -11.5231,-1.611 -11.774,-4.14 -0.1631,-1.654 5.9905,-1.555 5.727,-3.64 -0.1945,-1.517 -2.7349,-1.305 -4.2404,-4.4335 -2.4276,-5.2264 -3.795,-11.046 -3.795,-17.1841 0,-22.5791 18.3918,-40.8872 41.0741,-40.8872 22.6819,0 41.0739,18.3081 41.0739,40.8872 0,5.5698 -1.123,10.8774 -3.149,15.7167 z"
+        />
+        
+      </g>
     </svg>
   )
 }

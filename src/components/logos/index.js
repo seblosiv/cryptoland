@@ -1,20 +1,24 @@
 /**
  * Chain logomarks — CryptoLand
  * =============================
- * One SVG component per chain, resolved by chain key. Every mark is authored
- * inline (no network requests, no image assets to 404) and drawn on a 32×32
- * viewBox so they optically align at any size.
+ * One SVG component per chain, resolved by chain key. Marks are inlined as
+ * source (no network request, no image asset to 404, nothing to cache-bust).
  *
  * Conventions every logo file follows:
  *   - default export is a React component taking { size = 28, className, style }
- *   - viewBox="0 0 32 32"
- *   - uses the chain's own brand colour(s); marks that read as a silhouette use
- *     `currentColor` so they inherit the accent
- *   - no <image>, no external <use>, no fonts — pure paths/shapes
+ *   - **monochrome**: every fill/stroke is `currentColor`. There are no colour
+ *     literals and no gradients anywhere in this directory. `ChainMark` in
+ *     ChainOnboarding.jsx sets `color` to the chain accent, which is what tints
+ *     each mark per deployment.
+ *   - each file keeps the viewBox of its SOURCE artwork (24×24, 1503×1504, …)
+ *     rather than being rescaled — `size` drives width/height, so they still
+ *     align optically. Do not assume a shared viewBox.
+ *   - overlapping shapes are separated by `opacity` on currentColor, never hue
+ *   - no <image>, no external <use>, no fonts, no filters — pure paths/shapes
  *
- * These are simplified geometric interpretations of each ecosystem's mark, used
- * to signal "this build is native to your chain" on that chain's own
- * deployment. Swap in an official asset any time by editing the one file.
+ * Monochrome is deliberate: it makes 29 chain builds read as one design system,
+ * lets every mark inherit that chain's accent for free, and avoids 28 clashing
+ * brand palettes on the solid-dark UI.
  */
 
 import polygon    from './polygon.jsx'

@@ -41,6 +41,9 @@ function ChainMark({ size = 60 }) {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: `0 0 0 6px ${ACCENT_DIM}`,
       animation: 'scale-in .45s cubic-bezier(.34,1.2,.64,1)',
+      // The logomarks are monochrome and paint with `currentColor`, so setting
+      // colour here is what tints each chain's mark to its own accent.
+      color: ACCENT,
     }}>
       {Logo
         ? <Logo size={Math.round(size * 0.52)} />
@@ -120,8 +123,16 @@ export default function ChainOnboarding({ onEnter }) {
             {PROFILE.tagline || 'Own the World · On-Chain'}
           </p>
 
+          {/* Third tile is chain-specific where the profile supplies one, so the
+              stat row itself differs per deployment rather than repeating. */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
-            {[['268M', 'Total Blocks'], ['~2.4 km²', 'Per Block'], ['$12+', 'Starting']].map(([v, l]) => (
+            {[
+              ['268M', 'Total Blocks'],
+              ['~2.4 km²', 'Per Block'],
+              ob.chainStat?.value
+                ? [ob.chainStat.value, ob.chainStat.label]
+                : ['$12+', 'Starting'],
+            ].map(([v, l]) => (
               <div key={l} style={{ padding: '14px 8px', borderRadius: 12, textAlign: 'center', background: 'var(--s2)' }}>
                 <div style={{
                   fontFamily: 'var(--mono)', fontSize: 'clamp(14px,3.2vw,19px)', fontWeight: 700,
@@ -138,7 +149,9 @@ export default function ChainOnboarding({ onEnter }) {
           }}>
             The planet is divided into{' '}
             <strong style={{ color: 'var(--t1)', fontWeight: 600 }}>268,435,456 blocks</strong>.
-            Each one is real Earth territory — permanently ownable, one owner each.
+            Each one is real Earth territory — permanently ownable, one owner each
+            {ob.nativeTerm ? <>, held as{' '}
+              <strong style={{ color: 'var(--t1)', fontWeight: 600 }}>{ob.nativeTerm}</strong></> : null}.
           </p>
 
           {why && (
@@ -220,7 +233,10 @@ export default function ChainOnboarding({ onEnter }) {
           {[
             ['1', 'Pick a tile', 'Zoom the map and click any unclaimed block on Earth.'],
             ['2', 'Pay in crypto', 'Prices start at $12 and rise as a region fills up.'],
-            ['3', 'It’s yours', 'Customise it, deploy an AI Guardian, trade it, or hold it.'],
+            ['3', 'It’s yours',
+              ob.nativeTerm
+                ? `Your tile is held as ${ob.nativeTerm} on ${eco}. Customise it, deploy an AI Guardian, trade it, or hold it.`
+                : 'Customise it, deploy an AI Guardian, trade it, or hold it.'],
           ].map(([n, t, d]) => (
             <div key={n} style={{
               display: 'flex', gap: 12, alignItems: 'flex-start',
