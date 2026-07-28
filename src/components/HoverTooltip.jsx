@@ -1,5 +1,6 @@
 import { useGameStore } from '../store/gameStore'
 import { tileBasePrice } from '../lib/tiles'
+import { shortAddr } from '../lib/addr'
 
 function isTouchDevice() {
   if (typeof window === 'undefined') return false
@@ -90,7 +91,7 @@ export function MapTooltip({ mousePos }) {
             borderRadius: 8, padding: '8px 10px',
             display: 'flex', flexDirection: 'column', gap: 5,
           }}>
-            {block && <TRow l="Owner" v={block.owner} />}
+            {block && <TRow l="Owner" v={shortAddr(block.owner)} title={block.owner} />}
             <TRow l="Price" v={`$${price}`} hi={!block} />
             <TRow l="Tile"  v={`${tx}, ${ty}`} />
           </div>
@@ -106,11 +107,16 @@ export function MapTooltip({ mousePos }) {
   )
 }
 
-function TRow({ l, v, hi }) {
+function TRow({ l, v, hi, title }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-      <span className="label">{l}</span>
-      <span style={{ fontSize: 11, fontFamily: 'var(--mono)', fontWeight: 700, color: hi ? 'var(--green)' : 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <span className="label" style={{ flexShrink: 0 }}>{l}</span>
+      {/* `overflow: hidden` already zeroes this flex item's automatic minimum
+          size, so nothing escaped the 210px tooltip — but a 58–65 char non-EVM
+          address was clipped head-only ("account_rdx129dyz5nzhx…"), which is
+          not enough to tell two owners apart. The caller now passes a
+          chain-aware short form and the raw value as `title`. */}
+      <span title={title} style={{ fontSize: 11, fontFamily: 'var(--mono)', fontWeight: 700, color: hi ? 'var(--green)' : 'var(--t2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {v}
       </span>
     </div>

@@ -337,12 +337,102 @@ Which profile field lands where in the flow:
 
 | Step | Reads |
 |---|---|
-| 1 · What this is | `ChainMark`, `tagline`, the stat row (`268M` / `~2.4 km²` / **`onboarding.chainStat`**), **`onboarding.nativeTerm`** in the "held as …" clause, then `onboarding.why` (falling back to `pitch`) in the accent colour |
-| 2 · Paying & your wallet | `ecosystem`, `ACTIVE_CHAIN.name`, `nativeCurrency.symbol`, a `Gas: FREE` row when `features.gasless`, `onboarding.feeNote`, the first three `wallets`, and the `onboarding.walletHelp` install link |
+| 1 · What this is | `ChainMark`, `tagline`, the stat row (`268M` / `~2.4 km²` / **`onboarding.chainStat`**), the **live social-proof line** (below), **`onboarding.nativeTerm`** in the "held as …" clause, then `onboarding.why` (falling back to `pitch`) in the accent colour |
+| 2 · Paying & your wallet | `ecosystem`, `ACTIVE_CHAIN.name`, `nativeCurrency.symbol`, a `Gas: FREE` row when `features.gasless`, the **live chain-head badge** (below), `onboarding.feeNote`, the first three `wallets`, and the `onboarding.walletHelp` install link |
 | 3 · How owning works | the three-step loop, with **`onboarding.nativeTerm`** in "Your tile is held as … on `<ecosystem>`", then `onboarding.grantAngle` in an accent-tinted panel headed *On `<ecosystem>`* |
 
 The badge row above all three steps shows `<ecosystem> · Land Registry`, plus
 *Zero gas* when `features.gasless` and *Runs in Telegram* when `features.miniApp`.
+
+**Live social proof (step 1).** Directly under the stat row, `ChainOnboarding`
+renders one quiet line — `<accent dot> 3,291 owners hold 7,629 blocks` — so a
+first-time visitor registers that the world is already inhabited before they
+ever see the map. It is not a profile field and not a constant:
+
+- Source is `api.fetchStats(scope)` → `GET /stats`, the same endpoint the HUD's
+  *Sold* / *Owners* cells read. `owners` is `COUNT(DISTINCT owner)` and `sold` is
+  `COUNT(*)` over the `blocks` table.
+- `scope` is `VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null`, matching
+  `gameStore.loadBlocksFromServer` and the country leaderboard — a shared-backend
+  Algorand build never advertises Polygon's owner count.
+- It renders **nothing** while loading, **nothing** on a failed request, and
+  **nothing** when either count is zero. A fresh deployment shows no line rather
+  than "0 owners", and no placeholder number is ever substituted for a real one.
+
+> Remember these counts are currently **seeded demo data** on every chain (see
+> `server/seed_chain.py`). The line is honest about the database; any grant
+> application that quotes it must say which numbers are seeded.
+
+### Live chain-head badge (step 2)
+
+Branding proves nothing on its own. A reviewer opening the Algorand build has no
+way to tell whether it actually talks to Algorand or merely painted itself teal.
+The badge closes that gap: directly under the *Network* / *Native token* rows it
+shows the **current head of the chain this build targets**, read from that
+chain's own RPC.
+
+| Piece | File |
+|---|---|
+| Probe | `src/lib/chainStatus.js` — `fetchChainStatus()` → `{ ok, height, label, extra }` |
+| Badge | `src/components/ChainStatus.jsx` — pulsing `.live-dot` + `<Label> #<height>` in the chain accent |
+| Contract tests | `src/test/chainStatus.test.js` — every family parsed against its real captured payload |
+
+The label is whatever **that ecosystem** calls the unit, which is itself part of
+the native signal — "Slot" on Solana, "Round" on Algorand, "Level" on Tezos:
+
+| Family | Method (real node call) | Field read | Label |
+|---|---|---|---|
+| `evm` | POST `eth_blockNumber` | hex result | Block |
+| `solana` | POST `getSlot` | result | Slot |
+| `ton` | POST `getMasterchainInfo` | `result.last.seqno` | Seqno |
+| `aptos` | GET `<rpc>` (ledger info root) | `ledger_version` | Version |
+| `sui` | POST `sui_getLatestCheckpointSequenceNumber` | result | Checkpoint |
+| `starknet` | POST `starknet_blockNumber` | result | Block |
+| `cardano` | GET `<rpc>/tip` | `[0].block_no` | Block |
+| `near` | POST `status` | `sync_info.latest_block_height` | Block |
+| `stellar` | GET `<rpc>/` (Horizon root) | `core_latest_ledger` | Ledger |
+| `algorand` | GET `<rpc>/v2/status` | `last-round` | Round |
+| `multiversx` | GET `<rpc>/network/status/4294967295` | `data.status.erd_nonce` | Block |
+| `radix` | POST `<rpc>/status/gateway-status` | `ledger_state.state_version` | State |
+| `tezos` | GET `<rpc>/chains/main/blocks/head/header` | `level` | Level |
+
+Endpoints come from `ACTIVE_CHAIN.rpcUrl`, so a deployment that sets
+`VITE_RPC_<KEY>` to a paid endpoint moves the badge onto it with no code change.
+`rpcUrlFallback` is tried if the primary fails.
+
+Rules the badge holds to — all four exist to keep it *evidence* rather than
+decoration:
+
+- **Nothing is ever fabricated.** No zero state, no "connecting…", no
+  placeholder. `fetchChainStatus()` returns `{ ok:false }` for a dead node, a
+  CORS refusal, a timeout, an unexpected shape or a non-positive height, and the
+  component then renders **nothing at all**. A missing badge is honest; a fake
+  number is not.
+- **It never blocks first paint** and never throws — the fetch runs from an
+  effect after paint, and no caller needs a `try`/`catch`.
+- **Blip-tolerant, not stale-tolerant.** Public RPCs drop the occasional
+  request; blanking on the first miss makes a healthy chain look broken (observed
+  live against Base). A good reading therefore survives up to `MAX_MISSES`
+  consecutive failures (~90s) and is then withdrawn, because a height that has
+  stopped advancing is no longer proof of a live connection.
+- **Only the RPC *host* is exposed**, never the full URL — a `VITE_RPC_<KEY>`
+  override may carry an API key in its path, which must not reach the DOM.
+
+Two deliberate field choices, both about not putting a number under a label that
+means something else:
+
+- MultiversX uses the metachain nonce, **not** `/stats.blocks` — the latter is a
+  cumulative count of blocks ever produced across all shards, not a chain head.
+- Cardano uses `block_no` (a block height). `abs_slot` is a *slot* and is kept in
+  `extra`, never shown under a "Block" label.
+
+> **Known gaps, verified live on 2026-07-28.** Cardano's configured RPC
+> (`api.koios.rest`) returns CORS headers on the `OPTIONS` preflight but **not**
+> on the response itself, so a browser cannot read it and the Cardano build shows
+> no badge. `polygon-rpc.com` currently answers `API key disabled / tenant
+> disabled` and its configured fallback (`rpc.ankr.com/polygon`) now demands an
+> API key, so Polygon has no working public RPC in `config.js`. Both are endpoint
+> problems, not code problems, and both are fixed by setting `VITE_RPC_<KEY>`.
 
 **`onboarding.nativeTerm`** — what a tile IS in that ecosystem's own vocabulary:
 `'an Algorand Standard Asset (ASA)'`, `'a Move object'`, `'an FA2 token'`,

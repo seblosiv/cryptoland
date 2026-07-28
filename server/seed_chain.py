@@ -419,9 +419,9 @@ def main():
 
     try:
         cur.executemany(
-            "INSERT INTO analytics_events (event, session_id, wallet, tile_key, properties, ts) "
-            "VALUES (?,?,?,NULL,NULL,?)",
-            [(e[0], f"seed-{e[1][:12]}", e[1], e[2]) for e in events])
+            "INSERT INTO analytics_events (event, session_id, wallet, tile_key, properties, ts, chain) "
+            "VALUES (?,?,?,NULL,NULL,?,?)",
+            [(e[0], f"seed-{e[1][:12]}", e[1], e[2], args.chain) for e in events])
         print(f"  events:    {len(events)}")
     except sqlite3.Error as e:
         print(f"  events:    skipped ({e})")

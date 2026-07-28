@@ -5,6 +5,7 @@ import { useGuardianStore } from '../store/guardianStore'
 import {
   PURCHASE_ZOOM, lngLatToTile, tilePoly, tileNW, tileCenter, tileKey, tileBasePrice, emptyFC,
 } from '../lib/tiles'
+import { tinyAddr } from '../lib/addr'
 
 // ── City-lights palette (low-zoom bloom) ──────────────────────────────────────
 // Warm-to-white, the way real city lights photograph from orbit. Kept as one
@@ -232,12 +233,8 @@ function blockEmoji(block) {
   return EMOJI_POOL[h % EMOJI_POOL.length]
 }
 
-function shortOwner(owner) {
-  if (!owner) return '???'
-  if (owner.length <= 10) return owner
-  if (owner.endsWith('.eth') && owner.length <= 14) return owner
-  return owner.slice(0, 8) + '…'
-}
+// 64px sprite — head-only is all that fits, but a NEAR/ENS name stays readable.
+const shortOwner = (owner) => tinyAddr(owner, 10) || '???'
 
 // Background pattern styles — picked per tile
 const BG_STYLES = ['solid', 'diagonal', 'dots', 'grid', 'radial', 'scanline']

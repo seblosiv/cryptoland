@@ -25,6 +25,8 @@
  *   raid_launched      — raid initiated
  */
 
+import { ACTIVE_CHAIN_CANONICAL } from './blockchain/config.js'
+
 const BASE = import.meta.env.VITE_API_BASE ?? ''
 
 // Session ID — persisted for the browser tab lifetime
@@ -76,6 +78,9 @@ export const analytics = {
       event,
       session_id: getSessionId(),
       wallet:     getWallet(),
+      // Stamp the build's chain so /metrics/grant can report this chain's
+      // traction alone rather than every chain combined.
+      chain:      ACTIVE_CHAIN_CANONICAL,
       tile_key:   properties.tile_key ?? null,
       properties: Object.keys(properties).length > 0 ? properties : null,
     }

@@ -4,14 +4,10 @@ import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
 import { explorerTxUrl } from '../lib/blockchain/config.js'
 import { PROFILE, WALLETS_BY_FAMILY } from '../lib/chainProfile.js'
 import { useIsMobile } from '../lib/hooks'
+import { shortAddr } from '../lib/addr'
 
 const C_UP = '#4ade80'
 const C_DN = '#f87171'
-
-function shortAddr(a) {
-  if (!a) return ''
-  return a.length > 12 ? a.slice(0, 6) + '…' + a.slice(-4) : a
-}
 
 function timeAgo(ts) {
   const s = (Date.now() - ts) / 1000

@@ -23,6 +23,7 @@ import AccountModal from './components/AccountModal'
 import AuthModal from './components/AuthModal'
 import EmpireCard from './components/EmpireCard'
 import PublicEmpire from './components/PublicEmpire'
+import EcosystemPage from './components/EcosystemPage'
 import PersonalPlaceOnboarding from './components/PersonalPlaceOnboarding'
 import AgentFeedPanel from './components/AgentFeedPanel'
 import LandDropModal from './components/LandDropModal'
@@ -41,6 +42,7 @@ import ChainOnboarding from './components/ChainOnboarding'
 function parseRoute(path) {
   const m = /^\/u\/([^/?#]+)/.exec(path || '')
   if (m) return { kind: 'empire', handle: decodeURIComponent(m[1]) }
+  if (/^\/ecosystem\/?$/.test(path || '')) return { kind: 'ecosystem' }
   return { kind: 'game' }
 }
 
@@ -186,6 +188,11 @@ export default function App() {
   // ── Route: /u/{handle} → public empire viewer ────────────────────────────
   if (route.kind === 'empire') {
     return <PublicEmpire handle={route.handle} />
+  }
+
+  // ── Route: /ecosystem → grant-reviewer landing page ──────────────────────
+  if (route.kind === 'ecosystem') {
+    return <EcosystemPage />
   }
 
   const dismissOnboarding = () => {

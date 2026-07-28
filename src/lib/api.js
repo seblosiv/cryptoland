@@ -45,6 +45,17 @@ export const api = {
   fetchCountryStats: (chain = null) =>
     req("GET", chain ? `/stats/countries?chain=${encodeURIComponent(chain)}` : "/stats/countries"),
 
+  /**
+   * Grant traction metrics — DAU/WAU/MAU, D1/D7 retention, economy totals, a
+   * per-chain breakdown and a daily activity timeseries over `days`.
+   * NOTE: the endpoint takes no `chain` param — it reports whatever is in THIS
+   * deployment's database. Under the shared-backend model, scope client-side
+   * via the `by_chain` array (see EcosystemPage).
+   */
+  /** Grant traction metrics. Pass a chain to scope to one chain's world. */
+  fetchGrantMetrics: (days = 30, chain = null) =>
+    req("GET", `/metrics/grant?days=${days}` + (chain ? `&chain=${encodeURIComponent(chain)}` : "")),
+
   /** Update image_url / label on an owned block */
   customizeBlock: (tileKey, data) => req("PATCH", `/blocks/${tileKey}`, data),
 

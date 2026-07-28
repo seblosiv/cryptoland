@@ -18,11 +18,13 @@
  * and the accent colour.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PROFILE, ACTIVE_CHAIN_KEY } from '../lib/chainProfile.js'
-import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
+import { ACTIVE_CHAIN, ACTIVE_CHAIN_CANONICAL } from '../lib/blockchain/config.js'
+import { api } from '../lib/api'
 import { logoFor } from './logos'
 import ChainHero from './ChainHero'
+import ChainStatus from './ChainStatus'
 
 const ACCENT = 'var(--chain-accent, var(--green))'
 const ACCENT_DIM = 'var(--chain-accent-dim, var(--green-d))'
@@ -78,6 +80,37 @@ function StepDots({ step, total, onGo }) {
   )
 }
 
+/**
+ * Live social proof for step 1: how many real owners hold how many blocks on
+ * THIS deployment, straight from `GET /stats` (the same endpoint the HUD's
+ * Sold / Owners cells read). Scoped with `?chain=` on shared-backend builds so
+ * an Algorand visitor is never shown Polygon's world — the same rule the store
+ * and the country leaderboard already follow.
+ *
+ * Deliberately silent: `null` while loading, `null` on error, and `null` for an
+ * empty world. A fresh deployment shows no line at all rather than "0 owners" —
+ * and we never substitute a placeholder number for a missing one.
+ */
+function useWorldProof() {
+  const [proof, setProof] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    const scope = import.meta.env.VITE_SCOPE_TO_CHAIN ? ACTIVE_CHAIN_CANONICAL : null
+    api.fetchStats(scope)
+      .then(s => {
+        if (!alive) return
+        const owners = Number(s?.owners) || 0
+        const sold   = Number(s?.sold) || 0
+        if (owners > 0 && sold > 0) setProof({ owners, sold })
+      })
+      .catch(() => { /* social proof is never worth an error state */ })
+    return () => { alive = false }
+  }, [])
+
+  return proof
+}
+
 function Row({ k, v }) {
   return (
     <div style={{
@@ -94,6 +127,7 @@ function Row({ k, v }) {
 
 export default function ChainOnboarding({ onEnter }) {
   const [step, setStep] = useState(0)
+  const proof    = useWorldProof()
 
   const eco      = PROFILE.ecosystem || ACTIVE_CHAIN.name
   const cur      = ACTIVE_CHAIN.nativeCurrency?.symbol ?? ''
@@ -140,7 +174,7 @@ export default function ChainOnboarding({ onEnter }) {
 
           {/* Third tile is chain-specific where the profile supplies one, so the
               stat row itself differs per deployment rather than repeating. */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: proof ? 12 : 24 }}>
             {[
               ['268M', 'Total Blocks'],
               ['~2.4 km²', 'Per Block'],
@@ -157,6 +191,24 @@ export default function ChainOnboarding({ onEnter }) {
               </div>
             ))}
           </div>
+
+          {/* Live social proof — real counts from GET /stats, or nothing at all. */}
+          {proof && (
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              marginBottom: 22, fontSize: 12, color: 'var(--t3)',
+            }}>
+              <span className="live-dot" style={{ background: ACCENT }} />
+              <span>
+                <strong style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--t2)' }}>
+                  {proof.owners.toLocaleString()}
+                </strong>{' '}owners hold{' '}
+                <strong style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--t2)' }}>
+                  {proof.sold.toLocaleString()}
+                </strong>{' '}blocks
+              </span>
+            </div>
+          )}
 
           <p style={{
             fontSize: 'clamp(13px,2.8vw,14px)', color: 'var(--t2)',
@@ -198,6 +250,10 @@ export default function ChainOnboarding({ onEnter }) {
             <Row k="Network" v={ACTIVE_CHAIN.name} />
             {cur && <Row k="Native token" v={cur} />}
             {PROFILE.features?.gasless && <Row k="Gas" v="FREE" />}
+            {/* Live head of this chain, read from its own RPC — renders
+                nothing if the node is unreachable. Sits with the chain facts
+                so the claim above it is independently checkable. */}
+            <ChainStatus style={{ alignSelf: 'center', marginTop: 2 }} />
           </div>
 
           {feeNote && (

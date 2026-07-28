@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { API_BASE } from '../lib/api'
+import { shortAddr } from '../lib/addr'
 
 function timeAgo(ts) {
   const d = (Date.now() - ts) / 1000
@@ -48,7 +49,10 @@ function seedFromBlocks(blocks) {
     .map(b => ({
       type:   'purchase',
       icon:   '🌍',
-      text:   `${b.owner?.length > 12 && b.owner.startsWith('0x') ? b.owner.slice(0, 6) + '…' + b.owner.slice(-4) : (b.owner || '?')} claimed ${b.country || 'tile'}`,
+      // shortAddr covers every chain — the old test only shortened 0x…, so on
+      // Cardano / Algorand / Radix builds a 58–65 char address was pasted whole
+      // into the ticker.
+      text:   `${shortAddr(b.owner) || '?'} claimed ${b.country || 'tile'}`,
       sub:    `$${parseFloat(b.price).toFixed(2)}`,
       color:  b.color || '#4ade80',
       ts:     b.purchasedAt,

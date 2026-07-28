@@ -284,7 +284,7 @@ Follows mouse cursor. Does not render if `selectedKey` is set (avoids overlap wi
 - If block has `imageUrl`: image header with label overlay
 - Color dot + country/region name
 - OWNED / FREE status badge
-- Owner name (if owned)
+- Owner (if owned) — shortened via `shortAddr()` from [`addr.js`](#library-addrjs), full address kept in the `title`
 - Price row
 - Tile coordinates
 - "Click to purchase →" (if unowned)
@@ -575,6 +575,79 @@ Throws on non-OK responses (attaches response text to error).
 
 ---
 
+## Library: `addr.js`
+
+**One chain-aware way to display an owner address.** Every surface that shows a
+`block.owner`, `entry.wallet`, `listing.seller` or a connected wallet imports from
+here. Pure module, no imports of its own.
+
+### Why it exists
+
+The `owner` column holds whatever the build's chain uses, and the formats are not
+close to the same length:
+
+| Family | Example shape | Length |
+|---|---|---|
+| evm | `0x` + 40 hex | 42 |
+| tezos | `tz1…` base58 | 36 |
+| solana | base58 | 43–44 |
+| ton | `EQ…` base64url | 48 |
+| stellar | `G…` base32 | 56 |
+| cardano / algorand | `addr1q…` bech32 / bare base32 | 58 |
+| multiversx | `erd1…` bech32 | 62 |
+| aptos / sui / starknet | `0x` + 64 hex | 66 |
+| radix | `account_rdx12…` bech32 | 65 |
+| near | `alice.near` — a **human name** | 6–64 |
+
+Every call site used to reimplement `startsWith('0x') ? head+tail : raw`, which
+produced two distinct bugs off the EVM path:
+
+1. **Unbounded strings.** Non-EVM addresses fell through the `0x` test and were
+   rendered raw — into the ticker, onto both `TileCertificate` canvases (which
+   cannot clip or ellipsise at all), and into the Guardian header row in
+   `PurchasePanel`, which had no `overflow`/`nowrap` and so let an unbreakable
+   65-char token run under the *ACTIVE* badge.
+2. **Destroyed NEAR/ENS names.** A blanket "longer than 12 ⇒ chop the middle"
+   rule turned `zephyr1234.near` into `zephyr…near`. The name *is* the identity.
+
+### API
+
+| Export | Use |
+|---|---|
+| `shortAddr(addr, { tail = 4, head, maxName = 24 })` | Default for all text UI. Returns `''` for empty input. |
+| `tinyAddr(addr, max = 10, maxName = max + 4)` | Head-only, for surfaces with no room for a tail — currently just the 64px map sprite label. |
+
+Behaviour:
+
+- **Names pass through whole.** Anything matching `name.tld` (`alice.near`,
+  `whale.eth`, `shop.tez`) is returned unmodified up to `maxName`.
+- **Head length adapts to the chain's own prefix**, so the result still reads as
+  that chain's address instead of a generic hash. Known prefixes are matched
+  longest-first (`account_rdx` before `0x`, `addr_test` before `addr1`) and the
+  head is `prefix.length + 4`, clamped to `[6, 13]`.
+- **EVM is unchanged**: `0x` → head 6 → `0x8f3a…1de2`, exactly the pre-existing
+  shape, so nothing regressed on the 17 mainnet EVM builds.
+
+| Family | Rendered |
+|---|---|
+| evm | `0x8f3a…1de2` |
+| cardano | `addr1qkxy…qd4l` |
+| radix | `account_rdx12…4lvn` |
+| multiversx | `erd1qqqq…x0c3` |
+| algorand | `4UTIOJ…MZHN` |
+| near | `lumen5161.near` |
+
+### Call sites
+
+`HoverTooltip` · `PurchasePanel` (owner card + Guardian header) ·
+`TileCertificate` (both canvases) · `LiveFeed` · `AgentFeedPanel` ·
+`AccountModal` · `WalletModal` · `walletStore.shortAddress` · `Map` (`tinyAddr`).
+
+Where the layout allows it, the shortened value carries the **full address in a
+`title` attribute**, so it stays copyable/inspectable on hover.
+
+---
+
 ## Viral surfaces (2026 v1)
 
 See [viral-strategy.md](viral-strategy.md) for the full strategic context.
@@ -602,13 +675,49 @@ The app does its own minimal client-side route detection in `App.jsx`:
 function parseRoute(path) {
   const m = /^\/u\/([^/?#]+)/.exec(path)
   if (m) return { kind: 'empire', handle: decodeURIComponent(m[1]) }
+  if (/^\/ecosystem\/?$/.test(path)) return { kind: 'ecosystem' }
   return { kind: 'game' }
 }
 ```
 
-When `route.kind === 'empire'`, the entire `<App>` returns `<PublicEmpire>` instead of mounting the game. When the user clicks "Claim your land →" we push `/?onboard=1` and dispatch a synthetic `popstate` to re-render and trigger the onboarding modal.
+There are three routes. When `route.kind === 'empire'` the entire `<App>` returns
+`<PublicEmpire>` instead of mounting the game; when it is `'ecosystem'` it returns
+`<EcosystemPage>`; otherwise the game mounts. Both non-game routes return **before**
+the map, stores and modals are set up, so neither pays the game's boot cost.
 
-The FastAPI SPA catch-all (`@app.get("/{full_path:path}")`) serves `dist/index.html` for any unknown path including `/u/...`, so deep links work in production. In dev the Vite dev server resolves the same paths directly to the React app.
+When the user clicks "Claim your land →" we push `/?onboard=1` and dispatch a synthetic `popstate` to re-render and trigger the onboarding modal.
+
+The FastAPI SPA catch-all (`@app.get("/{full_path:path}")`) serves `dist/index.html` for any unknown path including `/u/...` and `/ecosystem`, so deep links work in production. In dev the Vite dev server resolves the same paths directly to the React app.
+
+### `/ecosystem` — the grant-reviewer page
+
+`src/components/EcosystemPage.jsx` is the URL we put in a grant application. It answers
+a reviewer's questions in the order they ask them: **who** (chain logomark, "CryptoLand
+on <Ecosystem>", `PROFILE.tagline` + `PROFILE.pitch`), **traction** (live
+`GET /metrics/grant?days=30`), **native integration** (a spec table), **why this chain**
+(`PROFILE.onboarding.why` + `.grantAngle`), then one CTA into the map.
+
+Written once, chain-native on all 29 builds: every word comes from `PROFILE` and every
+fact from `ACTIVE_CHAIN`, so adding chain #30 needs no edit here.
+
+Three rules it is bound by, because a reviewer will check:
+
+- **No fabricated numbers.** Every figure is a field of the `/metrics/grant` response.
+  If the fetch fails the whole traction section renders **nothing** — a zero would read
+  as "no traction" rather than "no data".
+- **No implied contract.** Contract status is read from `ACTIVE_CHAIN.contractAddress`;
+  with none configured the row says "Not yet deployed — mint stubbed" in plain words.
+- **Seeded data is disclosed** under the traction block, since every per-chain world
+  ships seeded by `server/seed_chain.py`.
+
+It is also deliberately **not** instrumented with `analytics` — firing a page view here
+would put grant reviewers into the DAU number this very page reports.
+
+`/metrics/grant` takes a `chain` parameter, and the page passes
+`ACTIVE_CHAIN_CANONICAL` whenever `VITE_SCOPE_TO_CHAIN` is set. Every figure — DAU/WAU/
+MAU, D1/D7 retention, tiles, owners, volume and guardians — is then computed from that
+chain's rows alone. Unscoped, an Algorand reviewer was shown all 29 chains' traction
+(MAU 12,093 instead of 259), which is worse than showing nothing.
 
 ### HUD additions
 

@@ -100,7 +100,7 @@ enforced by query scoping rather than by separate files.
 |---|---|---|
 | Isolation | total (separate files) | by chain scoping |
 | Ops | 27 processes | 1 process |
-| Metrics | naturally per chain | `?chain=` on `/metrics/grant` |
+| Metrics | naturally per chain | read this chain's row of `by_chain` |
 | Best for | grant reviews | getting started |
 
 ---

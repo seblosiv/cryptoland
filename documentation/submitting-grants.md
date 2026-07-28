@@ -187,9 +187,29 @@ applications, and a saved baseline is the only way to do that.
 Fill the form using §5 below. Always include:
 
 - the **live chain-native URL** (`https://base.cryptoland.game`);
+- the **reviewer page**, `https://base.cryptoland.game/ecosystem` — see below;
 - the **numbers from step 5**, as numbers, with the window stated;
 - the **public repo URL** (§1.1);
 - the **deployed + verified contract address**, if step 4 was done.
+
+#### The `/ecosystem` page
+
+`src/components/EcosystemPage.jsx` is built for exactly one reader: the grant reviewer
+who opens your link with four minutes to spend. Every deployment has it at
+`/ecosystem`, chain-native without any per-chain edit, and it answers in their order —
+who this is on their chain, live traction, how deep the native integration goes, why
+this chain specifically, then one way into the product.
+
+Prefer it over a slide deck: it renders the **same** `/metrics/grant` response you
+quoted in step 5, live, from the deployment they are already looking at. A reviewer who
+wants to check a number can, and that is the point.
+
+It is also honest by construction, which is the part that protects the application:
+the contract row reads "Not yet deployed — mint stubbed" until
+`VITE_CONTRACT_<CHAIN>` is set, and the seeded-world disclosure sits directly under the
+traction block. **Do not remove either before submitting.** A reviewer who discovers
+the mint stub or the seed data on their own has found you hiding something; a reviewer
+who reads it in your own words has found you being straight with them.
 
 Then add the row to the tracker in §6 with the date.
 

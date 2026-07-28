@@ -448,6 +448,17 @@ async def init_db():
         await db.execute("""
             CREATE INDEX IF NOT EXISTS idx_analytics_wallet ON analytics_events(wallet)
         """)
+        # Which chain build produced the event. Without this, per-chain grant
+        # reporting is impossible: an Algorand deployment would report the
+        # traction of all 29 chains combined, which is both wrong and reads as
+        # inflated to anyone who checks.
+        try:
+            await db.execute("ALTER TABLE analytics_events ADD COLUMN chain TEXT")
+        except Exception:
+            pass  # already present
+        await db.execute("""
+            CREATE INDEX IF NOT EXISTS idx_analytics_chain_ts ON analytics_events(chain, ts)
+        """)
         # ── DAO proposals ──────────────────────────────────────────────────
         await db.execute("""
             CREATE TABLE IF NOT EXISTS dao_proposals (
@@ -2774,6 +2785,9 @@ class AnalyticsEvent(BaseModel):
     wallet:     Optional[str] = None
     tile_key:   Optional[str] = None
     properties: Optional[dict] = None
+    # Which chain build emitted this. Sent by the frontend so /metrics/grant can
+    # report a single chain's traction rather than all 29 combined.
+    chain:      Optional[str] = None
 
 @app.post("/analytics/event")
 async def track_event(data: AnalyticsEvent):
@@ -2782,10 +2796,10 @@ async def track_event(data: AnalyticsEvent):
     now = int(time.time() * 1000)
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("""
-            INSERT INTO analytics_events (event, session_id, wallet, tile_key, properties, ts)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO analytics_events (event, session_id, wallet, tile_key, properties, ts, chain)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (data.event, data.session_id, data.wallet, data.tile_key,
-              json.dumps(data.properties) if data.properties else None, now))
+              json.dumps(data.properties) if data.properties else None, now, data.chain))
         await db.commit()
     return {"ok": True}
 
@@ -2814,7 +2828,7 @@ async def analytics_funnel():
 # estimates. Read-only and safe to expose; it aggregates, never returns PII.
 
 @app.get("/metrics/grant")
-async def grant_metrics(days: int = 30):
+async def grant_metrics(days: int = 30, chain: Optional[str] = None):
     """
     Aggregate traction metrics for grant applications.
 
@@ -2838,15 +2852,19 @@ async def grant_metrics(days: int = 30):
         # ── Active users. Prefer wallet identity, fall back to session id, so
         # the count is meaningful before wallets are connected.
         actor = "COALESCE(NULLIF(wallet,''), session_id)"
+        # Scope every user-side query to one chain when asked, so a per-chain
+        # deployment reports its own traction rather than all chains combined.
+        cw    = " AND chain = ?" if chain else ""
+        cargs = (chain,) if chain else ()
         dau = await scalar(
-            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
-            (now_ms - day_ms,))
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?{cw}",
+            (now_ms - day_ms, *cargs))
         wau = await scalar(
-            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
-            (now_ms - 7 * day_ms,))
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?{cw}",
+            (now_ms - 7 * day_ms, *cargs))
         mau = await scalar(
-            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?",
-            (now_ms - 30 * day_ms,))
+            f"SELECT COUNT(DISTINCT {actor}) FROM analytics_events WHERE ts >= ?{cw}",
+            (now_ms - 30 * day_ms, *cargs))
 
         # ── Daily activity timeseries over the window.
         async with db.execute(f"""
@@ -2854,9 +2872,9 @@ async def grant_metrics(days: int = 30):
                    COUNT(DISTINCT {actor})       AS actives,
                    COUNT(*)                      AS events
             FROM analytics_events
-            WHERE ts >= ?
+            WHERE ts >= ?{cw}
             GROUP BY days_ago ORDER BY days_ago
-        """, (now_ms, day_ms, window_start)) as cur:
+        """, (now_ms, day_ms, window_start, *cargs)) as cur:
             ts_rows = await cur.fetchall()
         timeseries = [
             {"days_ago": r["days_ago"], "active_users": r["actives"], "events": r["events"]}
@@ -2865,12 +2883,19 @@ async def grant_metrics(days: int = 30):
 
         # ── Retention: of the actors first seen 7+ days ago, how many returned
         # at least 24h after their first event.
+        # Bounded to a trailing cohort window. Grouping on a COALESCE expression
+        # cannot use an index, so an unbounded GROUP BY full-scans the whole
+        # events table — that alone took ~4s at 338k rows, which is far too slow
+        # for a page a grant reviewer lands on. The ts predicate lets SQLite use
+        # idx_analytics_ts, and D1/D7 retention is not meaningful beyond this
+        # window anyway.
+        cohort_window_ms = max(90, days * 2) * day_ms
         async with db.execute(f"""
             SELECT {actor} AS a, MIN(ts) AS first_ts, MAX(ts) AS last_ts
             FROM analytics_events
-            WHERE {actor} IS NOT NULL
+            WHERE ts >= ? AND {actor} IS NOT NULL{cw}
             GROUP BY a
-        """) as cur:
+        """, (now_ms - cohort_window_ms, *cargs)) as cur:
             cohort = await cur.fetchall()
         eligible = [r for r in cohort if r["first_ts"] <= now_ms - day_ms]
         returned_d1 = [r for r in eligible if r["last_ts"] - r["first_ts"] >= day_ms]
@@ -2879,13 +2904,18 @@ async def grant_metrics(days: int = 30):
         def pct(num, den):
             return round(100.0 * len(num) / len(den), 1) if den else 0.0
 
-        # ── Economy / on-chain-relevant totals.
-        total_tiles   = await scalar("SELECT COUNT(*) FROM blocks")
-        total_owners  = await scalar("SELECT COUNT(DISTINCT owner) FROM blocks")
-        total_volume  = await scalar("SELECT SUM(price) FROM blocks")
-        window_tiles  = await scalar("SELECT COUNT(*) FROM blocks WHERE purchased_at >= ?", (window_start,))
-        window_volume = await scalar("SELECT SUM(price) FROM blocks WHERE purchased_at >= ?", (window_start,))
-        nft_mints     = await scalar("SELECT COUNT(*) FROM nft_mints")
+        # ── Economy / on-chain-relevant totals (also chain-scoped when asked).
+        bw = " WHERE chain = ?" if chain else ""
+        bwa = " AND chain = ?" if chain else ""
+        total_tiles   = await scalar(f"SELECT COUNT(*) FROM blocks{bw}", cargs)
+        total_owners  = await scalar(f"SELECT COUNT(DISTINCT owner) FROM blocks{bw}", cargs)
+        total_volume  = await scalar(f"SELECT SUM(price) FROM blocks{bw}", cargs)
+        window_tiles  = await scalar(
+            f"SELECT COUNT(*) FROM blocks WHERE purchased_at >= ?{bwa}", (window_start, *cargs))
+        window_volume = await scalar(
+            f"SELECT SUM(price) FROM blocks WHERE purchased_at >= ?{bwa}", (window_start, *cargs))
+        nft_mints     = await scalar(
+            f"SELECT COUNT(*) FROM nft_mints{bw}", cargs)
 
         # ── Per-chain breakdown — the multichain deployment story funders want.
         async with db.execute("""
@@ -2903,7 +2933,16 @@ async def grant_metrics(days: int = 30):
         ]
 
         # ── Engagement depth (shows it's a game, not a mint).
-        guardians = await scalar("SELECT COUNT(*) FROM guardians")
+        # The guardians table has no chain column, so scope it by joining to the
+        # tiles it protects. Unscoped it reported every chain's guardians — the
+        # Algorand page showed 2,897 guardians against 274 tiles, which is
+        # self-evidently impossible to anyone reading the page.
+        if chain:
+            guardians = await scalar(
+                "SELECT COUNT(*) FROM guardians g "
+                "JOIN blocks b ON b.tile_key = g.tile_key AND b.chain = ?", cargs)
+        else:
+            guardians = await scalar("SELECT COUNT(*) FROM guardians")
         accounts  = await scalar("SELECT COUNT(*) FROM users")
 
     return {

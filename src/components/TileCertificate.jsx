@@ -11,6 +11,7 @@
  */
 import { useRef, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { shortAddr } from '../lib/addr'
 
 const W = 800
 const H = 440
@@ -127,10 +128,13 @@ function useCanvas(block, shareUrl) {
     }
 
     // ── Owner ──────────────────────────────────────────────────────────────
-    const owner = block.owner || ''
-    const displayOwner = owner.startsWith('0x') && owner.length > 16
-      ? `${owner.slice(0, 8)}…${owner.slice(-6)}`
-      : owner
+    // The old `startsWith('0x')` test shortened EVM only, so a 58-char Cardano
+    // or 65-char Radix address was drawn raw — unbounded on a canvas that
+    // cannot clip or ellipsise, and visually nothing like the EVM card.
+    // shortAddr bounds every chain to the same shape.
+    // Head is left auto so each chain keeps its own prefix (addr1…, erd1…,
+    // account_rdx12…); only the tail is widened for this larger surface.
+    const displayOwner = shortAddr(block.owner, { tail: 6, maxName: 28 })
 
     ctx.font = '600 13px monospace'
     ctx.fillStyle = `rgba(${r},${g},${b},0.9)`
@@ -384,10 +388,9 @@ export function MiniCertificate({ block, shareUrl }) {
       sx += Math.max(84, ctx.measureText(s.v).width + 28)
     }
 
-    // Owner
-    const owner = block.owner || ''
-    const displayOwner = owner.startsWith('0x') && owner.length > 16
-      ? `${owner.slice(0, 8)}…${owner.slice(-6)}` : owner
+    // Owner — same bound as the full card, tighter because this canvas is 560px
+    // wide. A raw 65-char address ran to x≈466 here, crowding the QR column.
+    const displayOwner = shortAddr(block.owner, { tail: 5, maxName: 22 })
     ctx.font = '600 10px monospace'
     ctx.fillStyle = `rgba(${r},${g},${b},0.9)`
     ctx.letterSpacing = '0px'

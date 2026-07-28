@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { useViralStore } from '../store/viralStore'
+import { shortAddr } from '../lib/addr'
 
 /**
  * AgentFeedPanel — the public, parasocial feed of Guardian Agent thoughts.
@@ -30,11 +31,9 @@ function timeAgo(ms) {
   return `${Math.floor(d / 86_400_000)}d`
 }
 
-function shortenOwner(o) {
-  if (!o) return '—'
-  if (o.startsWith('0x') && o.length > 12) return o.slice(0, 6) + '…' + o.slice(-4)
-  return o.length > 16 ? o.slice(0, 14) + '…' : o
-}
+// Non-EVM addresses used to fall through to a head-only chop, losing the tail
+// that actually distinguishes two owners. shortAddr keeps prefix + tail.
+const shortenOwner = (o) => shortAddr(o) || '—'
 
 export default function AgentFeedPanel() {
   const open      = useViralStore(s => s.agentPanelOpen)

@@ -18,17 +18,16 @@
 import { create } from 'zustand'
 import { ACTIVE_CHAIN, CHAINS } from '../lib/blockchain/config.js'
 import { analytics } from '../lib/analytics'
+import { shortAddr as shortAddress } from '../lib/addr'
 
 // Lazy-import adapter to avoid top-level await issues in some bundlers
 async function getAdapter() {
   return import('../lib/blockchain/index.js')
 }
 
-function shortAddr(addr) {
-  if (!addr) return null
-  if (addr.length > 12) return addr.slice(0, 6) + '…' + addr.slice(-4)
-  return addr
-}
+// Chain-aware: keeps `0x1234…abcd` for EVM but leaves `alice.near` intact and
+// keeps the bech32 prefix on Cardano / MultiversX / Radix. See src/lib/addr.js.
+const shortAddr = (addr) => shortAddress(addr) || null
 
 function loadPersistedWallet() {
   try {

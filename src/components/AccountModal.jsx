@@ -7,13 +7,9 @@ import { useGameStore } from '../store/gameStore'
 import { useGuardianStore } from '../store/guardianStore'
 import { useIsMobile } from '../lib/hooks'
 import { api } from '../lib/api'
+import { shortAddr } from '../lib/addr'
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
-
-function shortAddr(a) {
-  if (!a) return ''
-  return a.length > 12 ? a.slice(0, 6) + '…' + a.slice(-4) : a
-}
 
 function fmtDate(iso) {
   if (!iso) return '—'

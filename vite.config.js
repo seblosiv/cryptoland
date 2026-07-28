@@ -122,6 +122,7 @@ export default defineConfig({
       '/nft':               'http://127.0.0.1:8000',
       '/marketplace':       'http://127.0.0.1:8000',
       '/analytics':         'http://127.0.0.1:8000',
+      '/metrics':           'http://127.0.0.1:8000',
       '/dao':               'http://127.0.0.1:8000',
       '/token':             'http://127.0.0.1:8000',
       '/auth':              'http://127.0.0.1:8000',

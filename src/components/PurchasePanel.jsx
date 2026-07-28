@@ -5,6 +5,7 @@ import { usePriceStore, SOURCE_META } from '../store/priceStore'
 import { tileBasePrice, lngLatToTile, tileNW, GRID_N, geoRegion } from '../lib/tiles'
 import { useIsMobile } from '../lib/hooks'
 import { api } from '../lib/api'
+import { shortAddr } from '../lib/addr'
 import TileCertificate, { MiniCertificate } from './TileCertificate'
 
 function fakeViewers(tx, ty) {
@@ -1659,8 +1660,11 @@ export default function PurchasePanel() {
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span className="label" style={{ display: 'block', marginBottom: 2 }}>Owner</span>
-                  <span style={{ fontSize: 12, fontFamily: 'var(--mono)', fontWeight: 700, color: accentColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                    {block.owner}
+                  {/* Shortened chain-aware so a 65-char Radix / 58-char Cardano
+                      address still shows its prefix AND its tail, instead of
+                      being clipped to a meaningless head. */}
+                  <span title={block.owner} style={{ fontSize: 12, fontFamily: 'var(--mono)', fontWeight: 700, color: accentColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                    {shortAddr(block.owner)}
                   </span>
                 </div>
                 {isMine && <span className="badge badge-green">You</span>}
@@ -1958,8 +1962,8 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
               <div style={{ fontSize: 12, fontWeight: 700, color: pm.color }}>
                 {pm.icon} {pm.label} Guardian
               </div>
-              <div style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mono)', marginTop: 1 }}>
-                Level {guardian.level} · {block.owner}
+              <div title={block.owner} style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mono)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                Level {guardian.level} · {shortAddr(block.owner)}
               </div>
             </div>
             <div style={{
