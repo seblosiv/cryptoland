@@ -2,6 +2,12 @@ fastapi>=0.110,<1.0
 uvicorn[standard]>=0.29,<1.0
 aiosqlite>=0.19,<1.0
 httpx>=0.27,<1.0
+# Imported by price_events.py. It was missing from this file, so a clean deploy
+# built a venv without it and every backend crashed on import with
+# ModuleNotFoundError — 27/27 dead on first boot. It only ever worked locally
+# because aiohttp was already present in the dev environment as a transitive
+# dependency of something else.
+aiohttp>=3.9,<4.0
 python-dotenv>=1.0,<2.0
 slowapi>=0.1.9,<1.0
 eth-account>=0.11,<0.14
