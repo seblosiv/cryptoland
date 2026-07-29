@@ -212,6 +212,7 @@ ${cards}
 </section>
 
 <footer>
+  <a href="/about" style="color:var(--acc)">About &amp; who builds this →</a><br><br>
   Every build exposes <code>/ecosystem</code> — that chain's live traction, its native integration spec, and
   an explicit statement of what is and is not deployed on-chain.
 </footer>

@@ -150,6 +150,13 @@ stage_apex() {
   cat > "$caddy.apex" <<EOF
 $DOMAIN, www.$DOMAIN {
     root * /srv/cryptoland/apex/dist
+    # /about must resolve without the .html suffix — it is the URL that goes in
+    # grant applications, and 85% of programme pages require founder details.
+    @about path /about /about/
+    handle @about {
+        rewrite * /about.html
+        file_server
+    }
     file_server
     handle_errors {
         rewrite * /index.html

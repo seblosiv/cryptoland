@@ -2,7 +2,7 @@
 # push.sh — sync the staged 27-chain deployment to the server and start it.
 # Run from the repo root AFTER: CRYPTOLAND_DOMAIN=xono.ai ./scripts/deploy-chain.sh all --seed
 #
-#   HOST=root@91.99.194.54 ./deploy/server/push.sh
+#   HOST=root@<your-server-ip> ./deploy/server/push.sh
 set -euo pipefail
 
 HOST="${HOST:?set HOST=root@<ip>}"
