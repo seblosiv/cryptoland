@@ -23,14 +23,21 @@ deploy/out/
   <chain>/dist/          the static bundle to serve at <chain>.<domain>
   <chain>/<chain>.db     that chain's database (with --seed)
   nginx/<chain>.conf     a ready server block
-  Caddyfile              the same 27 sites, appended as you build them
+  Caddyfile              the same 27 sites
 ```
+
+The Caddyfile is **rewritten per chain, not appended to**. Each run strips any
+existing block for that chain — on *any* domain — before writing the new one, so
+re-running a chain, or switching `CRYPTOLAND_DOMAIN`, replaces its site block
+instead of stacking another one beside it. Appending meant three runs produced
+three `algorand.*` addresses; Caddy refuses to start on a duplicate site address,
+and a stale block pointing at the old domain is worse than no block at all.
 
 Environment knobs:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `CRYPTOLAND_DOMAIN` | `cryptoland.game` | apex domain for the subdomains |
+| `CRYPTOLAND_DOMAIN` | `cryptoland.game` | apex domain for the subdomains, e.g. `CRYPTOLAND_DOMAIN=xono.ai` → `algorand.xono.ai` |
 | `CRYPTOLAND_API_HOST` | *(unset)* | if set, builds point `VITE_API_BASE` at this host |
 | `CRYPTOLAND_SEED_USERS` | `120` | owners generated per chain |
 

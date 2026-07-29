@@ -86,9 +86,30 @@ PY
       deploy/nginx.conf.template > "$OUT/nginx/$chain.conf"
   echo "  ✓ nginx   -> $OUT/nginx/$chain.conf  ($chain.$DOMAIN → :$port)"
 
-  # 4. Append this chain to the Caddyfile (simpler alternative to nginx:
-  #    automatic HTTPS for all 27 subdomains with no certbot step).
-  cat >> "$OUT/Caddyfile" <<EOF
+  # 4. Write this chain's block into the Caddyfile (simpler alternative to
+  #    nginx: automatic HTTPS for all 27 subdomains with no certbot step).
+  #
+  #    Rewritten per chain, not appended. Appending meant a second run — or a
+  #    run under a different CRYPTOLAND_DOMAIN — left the previous site blocks
+  #    in place, so the file ended up with several `algorand.*` addresses.
+  #    Caddy refuses to start on a duplicate site address, and a stale block
+  #    for the old domain is worse than none.
+  local caddy="$OUT/Caddyfile"
+  if [[ -f "$caddy" ]]; then
+    # Drop any existing block for this chain, on ANY domain: from its site line
+    # up to the closing brace in column 1.
+    awk -v chain="$chain" '
+      $0 ~ "^"chain"\\.[^ ]+ \\{$" { skip = 1 }
+      skip && /^\}$/                  { skip = 0; next }
+      !skip                            { print }
+    ' "$caddy" > "$caddy.tmp" && mv "$caddy.tmp" "$caddy"
+    # Removing a block leaves its separator behind; collapse runs of blank
+    # lines and any leading ones so repeated runs don't grow whitespace.
+    awk 'BEGIN{blank=1} /^$/{if(blank)next; blank=1; print; next} {blank=0; print}' \
+      "$caddy" > "$caddy.tmp" && mv "$caddy.tmp" "$caddy"
+  fi
+
+  cat >> "$caddy" <<EOF
 $chain.$DOMAIN {
     root * /srv/cryptoland/$chain/dist
     handle /tonconnect-manifest.json {

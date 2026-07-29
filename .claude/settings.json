@@ -8,7 +8,9 @@
       "Bash(uvicorn main:app --reload --port 8000)",
       "Bash(echo \"Backend PID: $!\")",
       "Bash(npm run *)",
-      "Bash(echo \"Vite PID: $!\")"
+      "Bash(echo \"Vite PID: $!\")",
+      "Bash(npm test *)",
+      "Bash(grep -v \"=$\")"
     ]
   }
 }
