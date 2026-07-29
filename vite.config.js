@@ -18,7 +18,24 @@ function chainMeta() {
   return {
     name: 'cryptoland-chain-meta',
     transformIndexHtml(html) {
-      const chain = process.env.VITE_CHAIN || 'polygon-amoy'
+      // VITE_CHAIN can arrive two ways and BOTH must work:
+      //   - exported in the environment (`VITE_CHAIN=ton npx vite build`)
+      //   - written into .env.production, which is how scripts/build-chain.sh
+      //     selects the chain (it copies env/.env.<chain> into place)
+      // Vite loads .env.production into `import.meta.env`, never into
+      // `process.env`, so reading process.env alone silently fell back to
+      // 'polygon-amoy' for every scripted build — all 27 bundles shipped OG
+      // tags and a <title> saying "CryptoLand on Polygon Amoy". The bundles
+      // themselves were correct; only the link preview lied, which is exactly
+      // the surface a grant reviewer sees first when the URL is shared.
+      let chain = process.env.VITE_CHAIN
+      if (!chain) {
+        try {
+          const envFile = readFileSync('.env.production', 'utf8')
+          chain = /^VITE_CHAIN\s*=\s*(.+)$/m.exec(envFile)?.[1]?.trim()
+        } catch { /* no .env.production — fall through to the default */ }
+      }
+      chain = chain || 'polygon-amoy'
       let name = 'CryptoLand'
       let tagline = 'Own real Earth territory on-chain.'
       try {
