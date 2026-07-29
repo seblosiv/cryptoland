@@ -395,7 +395,20 @@ export default function ChainOnboarding({ onEnter }) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 300,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(0,0,0,0.92)',
+      // A radial scrim, not a flat one. At a uniform rgba(0,0,0,0.92) the map
+      // behind was crushed to black on every chain, so the first thing a player
+      // saw of a *geospatial* game was an empty void — the world is the product,
+      // and it was invisible until after the modal closed.
+      //
+      // Dense behind the card (where text has to stay readable) and much lighter
+      // at the edges, so the city lights read as a real place the modal is
+      // sitting on top of. Deliberately NOT backdrop-filter: blur — see
+      // documentation/styling.md; frosted panels are out of contract here.
+      background:
+        'radial-gradient(ellipse 78% 68% at 50% 50%,' +
+        ' rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.86) 30%,' +
+        ' rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.34) 82%,' +
+        ' rgba(0,0,0,0.20) 100%)',
       padding: 'max(20px, var(--sat)) 20px max(20px, var(--sab))',
       overflowY: 'auto',
     }}>

@@ -140,8 +140,32 @@ chain_port() {
   echo 9000
 }
 
+# The apex (xono.ai / www) is not a chain, but it must live in the same
+# Caddyfile — push.sh copies that file wholesale, so an apex block added by hand
+# on the server is silently destroyed by the next deploy. Emit it here instead.
+stage_apex() {
+  local caddy="$OUT/Caddyfile"
+  grep -q "^$DOMAIN, www.$DOMAIN {" "$caddy" 2>/dev/null && return 0
+  mkdir -p "$OUT"
+  cat > "$caddy.apex" <<EOF
+$DOMAIN, www.$DOMAIN {
+    root * /srv/cryptoland/apex/dist
+    file_server
+    handle_errors {
+        rewrite * /index.html
+        file_server
+    }
+}
+
+EOF
+  cat "$caddy.apex" "$caddy" > "$caddy.new" 2>/dev/null || cp "$caddy.apex" "$caddy.new"
+  mv "$caddy.new" "$caddy"; rm -f "$caddy.apex"
+  echo "  ✓ caddy   -> apex block for $DOMAIN"
+}
+
 if [[ "${1:-}" == "all" ]]; then
   for c in "${CHAINS[@]}"; do stage_one "$c"; done
+  stage_apex
   echo
   echo "✓ staged ${#CHAINS[@]} chains under $OUT/"
   echo "  serve  <chain>.$DOMAIN  from  $OUT/<chain>/dist"

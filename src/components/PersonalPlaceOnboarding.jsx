@@ -101,11 +101,15 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 240,
-      background: 'rgba(0,0,0,0.92)',
+      // Radial scrim rather than a flat one + blur: keeps the map readable
+        // behind the modal without frosted glass, which is out of contract
+        // here (see documentation/styling.md).
+        background: 'radial-gradient(ellipse 78% 68% at 50% 50%,'
+          + ' rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.82) 38%,'
+          + ' rgba(0,0,0,0.58) 70%, rgba(0,0,0,0.28) 100%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 'max(20px, var(--sat)) 20px max(20px, var(--sab))',
       overflowY: 'auto',
-      backdropFilter: 'blur(6px)',
     }}>
       <div style={{
         width: '100%', maxWidth: 520,

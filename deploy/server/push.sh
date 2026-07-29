@@ -51,6 +51,15 @@ for c in "${CHAINS[@]}"; do
   printf "  ✓ %-12s :%s\n" "$c" "$port"
 done
 
+echo "── apex landing page ────────────────────────────────"
+if [[ -f deploy/apex/dist/index.html ]]; then
+  "${SSH[@]}" "mkdir -p /srv/cryptoland/apex/dist"
+  rsync -az -e "$RSYNC_RSH" deploy/apex/dist/ "$HOST:/srv/cryptoland/apex/dist/"
+  echo "  ✓ apex"
+else
+  echo "  · no apex build (run: node deploy/apex/build-apex.mjs)"
+fi
+
 echo "── caddy + systemd ──────────────────────────────────"
 rsync -az -e "$RSYNC_RSH" deploy/out/Caddyfile "$HOST:/etc/caddy/Caddyfile"
 rsync -az -e "$RSYNC_RSH" deploy/server/cryptoland@.service "$HOST:/etc/systemd/system/cryptoland@.service"

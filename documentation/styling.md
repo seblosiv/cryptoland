@@ -158,6 +158,33 @@ tiles and UI read clearly on top:
 
 ---
 
+
+### Modal scrims — radial, never blurred
+
+A full-screen modal sits on top of the map, and the map **is** the product. A flat
+`rgba(0,0,0,0.92)` crushed it to pure black, so the first thing a player saw of a
+geospatial game was an empty void until the modal closed.
+
+The fix is a radial gradient — dense behind the card where text must stay
+readable, much lighter at the edges so coastlines, labels and city lights read
+through:
+
+```css
+radial-gradient(ellipse 78% 68% at 50% 50%,
+  rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.86) 30%,
+  rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.34) 82%, rgba(0,0,0,0.20) 100%)
+```
+
+**Not `backdrop-filter: blur()`.** That is the glassmorphism this project has
+rejected repeatedly, and it also costs a compositor pass over the whole viewport
+on every frame while a WebGL map animates underneath. The card itself stays
+opaque `--s1`, so contrast inside it is unaffected.
+
+Applied to `ChainOnboarding`, `PersonalPlaceOnboarding` and `EmpireCard` — the
+last two still carried `backdropFilter: 'blur(6px)'` and were the only real
+violations left in `src/`.
+
+
 ## Layout System
 
 - **Full viewport:** `html, body, #root` are `width/height: 100%`, `overflow: hidden`
