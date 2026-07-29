@@ -49,7 +49,7 @@ module.exports = {
 
     // ── EVM Mainnets ──────────────────────────────────────────────────────
     polygon: {
-      url:      'https://polygon-rpc.com',
+      url:      'https://polygon-bor-rpc.publicnode.com',
       chainId:  137,
       accounts: [PK],
       gasPrice: 'auto',
@@ -69,6 +69,51 @@ module.exports = {
       chainId:  1,
       accounts: [PK],
     },
+
+    // ── Added 2026-07-29. Deployment cost measured with live gas + token
+    //    prices at ~3.2M gas: SKALE/Scroll/Avalanche/Ronin ~$0.00, Optimism
+    //    $0.01, Base $0.04, Celo $0.04, BNB $0.09, Polygon $0.12, Arbitrum
+    //    $0.12 — about $0.42 for all ten. Cost is not the constraint; a
+    //    RETAINED, BACKED-UP deployer key is (Retro9000 and OP Atlas both
+    //    require the original deployer address to sign to claim the contracts).
+    optimism: {
+      url:      'https://optimism-rpc.publicnode.com',
+      chainId:  10,
+      accounts: [PK],
+    },
+    arbitrum: {
+      url:      'https://arb1.arbitrum.io/rpc',
+      chainId:  42161,
+      accounts: [PK],
+    },
+    bnb: {
+      url:      'https://bsc-dataseed.bnbchain.org',
+      chainId:  56,
+      accounts: [PK],
+    },
+    scroll: {
+      url:      'https://rpc.scroll.io',
+      chainId:  534352,
+      accounts: [PK],
+    },
+    celo: {
+      url:      'https://forno.celo.org',
+      chainId:  42220,
+      accounts: [PK],
+    },
+    ronin: {
+      url:      'https://api.roninchain.com/rpc',
+      chainId:  2020,
+      accounts: [PK],
+    },
+    // SKALE Nebula Gaming Hub — gasless (sFUEL is a valueless faucet token),
+    // so this is the zero-cost place to prove the contract works on mainnet.
+    skale: {
+      url:      'https://mainnet.skalenodes.com/v1/green-giddy-denebola',
+      chainId:  1482601649,
+      accounts: [PK],
+    },
+
   },
 
   etherscan: {
@@ -101,7 +146,9 @@ module.exports = {
   },
 
   paths: {
-    sources:  './',
+    // './' made node_modules part of the source tree, so Hardhat treated
+    // OpenZeppelin's contracts as local files and refused to compile (HH1006).
+    sources:  './src',
     tests:    './test',
     cache:    './cache',
     artifacts:'./artifacts',

@@ -26,7 +26,11 @@ describe('CryptoLandTile', () => {
     expect(await contract.tokenIdFromKey(0, 0)).to.equal(0n)
     expect(await contract.tokenIdFromKey(1, 0)).to.equal(32768n)        // 1 << 15
     expect(await contract.tokenIdFromKey(0, 1)).to.equal(1n)
-    expect(await contract.tokenIdFromKey(16383, 16383)).to.equal(536887295n) // (16383<<15)|16383
+    // 536854527, not 536887295: the old literal was computed with tx=16384,
+    // which is out of range on a 16384-wide grid (max index 16383). The contract
+    // was right and the expectation was wrong — verified against the same
+    // (tx << 15) | ty scheme used by _shared.js and evm.js.
+    expect(await contract.tokenIdFromKey(16383, 16383)).to.equal(536854527n)
   })
 
   it('produces unique IDs for distinct tiles', async () => {

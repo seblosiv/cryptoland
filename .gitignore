@@ -58,3 +58,9 @@ deploy/out/
 # DB backups
 *.db.bak*
 *.bak
+
+# Hardhat toolchain (installed on demand in contracts/)
+contracts/node_modules/
+contracts/artifacts/
+contracts/cache/
+contracts/package-lock.json
