@@ -252,4 +252,68 @@ ${cards}
 
 mkdirSync('deploy/apex/dist', { recursive: true })
 writeFileSync('deploy/apex/dist/index.html', html)
+
+// robots.txt — /about is the ONLY disallowed path. Everything else must stay
+// indexable: a grant reviewer has to be able to find the product.
+const robots = `# xono.ai
+# The whole site is open to crawlers EXCEPT /about, which carries the founder's
+# name and contact details. See also the noindex meta tags on that page and the
+# X-Robots-Tag header in the Caddy config - three layers, because meta tags only
+# work if the crawler parses HTML, and robots.txt only works if it is honoured.
+
+User-agent: *
+Disallow: /about
+Allow: /
+
+# AI / LLM training and retrieval crawlers - blocked from /about specifically.
+User-agent: GPTBot
+Disallow: /about
+User-agent: OAI-SearchBot
+Disallow: /about
+User-agent: ChatGPT-User
+Disallow: /about
+User-agent: ClaudeBot
+Disallow: /about
+User-agent: Claude-Web
+Disallow: /about
+User-agent: anthropic-ai
+Disallow: /about
+User-agent: Google-Extended
+Disallow: /about
+User-agent: PerplexityBot
+Disallow: /about
+User-agent: CCBot
+Disallow: /about
+User-agent: Applebot-Extended
+Disallow: /about
+User-agent: Bytespider
+Disallow: /about
+User-agent: meta-externalagent
+Disallow: /about
+User-agent: Amazonbot
+Disallow: /about
+User-agent: cohere-ai
+Disallow: /about
+User-agent: Diffbot
+Disallow: /about
+User-agent: omgili
+Disallow: /about
+User-agent: Timpibot
+Disallow: /about
+
+Sitemap: https://xono.ai/sitemap.xml
+`
+writeFileSync('deploy/apex/dist/robots.txt', robots)
+
+// Sitemap lists every chain build but deliberately OMITS /about.
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://xono.ai/</loc><priority>1.0</priority></url>
+${TARGETS.map(k => `  <url><loc>https://${k}.xono.ai/</loc><priority>0.8</priority></url>
+  <url><loc>https://${k}.xono.ai/ecosystem</loc><priority>0.7</priority></url>`).join('\n')}
+</urlset>
+`
+writeFileSync('deploy/apex/dist/sitemap.xml', sitemap)
+console.log('robots.txt + sitemap.xml written (/about excluded)')
+
 console.log(`apex: ${TARGETS.length} chains, ${families.length} families, ${(html.length/1024).toFixed(1)} KB`)

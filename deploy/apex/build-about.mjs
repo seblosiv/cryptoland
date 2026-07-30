@@ -15,6 +15,35 @@
  */
 import { writeFileSync, mkdirSync } from 'node:fs'
 
+/**
+ * Render a string as an inline SVG image rather than HTML text.
+ *
+ * WHY: the founder name and email are the two strings most worth keeping out of
+ * automated harvesting — email scrapers and LLM training crawlers both read the
+ * HTML text layer. Inside an <svg> the characters are drawn, not marked up, so a
+ * naive text extractor gets nothing.
+ *
+ * HONEST LIMIT: this stops naive scraping only. The text still lives in the SVG
+ * source, so anyone who looks at the markup, or runs OCR on the rendered page,
+ * can read it. It raises the cost; it does not make the data private. The email
+ * is additionally split so no `mailto:` or `user@host` literal appears anywhere
+ * in the served HTML — it is reassembled in JS on click.
+ *
+ * Accessibility is preserved with role="img" + aria-label so screen readers and
+ * keyboard users are unaffected.
+ */
+const svgText = (text, { size = 42, weight = 800, fill = 'var(--t1)', letter = '-0.03em', label } = {}) => {
+  const w = Math.ceil(text.length * size * 0.58)
+  const h = Math.ceil(size * 1.32)
+  return `<svg role="img" aria-label="${esc(label ?? text)}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"
+    style="max-width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+    <text x="0" y="${Math.round(size)}" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif"
+      font-size="${size}" font-weight="${weight}" letter-spacing="${letter}" fill="${fill}">${esc(text)}</text>
+  </svg>`
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))
+
+
 const { MAINNET_CHAINS } = await import('../../src/lib/blockchain/config.js')
 const TARGETS = 27
 const FAMILIES = [...new Set(MAINNET_CHAINS.map(c => c.family))].length
@@ -23,9 +52,29 @@ const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>About — CryptoLand</title>
-<meta name="description" content="Who builds CryptoLand: Seb Bochenek, founder and engineer.">
-<meta property="og:title" content="About — CryptoLand">
-<meta property="og:description" content="Who builds CryptoLand, what is shipped, and how to get in touch.">
+<meta name="description" content="Who builds CryptoLand.">
+<!-- THIS PAGE ONLY: keep the founder's identity out of search indexes and AI
+     training corpora. Everything else on xono.ai stays fully indexable - a grant
+     reviewer must be able to find the product. noarchive also suppresses
+     cached copies, which otherwise outlive any later change here. -->
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="google" content="nositelinkssearchbox">
+<!-- Named AI/LLM crawlers. These are honoured voluntarily; see robots.txt for
+     the same list, and the X-Robots-Tag header for the case where a crawler
+     fetches the file without parsing the HTML. -->
+<meta name="GPTBot" content="noindex, nofollow">
+<meta name="OAI-SearchBot" content="noindex, nofollow">
+<meta name="ChatGPT-User" content="noindex, nofollow">
+<meta name="ClaudeBot" content="noindex, nofollow">
+<meta name="anthropic-ai" content="noindex, nofollow">
+<meta name="Google-Extended" content="noindex, nofollow">
+<meta name="PerplexityBot" content="noindex, nofollow">
+<meta name="CCBot" content="noindex, nofollow">
+<meta name="Applebot-Extended" content="noindex, nofollow">
+<meta name="Bytespider" content="noindex, nofollow">
+<meta name="meta-externalagent" content="noindex, nofollow">
+
 <style>
 :root{--bg:#0f0f0f;--s1:#141414;--s2:#1a1a1a;--s3:#222;--b0:rgba(255,255,255,.08);
 --t1:#fff;--t2:#a8a8a8;--t3:#6e6e6e;--acc:#4ade80}
@@ -63,7 +112,7 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 
 <header>
   <a class="back" href="/">← CryptoLand</a>
-  <h1>Seb Bochenek</h1>
+  <h1 style="margin-bottom:2px">${svgText('Seb Bochenek', { size: 42, label: 'Founder name' })}</h1>
   <div class="role">Founder &amp; engineer — CryptoLand</div>
 
   <div class="who">
@@ -81,7 +130,9 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 
   <div class="links">
     <a class="link" href="https://www.linkedin.com/in/sebbusiness/" rel="me noopener" target="_blank">LinkedIn <span>@sebbusiness</span></a>
-    <a class="link" href="mailto:seblosiv@gmail.com">Email <span>seblosiv@gmail.com</span></a>
+    <button class="link" id="em" type="button" aria-label="Reveal contact email">
+      Email ${svgText('seblosiv at gmail dot com', { size: 13, weight: 600, fill: 'var(--t3)', letter: '0', label: 'Contact email' })}
+    </button>
     <a class="link" href="/">The game <span>27 live deployments</span></a>
   </div>
 </header>
@@ -113,7 +164,22 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
   integration spec, and the same disclosures as above.
 </footer>
 
-</div></body></html>`
+</div>
+<script>
+// The address is assembled at click time from parts, so the served HTML contains
+// no user-at-host string for an email harvester to regex out. This defeats naive
+// scraping only - anyone running the page in a browser can still read it.
+(function () {
+  var b = document.getElementById('em');
+  if (!b) return;
+  var u = ['seb','losiv'].join(''), d = ['gmail','com'].join('.');
+  b.addEventListener('click', function () {
+    location.href = 'mail' + 'to:' + u + String.fromCharCode(64) + d;
+  });
+  b.style.cursor = 'pointer';
+})();
+</script>
+</body></html>`
 
 mkdirSync('deploy/apex/dist', { recursive: true })
 writeFileSync('deploy/apex/dist/about.html', html)

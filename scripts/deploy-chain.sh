@@ -152,8 +152,15 @@ $DOMAIN, www.$DOMAIN {
     root * /srv/cryptoland/apex/dist
     # /about must resolve without the .html suffix — it is the URL that goes in
     # grant applications, and 85% of programme pages require founder details.
-    @about path /about /about/
+    @about path /about /about/ /about.html
     handle @about {
+        # Third layer of crawler blocking, after the page's meta tags and
+        # robots.txt. This one works even when a crawler fetches the file without
+        # parsing HTML or honouring robots.txt, and Google treats the header as
+        # authoritative. Scoped to /about ONLY - the rest of the site must stay
+        # indexable so grant reviewers can find the product.
+        header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex"
+        header Referrer-Policy "no-referrer"
         rewrite * /about.html
         file_server
     }
