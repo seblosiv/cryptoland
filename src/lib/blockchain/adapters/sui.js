@@ -131,19 +131,52 @@ export async function getTileData()      { return null }
 export async function getOwnedTokenIds() { return [] }
 export async function totalSupply()      { return 0 }
 
+/**
+ * Poll until the transaction lands.
+ *
+ * Sui DEPRECATED JSON-RPC on public fullnodes — every method there now returns
+ * -32601 with a notice to migrate to gRPC or GraphQL. GraphQL is the path that
+ * works from a browser (the endpoint sends `Access-Control-Allow-Origin: *`),
+ * so it is tried first. JSON-RPC is kept as a fallback because the third-party
+ * endpoints we point at still serve it, and it is the only thing that works if
+ * a deployment overrides rpcUrl with a private node.
+ */
+async function txStatusViaGraphQL(digest) {
+  const url = ACTIVE_CHAIN.graphqlUrl
+  if (!url) return null
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: 'query($d:String!){ transactionEffects(digest:$d){ status } }',
+      variables: { d: digest },
+    }),
+  }).then(r => r.json()).catch(() => null)
+  // SUCCESS | FAILURE | null while still unconfirmed.
+  return r?.data?.transactionEffects?.status ?? null
+}
+
+async function txStatusViaJsonRpc(digest) {
+  const r = await fetch(ACTIVE_CHAIN.rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0', id: 1, method: 'sui_getTransactionBlock',
+      params: [digest, { showEffects: true }],
+    }),
+  }).then(r => r.json()).catch(() => null)
+  const s = r?.result?.effects?.status?.status
+  if (s === 'success') return 'SUCCESS'
+  if (s === 'failure') return 'FAILURE'
+  return null
+}
+
 export async function waitForTx(digest, maxWait = 60_000) {
   const start = Date.now()
   while (Date.now() - start < maxWait) {
-    const r = await fetch(ACTIVE_CHAIN.rpcUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1, method: 'sui_getTransactionBlock',
-        params: [digest, { showEffects: true }],
-      }),
-    }).then(r => r.json()).catch(() => null)
-    if (r?.result?.effects?.status?.status === 'success') return r.result
-    if (r?.result?.effects?.status?.status === 'failure') throw new Error(`Sui tx ${digest} failed`)
+    const status = (await txStatusViaGraphQL(digest)) ?? (await txStatusViaJsonRpc(digest))
+    if (status === 'SUCCESS') return { digest, status }
+    if (status === 'FAILURE') throw new Error(`Sui tx ${digest} failed`)
     await new Promise(res => setTimeout(res, 2000))
   }
   throw new Error(`Sui tx ${digest} not confirmed within ${maxWait / 1000}s`)

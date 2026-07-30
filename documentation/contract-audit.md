@@ -255,3 +255,40 @@ The run found Sui's primary RPC dead — see
 [blockchain.md](blockchain.md) — and a false FAIL on Cardano, because the checker
 only walked `rpcUrl`/`rpcUrlFallback` and Cardano's browser-reachable source is
 `statusUrl` (Mithril). Both fixed.
+
+---
+
+# TON: from unverifiable to fully executed — 2026-07-30
+
+The second round recorded TON as untestable because FunC has no in-language test
+framework. That was a tooling gap on my side, not a real one: **`@ton/sandbox`
+runs the actual TVM**, so the compiled bytecode can be executed against a real
+emulated blockchain.
+
+`contracts/ton/test/tile.test.mjs` compiles the real FunC source (not a fixture)
+and drives it through 9 tests. Every round-1 fix that had been verified only by
+reading the source is now proven against the machine:
+
+| Test | Proves |
+|---|---|
+| `claim_tile prices from STORAGE` | the free-mint bug is closed — a 0.5 TON payment against a 5 TON stored price throws `403` |
+| `claim_tile succeeds when covered` | the happy path still works |
+| `claim_tile disabled at price zero` | sales stay shut until the owner opens them |
+| `coordinates outside 16383 rejected` | `tx = 16384` throws `402` |
+| `a stranger cannot set the price` | throws `401` |
+| `a stranger cannot withdraw` | throws `401` |
+| `set_market_fee enforces the ceiling` | 1001 bps rejected, 1000 accepted |
+| `set_tile_price persists` | the silent-no-op bug is closed — the new price is enforced on the next claim |
+| `withdraw pays the treasury receiver` | the outgoing message is addressed to the **cold wallet**, and *not* to the owner |
+
+The last one is the important one: it was previously impossible to distinguish
+"pays the receiver" from "pays the owner" without executing, because with
+`recv == owner` both look identical. The test deploys with a **separate** cold
+wallet and asserts on the destination of the outgoing message.
+
+Two setup notes worth keeping: `@ton/sandbox` needs `@ton/core >= 0.61` (an older
+pin fails deep inside `StorageUsed` serialization with an unhelpful
+`Cannot convert undefined to a BigInt`), and messages must be sent through the
+treasury sender rather than hand-built `sendMessage({info})` payloads.
+
+Run: `cd contracts/ton && npm test`

@@ -252,6 +252,16 @@ only JSON-RPC, so the primary was dead for every transaction lookup while
 Primary is now `sui-rpc.publicnode.com` (`Access-Control-Allow-Origin: *`), with
 `sui-mainnet-endpoint.blockvision.org` as the fallback. Both still serve JSON-RPC.
 
-**This will need revisiting.** JSON-RPC is being retired ecosystem-wide on Sui; the
-adapter will eventually need a GraphQL path. Re-run `node scripts/check-rpcs.mjs`
-before every submission round — this is exactly the failure mode it exists to catch.
+**The adapter now speaks GraphQL.** `waitForTx()` queries
+`transactionEffects(digest){ status }` against `graphql.mainnet.sui.io/graphql`
+(found by introspecting the schema — the field is `transactionEffects`, not
+`transactionBlock`, and the status enum is `SUCCESS`/`FAILURE`). That endpoint
+sends `Access-Control-Allow-Origin: *`, so the browser reads it directly.
+
+JSON-RPC is kept as a **fallback**, not removed: the third-party endpoints we
+point at still serve it, and it is the only thing that works when a deployment
+overrides `rpcUrl` with a private node. The new `graphqlUrl` field on a chain
+config is null everywhere except Sui.
+
+Re-run `node scripts/check-rpcs.mjs` before every submission round — this is
+exactly the failure mode it exists to catch.

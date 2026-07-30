@@ -77,3 +77,5 @@ contracts/multiversx/target/
 contracts/*/target/
 contracts/*/build/
 scripts/node_modules/
+contracts/ton/node_modules/
+contracts/*/node_modules/

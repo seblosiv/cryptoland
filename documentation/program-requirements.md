@@ -455,3 +455,82 @@ publish.
 startpage) were rate-limited/CAPTCHA'd by the sweep volume during this run and
 returned empty for most queries — the browser passes carried it. Give the engines
 time to un-suspend before the next sweep.
+
+---
+
+## 14. The last 13, resolved — 2026-07-30 (supersedes §13's "genuinely unknown")
+
+§13 concluded the residual 13 were "a human-contact problem, not a tooling
+problem". That was wrong. It was a **wrong-source** problem: I kept re-reading
+marketing pages, which are the one place a programme's real status is never
+written.
+
+Three sources answered all 13:
+
+1. **Discourse governance forums expose `/search.json` and `/t/<id>.json`.**
+   A marketing page can sit stale for a year; a governance forum cannot, because
+   funding a programme requires a public proposal. Eight forums were reachable:
+   `gov.optimism.io`, `forum.celo.org`, `gov.near.org`, `forum.celestia.org`,
+   `forum.arbitrum.foundation`, `forum.skale.network`, `gov.injective.network`,
+   `forum.scroll.io`.
+2. **Full-page render with lazy-content scroll**, rather than reading only what
+   loads above the fold.
+3. **Absence of forum activity as evidence.** A chain whose governance forum has
+   *zero* grant threads is not running a grants programme, whatever its site says.
+
+### ✅ Newly confirmed OPEN
+
+| # | Programme | Evidence |
+|---|---|---|
+| 13 | **Stellar Community Fund** | *"Submissions Open For SCF#11"* — up to **$150,000 in XLM** |
+| 15 | **Celo — via Prezenti** | *"Prezenti Grants: Season 3 Plan"* (23 Jul 2026), $165,000 redeployed |
+| 19 | **Aptos Foundation** | multiple live tracks; *"Apply for up to $25K in third-party audits"* |
+
+> 🔑 **Celo's grants are called Prezenti, not CeloPG.** That is exactly why
+> `celopg.eco` read as unclear through five automated passes — the programme is
+> real and funded, under a name the chain's own grants page never surfaces.
+> Season 2 has a published retrospective; Season 3 is funded and running.
+
+### 🟡 Restructuring — do not plan around the old shape
+
+- **#22 Optimism.** The Foundation filed *"Council Dissolution Proposal: Dissolve
+  the Grants Council"* on 2026-06-25. A delegate reply pushes back on full
+  dissolution, so the outcome was still contested. Current season work is
+  *"S9 Impact Autopsy & S10 Capital Efficiency"*. Retro Funding was already
+  paused (§0). **Treat Optimism as in flux and confirm before writing.**
+- **#9 Scroll.** No application form exists. Funding flows through governance —
+  a Delegated Council Program and an Operations Committee, with retroactive
+  pilots. Apply by proposal, not by form. The live Tally form on scroll.io is a
+  **BD intake form**, not a grants application.
+
+### 🔴 No active programme found
+
+| # | Programme | Evidence |
+|---|---|---|
+| 7 | SKALE Indie Accelerator | `/grants` unreachable; **zero** grant threads on `forum.skale.network` |
+| 40 | Injective Ecosystem | **zero** grant threads on `gov.injective.network` |
+| 32 | Celestia | only an *Ecosystem Delegation Program* (2025), no grants — matches the existing "not actionable" note in `config.js` |
+| 36 | NEAR Foundation | no Foundation grants threads; governance has moved to *House of Stake* |
+| 4 | DoraHacks Grant DAOs | `dorahacks.io/grant` is **404**; DoraHacks is a hackathon platform, grants run per-ecosystem |
+
+### ⚪ Live but no public application window
+
+- **#5 Base Builder Grants** — the `grants.base.eth` publication is active, but
+  the model is retroactive/nomination-based. There is nothing to apply to.
+- **#50 Animoca Brands** — `/contact-us` is 404; a private VC with no public
+  application path.
+- **#52 a16z CSX** — the programme page states no cohort or deadline.
+
+### Final scoreboard
+
+| Verdict | Count |
+|---|---|
+| ✅ Confirmed OPEN | **31** |
+| 🟡 Restructuring / proposal-based | 2 |
+| 🔴 Confirmed closed, dead, or no programme | **10** |
+| ⚪ Live but nothing to apply to | 3 |
+| ❔ Unknown | **0** |
+
+**Nothing is left unknown.** The lesson worth keeping: for any programme with a
+governance forum, check `/<forum>/search.json?q=grant` *first*. It is faster than
+crawling and it is the only source that cannot quietly go stale.

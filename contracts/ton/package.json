@@ -1,0 +1,15 @@
+{
+  "name": "cryptoland-ton",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/tile.test.mjs"
+  },
+  "devDependencies": {
+    "@ton/core": "^0.63.1",
+    "@ton/crypto": "^3.3.0",
+    "@ton/sandbox": "^0.44.0",
+    "@ton/test-utils": "^0.7.0",
+    "@ton-community/func-js": "^0.10.0"
+  }
+}

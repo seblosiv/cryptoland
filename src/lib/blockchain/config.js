@@ -45,6 +45,7 @@ function defineChain(key, cfg) {
     // needs Koios (it calls rpcUrl/tx_status), hence a separate field rather
     // than reordering rpcUrl.
     statusUrl:          cfg.statusUrl ?? null,
+    graphqlUrl:         cfg.graphqlUrl ?? null,
     explorerUrl:        cfg.explorerUrl,
     explorerTxPath:     cfg.explorerTxPath  ?? '/tx/',
     explorerNFTPath:    cfg.explorerNFTPath ?? '/token/',
@@ -411,6 +412,9 @@ const CHAIN_DEFS = {
     // ecosystem-wide and the adapter will eventually need a GraphQL path.
     rpcUrl: 'https://sui-rpc.publicnode.com',
     rpcUrlFallback: 'https://sui-mainnet-endpoint.blockvision.org',
+    // The migration target Sui's own deprecation notice points at. CORS-open
+    // (`Access-Control-Allow-Origin: *`), so the browser can read it directly.
+    graphqlUrl: 'https://graphql.mainnet.sui.io/graphql',
     explorerUrl: 'https://suiscan.xyz/mainnet', explorerNFTPath: '/object/',
     nativeCurrency: { name: 'Sui', symbol: 'SUI', decimals: 9 },
     blockTime: 0.5, confirmations: 1, color: '#4da2ff', logo: '🌊',
