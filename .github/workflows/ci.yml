@@ -55,8 +55,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { name: invariants, dir: contracts/rust-invariants }
           - { name: solana,     dir: contracts/solana/programs/cryptoland-tile }
-          - { name: near,       dir: contracts/near }
           - { name: stellar,    dir: contracts/stellar }
           - { name: multiversx, dir: contracts/multiversx }
           - { name: radix,      dir: contracts/radix }

@@ -1,0 +1,10 @@
+[package]
+name = "cryptoland-invariants"
+version = "0.1.0"
+edition = "2021"
+
+# Deliberately ZERO dependencies. Every chain SDK imposes its own toolchain
+# constraints — near-sdk 5.29 blocks plain `cargo test`, soroban's testutils
+# will not compile under rustc 1.97 — and those constraints kept knocking out
+# the invariant tests. Depending on nothing means these always run.
+[dependencies]

@@ -79,3 +79,9 @@ contracts/*/build/
 scripts/node_modules/
 contracts/ton/node_modules/
 contracts/*/node_modules/
+
+# Chain CLI key material — .aptos/config.yaml holds a PRIVATE KEY in plaintext.
+# Testnet keys are still keys; a committed one gets scraped and reused.
+contracts/*/.aptos/
+contracts/*/.stellar/
+**/.aptos/

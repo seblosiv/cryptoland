@@ -415,10 +415,23 @@ Done and working:
 
 Known gaps — be honest about these, do not paper over them:
 
-- **NOTHING IS DEPLOYED.** All 13 contracts compile, all have executable tests, and
-  TON runs on a real TVM — but **no contract has ever executed on a real chain**.
-  Blocked on ~$11 to the deployer wallet. This is the single biggest gap and every
-  claim about on-chain behaviour is emulator-level until it closes.
+- **Mainnet is unfunded — but testnet verification is DONE for Stellar.** The
+  contract is live on Stellar testnet
+  (`CBVB7GK65CN2KB4NMQ3CGC6LIHFQU7IZ46KWZTUHKAFLO4BT6EBB4FFW`) with **18/18 checks
+  passing**, including the one that cannot be unit-tested: `withdraw` paying a
+  *separate cold wallet* (10000 → 10010 XLM) while the owner gained only gas. See
+  `documentation/contract-audit.md` and `deploy/apex/deployments.mjs`.
+  > **Testnets are free.** Treating "nothing deployed" as blocked on funding was
+  > wrong — *mainnet* is blocked on funding; verification never was. Deploy every
+  > remaining chain to its testnet before asking for money.
+  >
+  > It immediately caught a defect no test could: the `wasm32-unknown-unknown`
+  > artifact is **rejected** by the Soroban host ("reference-types not enabled").
+  > Soroban needs `wasm32v1-none`. **A green test suite is not a deployable
+  > artifact** — assume NEAR, Radix and MultiversX have their own version of this.
+- **The other 12 chains are still emulator-level.** Sui's testnet faucet is
+  service-side throttled and Aptos's now needs a browser-issued bearer token; both
+  need a retry or one human visit. Every other chain is untried.
 - **On-chain activity is ~1 tx per purchase**, which is structurally uncompetitive
   for retroactive rounds (Retro9000 ranks by AVAX burned by your contracts; OP's
   template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).

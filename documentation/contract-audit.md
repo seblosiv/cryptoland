@@ -345,3 +345,115 @@ emulator-level. **No contract has executed on a real chain.** Emulators model th
 not the network: gas schedules, mainnet contract-size limits, wallet-adapter quirks
 and RPC behaviour are all unverified until a real deployment. Treat the suite as
 protection against regression, not as proof of production readiness.
+
+---
+
+# First real deployment — Stellar testnet, 2026-07-31
+
+Every previous section of this document ended with the same caveat: *nothing has
+executed on a real chain*. That is no longer true.
+
+**Contract:** `CBVB7GK65CN2KB4NMQ3CGC6LIHFQU7IZ46KWZTUHKAFLO4BT6EBB4FFW`
+([stellar.expert](https://stellar.expert/explorer/testnet/contract/CBVB7GK65CN2KB4NMQ3CGC6LIHFQU7IZ46KWZTUHKAFLO4BT6EBB4FFW))
+· deploy tx `b4bdc14f…` · 11,200-byte wasm.
+
+This cost nothing. **Testnets are free**, and treating "no contract deployed" as
+blocked on funding was my error — mainnet is blocked on funding; verification was
+not.
+
+## What the chain confirmed — 18/18
+
+| Property | On-chain result |
+|---|---|
+| Fee defaults to 7% | `market_fee_bps` read back as **700** from chain state |
+| Sales start closed | `tile_price` is 0 until the owner opens them |
+| tokenId — far corner | **`token_id(16383,16383) = 536854527`** — the cross-chain canonical value, executed on a real VM |
+| tokenId — bounds | `token_id(16384,0)` reverts |
+| A buyer really pays | `claim_tile(100,200)` emitted a **10 XLM transfer buyer → contract**, returned tokenId **3277000** |
+| Treasury records it | `treasury = 100000000` stroops |
+| **Payout honours the receiver** | `withdraw` paid the **cold wallet**: 10000 → **10010 XLM** |
+| **Owner does not get the money** | owner balance moved only by gas |
+| Treasury zeroes | `treasury = 0` after payout |
+| Stranger cannot withdraw | `Error(Contract, #5)` — NotOwner |
+| Stranger cannot set price | rejected, missing owner signature |
+| Fee ceiling enforced | `set_market_fee_bps(1001)` → `Error(Contract, #4)` FeeTooHigh |
+| Ceiling is inclusive | `set_market_fee_bps(1000)` accepted — exactly 10% |
+| No double-claim | re-claiming (100,200) → `Error(Contract, #2)` AlreadyClaimed |
+
+**The payout test is the one that could not have been done any other way.** With
+`treasury_receiver == owner`, a correct implementation and one that pays
+`msg.sender` are indistinguishable. Deploying with a *separate* cold wallet and
+watching it gain exactly 10 XLM while the owner gained nothing is the only real
+proof — and it is the exact property that matters to whoever collects the revenue.
+
+## It caught a real defect no test would have
+
+The `wasm32-unknown-unknown` artifact — the one every previous check treated as
+"the build works" — is **rejected by the Soroban host**:
+
+```
+HostError: Error(WasmVm, InvalidAction)
+"reference-types not enabled: zero byte expected"
+```
+
+Soroban requires `wasm32v1-none`. The contract compiled, passed every unit test,
+and produced a 27,080-byte wasm that **cannot be deployed**. The correct target
+produces 11,200 bytes. No amount of `cargo test` surfaces a build-target
+incompatibility with a host you never talk to.
+
+Assume the other Rust chains (NEAR, Radix, MultiversX) have their own version of
+this. **A green test suite is not a deployable artifact.**
+
+## Blocked elsewhere, and why
+
+- **Sui testnet** — the faucet returns "Too Many Requests" from three separate IPs
+  (laptop and two servers), so the throttle is service-side rather than per-IP.
+  Nothing about the contract is at fault; retry later.
+- **Aptos testnet** — the faucet now requires a bearer token issued through a web
+  flow. Needs a human to visit `aptos.dev/network/faucet` once, after which
+  `aptos move publish` should work: the contract compiles and its 4 tests pass.
+
+## Still true
+
+Mainnet remains unfunded, and testnet gas schedules are not mainnet's. But the
+claim "the contracts are correct and the money reaches your wallet" is no longer
+resting on emulators for at least one chain — it is resting on a chain.
+
+## The wasm-target lesson generalised — NEAR had the same class of defect
+
+Predicted above: *"assume the other Rust chains have their own version of this."*
+They did.
+
+`cargo near build` refused to emit an artifact at all:
+
+```
+wasm, compiled with rustc 1.97.1 exceeds the max allowed 1.86.0 for this contract
+```
+
+near-sdk 5.6.0 — the version I pinned so that `cargo test` would run — caps rustc
+at 1.86, and the repo runs 1.97. Pinning the crate to rustc 1.86 does not work
+either: other dependencies then refuse *that*. The NEAR contract had a green test
+suite and **no deployable artifact**, which is the worse half of the trade.
+
+Resolved by taking the opposite side: near-sdk **5.29**, which builds
+(133,273-byte wasm via `cargo-near`) but carries the `compile_error!` that blocks
+plain `cargo test`. **Deployability beats a green suite** — an untested contract
+that ships can be tested; a tested contract that cannot be built is worthless.
+
+To avoid paying for that with lost coverage, the shared arithmetic now lives in
+`contracts/rust-invariants/` — a crate with **zero dependencies**, so no SDK's
+toolchain constraints can ever make it unrunnable again. Eight tests: the five
+canonical tokenId pairs, the shift-vs-multiply equivalence across the grid, grid
+bounds, round-tripping, the 7% split, that shares always reconstitute the price
+exactly, and that the 10% ceiling is inclusive. One of them is annotated with the
+value the Stellar deployment returned on-chain.
+
+Each contract still embeds its own copy of the arithmetic — a shared crate cannot
+be linked into a Move module or a FunC cell — and `src/test/contracts.test.js` is
+what enforces that all 13 still agree.
+
+## Current verification, generated by `./scripts/verify-contracts.sh`
+
+**13 passing, 0 failing, 1 skipped** (Tezos — ligo ships a Linux-only binary, so it
+verifies on the server). Plus 335 frontend, 23 backend, and 18/18 on-chain checks
+against the live Stellar deployment.
