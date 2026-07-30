@@ -21,7 +21,11 @@ async function main() {
   const contract = await Factory.deploy(
     'CryptoLand Tiles',
     'CLND',
-    `https://api.cryptoland.io/metadata/${network}/`,
+    // Metadata base URI is stored ON-CHAIN and is what every marketplace and
+    // wallet will fetch. api.cryptoland.io is a domain we do not own — pointing
+    // 27 deployments at it would make every tile's metadata permanently
+    // unresolvable. Use the live per-chain deployment instead.
+    `https://${network}.xono.ai/metadata/`,
   )
 
   await contract.waitForDeployment()

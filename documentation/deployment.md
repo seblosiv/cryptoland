@@ -199,3 +199,41 @@ Before pointing a reviewer at a subdomain:
 - [ ] if a contract is deployed: `VITE_CONTRACT_<CHAIN>` set **and rebuilt**, and
       the **deployer key is backed up** (Retro9000 and OP Atlas require the
       original deployer address to sign to claim your contracts)
+
+---
+
+## Contract deployment — what actually happened on SKALE
+
+**2026-07-30, first real deployment attempt.** Deployer
+`0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58`, funded with 0.0001 sFUEL on all four
+SKALE mainnet hubs via `sfuelstation.com` (the faucet is behind a browser challenge,
+so it needs a human).
+
+Result: **transaction reverted** (`status: 0`), tx
+`0xe1c4474e847d9629b686a01e6db7035e2ddbb3d9e9c9b6554accef95ecc671ae`, block 46697770.
+
+Ruled out, each by measurement rather than assumption:
+
+| Hypothesis | Check | Verdict |
+|---|---|---|
+| Out of gas | used 50,000,000 of a 268,435,455 block limit | ✗ |
+| Insufficient balance | 50M × 100,000 wei = 0.000005 sFUEL, held 0.0001 | ✗ |
+| Contract too large | bytecode 11,243 bytes vs EIP-170's 24,576 | ✗ |
+| Compile failure | `Compiled 1 Solidity file successfully` on the server | ✗ |
+| Bad estimate | `estimateGas` returned OK (50,000,000) | ✗ |
+
+**Most likely: SKALE gates contract deployment behind a deployer whitelist.** SKALE
+chains can run permissioned deployment via a predeployed ConfigController, and
+`eth_call` against `0xD200…D2` reverts without a message, which is consistent with a
+restricted/absent controller on this hub. Requesting deployer access from the SKALE
+team is the next step, not more gas.
+
+> **Do not burn faucet sFUEL retrying.** The failed attempt cost ~0.000005 sFUEL and
+> the faucet dispenses 0.0001 at a time; the constraint is permission, not funds.
+
+### Metadata base URI — fixed before first deploy
+
+`scripts/deploy.js` passed `https://api.cryptoland.io/metadata/<network>/` — a domain
+we do not own. That string is stored **on-chain** and is what every wallet and
+marketplace fetches, so 27 deployments would have had permanently unresolvable
+metadata. Now `https://<network>.xono.ai/metadata/`, which we control.
