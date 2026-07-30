@@ -253,3 +253,65 @@ the real answer is behind the apply form.
 > **Bottom line: 9 of 46 are positively confirmed open.** The rest are unknown, not
 > open. Before submitting to any programme outside the confirmed list, open its
 > apply form directly — the July dossier's URLs had already rotted within a week.
+
+---
+
+## 11. Re-probe with TLS impersonation — 2026-07-30 (supersedes §10)
+
+§10 used plain `curl` and left 15 unreachable. Most were **not dead links**:
+403/429 blocks key on the **TLS/JA3 handshake**, not the User-Agent, so curl is
+rejected regardless of headers. `scripts/probe-programs.py` replays a real Chrome
+handshake via `curl_cffi`, rotates four fingerprints and three ISP proxies, and
+falls back to crawling the site root for the moved apply route.
+
+**Recovered by fingerprint alone:** Aptos Foundation (429 → 200), Cardano Foundation
+(429 → 200, and it reads OPEN), Sui (404 → 200), Base Builder Grants (404 → 200).
+
+| Verdict | §10 (curl) | §11 (curl_cffi) |
+|---|---|---|
+| OPEN | 9 | **11** |
+| CLOSED | 1 | 1 |
+| UNCLEAR | 20 | 23 |
+| UNREACHABLE | 15 | **11** |
+
+### ✅ Confirmed OPEN
+
+- **#21 Avalanche Retro9000** — *"Apply Now Avalanche L1s & Infrastructure Tooling: The next project snapshot for grant disbursement will take place July "*
+- **#23 Cardano Catalyst** — *"Submit a proposal Want to solve a problem on Cardano or in the wider world?"*
+- **#29 Starknet Growth** — *"Apply now Ecosystem Integration Grants Bridge Starknet with other networks, expand interoperability and give your app an"*
+- **#31 Arbitrum Foundation Grants** — *"Managed by The Arbitrum Foundation Learn More Apply now Active Arbitrum Audit Program Active ArbiFuel ArbiFuel is a Gas "*
+- **#34 Solana Foundation** — *"In the application, make sure to: Provide a brief project overview Clarify how your project provides a public good for t"*
+- **#38 HBAR Foundation** — *"</p> Visit Our Ecosystem Introduction to our global team Submit a proposal <p>Ready to build on the world's most trusted"*
+- **#44 BNB Chain MVB** — *"EVM-Compatible opBNB Built with the OP Stack BNB Greenfield Decentralized data storage & economy BNB Beacon Chain Sunset"*
+- **#45 Tezos Foundation** — *"Apply now Tezos Foundation Follow us first row Role of the Tezos Foundation Grants Program Bounty Program Bug Bounty Pro"*
+- **#48 Cardano Foundation** — *"See All Articles Crypto Valley Conference 28–28 May 2026 | Rotkreuz, Switzerland Event Point Zero Forum 23–25 Jun 2026 |"*
+- **#49 Outlier Base Camp** — *"> Learn More > Stay Updated FutureSpark Base Camp Register your interest for our upcoming accelerators based in Riyadh, "*
+- **#51 Alliance DAO** — *"We strongly encourage teams to submit applications as early as possible, as it maximizes your chances of selection."*
+
+### 🔴 CLOSED
+
+- **#26 TON Grants & Bounties** — `archived: true` via GitHub API, read-only since 2026-05-20.
+
+### ⛔ Still unreachable (11)
+
+#4 DoraHacks Grant DAOs (404), #6 Radix Booster Grants (404), #7 SKALE Indie Accelerator (404), #8 Tezos Ecosystem Grants (404), #11 Ronin Ecosystem Grants (404), #19 Aptos DoraHacks (405), #20 Moonbeam Grants (200), #37 Algorand Foundation (404), #40 Injective Ecosystem (404), #42 TON Society grants (522), #47 Arbitrum Gaming Ventures (403)
+
+These need a **real browser** (JS execution), not a better HTTP client — see §12.
+
+### ❔ UNCLEAR (23)
+
+Page loads and states neither. Almost all are JS-rendered marketing shells whose
+apply window lives behind a form. **Not evidence of open.**
+
+## 12. What still needs a headless browser
+
+`curl_cffi` solves TLS fingerprinting. It cannot execute JavaScript, so it cannot:
+
+- read SPA content rendered client-side (most "UNCLEAR" rows),
+- pass interactive challenges (Vercel/Cloudflare checkpoints — e.g. SKALE's sFUEL faucet),
+- navigate multi-step flows, scroll, or expand accordions,
+- **submit an application form**, which is the eventual goal.
+
+The right tool is a real browser driven headlessly (Playwright, or zendriver for
+harder anti-bot). That is a separate build: form-filling is per-programme, and an
+auto-submitted application that gets a field wrong is worse than none.
