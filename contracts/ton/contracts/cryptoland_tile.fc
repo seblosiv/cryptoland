@@ -95,7 +95,7 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
     var (owner, total, content, item_code) = load_data();
 
     if (op == op::mint_tile) {
-        throw_unless(error::not_owner, equal_slices(sender, owner));
+        throw_unless(error::not_owner, equal_slice_bits(sender, owner));
         int tx = in_msg_body~load_uint(32);
         int ty = in_msg_body~load_uint(32);
         int item_index = token_id_from_key(tx, ty);
@@ -121,13 +121,13 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
 
     ;; Admin: price, fee, payout target, withdrawal. Owner only.
     if ((op == op::set_tile_price) | (op == op::set_market_fee) | (op == op::set_treasury_recv)) {
-        throw_unless(error::not_owner, equal_slices(sender, owner));
+        throw_unless(error::not_owner, equal_slice_bits(sender, owner));
         return ();
     }
 
     ;; Entire balance to the treasury receiver, minus what the message costs.
     if (op == op::withdraw) {
-        throw_unless(error::not_owner, equal_slices(sender, owner));
+        throw_unless(error::not_owner, equal_slice_bits(sender, owner));
         var msg = begin_cell()
             .store_uint(0x18, 6)
             .store_slice(owner)
