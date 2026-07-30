@@ -14,6 +14,8 @@ declare_id!("CLND1111111111111111111111111111111111111111");
 
 pub const GRID_MAX: u64 = 16383;
 pub const COORD_SHIFT: u64 = 15;
+/// 10% ceiling — a stolen owner key still cannot confiscate a sale.
+pub const MAX_FEE_BPS: u16 = 1000;
 
 /// (tx << 15) | ty — identical to every other chain.
 pub fn token_id_from_key(tx: u64, ty: u64) -> Result<u64> {
@@ -35,11 +37,16 @@ pub mod cryptoland_tile {
         reg.base_uri = base_uri;
         reg.total = 0;
         reg.bump = ctx.bumps.registry;
+        reg.tile_price = 0;
+        reg.market_fee_bps = 700;
+        reg.treasury_receiver = ctx.accounts.owner.key();
         Ok(())
     }
 
     pub fn mint_tile(ctx: Context<MintTile>, tx: u32, ty: u32) -> Result<()> {
         // Seeds take the 4-byte LE form; coords are bounded to 16383 so u32 is exact.
+        let price = ctx.accounts.registry.tile_price;
+        require!(price > 0, TileError::ClaimingDisabled);
         let id = token_id_from_key(tx as u64, ty as u64)?;
         let tile = &mut ctx.accounts.tile;
         tile.token_id = id;
@@ -54,6 +61,53 @@ pub mod cryptoland_tile {
         emit!(TileMinted { token_id: id, to: tile.owner, tx: tx as u64, ty: ty as u64 });
         Ok(())
     }
+
+    pub fn set_tile_price(ctx: Context<AdminOnly>, price: u64) -> Result<()> {
+        ctx.accounts.registry.tile_price = price;
+        Ok(())
+    }
+
+    pub fn set_market_fee_bps(ctx: Context<AdminOnly>, bps: u16) -> Result<()> {
+        require!(bps <= MAX_FEE_BPS, TileError::FeeTooHigh);
+        ctx.accounts.registry.market_fee_bps = bps;
+        Ok(())
+    }
+
+    /// Point payouts at a cold wallet without handing over admin rights.
+    pub fn set_treasury_receiver(ctx: Context<AdminOnly>, to: Pubkey) -> Result<()> {
+        require!(to != Pubkey::default(), TileError::ZeroAddress);
+        ctx.accounts.registry.treasury_receiver = to;
+        Ok(())
+    }
+
+    /// Move lamports held by the registry PDA out to the receiver. Any time.
+    pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+        let reg = ctx.accounts.registry.to_account_info();
+        let rent = Rent::get()?.minimum_balance(reg.data_len());
+        let amount = reg.lamports().saturating_sub(rent);
+        require!(amount > 0, TileError::NothingToWithdraw);
+        **reg.try_borrow_mut_lamports()? -= amount;
+        **ctx.accounts.receiver.try_borrow_mut_lamports()? += amount;
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct AdminOnly<'info> {
+    #[account(mut, seeds = [b"registry"], bump = registry.bump, has_one = owner)]
+    pub registry: Account<'info, Registry>,
+    pub owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(mut, seeds = [b"registry"], bump = registry.bump, has_one = owner,
+              constraint = registry.treasury_receiver == receiver.key() @ TileError::WrongReceiver)]
+    pub registry: Account<'info, Registry>,
+    pub owner: Signer<'info>,
+    /// CHECK: must equal registry.treasury_receiver, enforced above.
+    #[account(mut)]
+    pub receiver: UncheckedAccount<'info>,
 }
 
 #[account]
@@ -62,6 +116,12 @@ pub struct Registry {
     pub base_uri: String,
     pub total: u64,
     pub bump: u8,
+    /// Primary sale price in lamports. 0 disables on-chain claiming.
+    pub tile_price: u64,
+    /// Resale fee, 700 = 7%. Hard-capped at MAX_FEE_BPS.
+    pub market_fee_bps: u16,
+    /// Where withdrawals land — point at a cold wallet.
+    pub treasury_receiver: Pubkey,
 }
 
 #[account]
@@ -83,7 +143,7 @@ pub struct TileMinted {
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    #[account(init, payer = owner, space = 8 + 32 + 4 + 128 + 8 + 1, seeds = [b"registry"], bump)]
+    #[account(init, payer = owner, space = 8 + 32 + 4 + 128 + 8 + 1 + 8 + 2 + 32, seeds = [b"registry"], bump)]
     pub registry: Account<'info, Registry>,
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -118,6 +178,16 @@ pub enum TileError {
     OutOfRange,
     #[msg("counter overflow")]
     Overflow,
+    #[msg("fee above the 10% ceiling")]
+    FeeTooHigh,
+    #[msg("zero address")]
+    ZeroAddress,
+    #[msg("nothing to withdraw")]
+    NothingToWithdraw,
+    #[msg("receiver does not match treasury_receiver")]
+    WrongReceiver,
+    #[msg("on-chain claiming disabled")]
+    ClaimingDisabled,
 }
 
 #[cfg(test)]
