@@ -1,0 +1,13 @@
+[package]
+name = "cryptoland"
+version = "0.1.0"
+authors = []
+
+[addresses]
+cryptoland = "_"
+
+# Local path: the git dependency fails to clone in this environment (exit 128 on
+# a partial checkout of aptos-core). Point at a local checkout instead; CI or a
+# fresh machine can restore the git form.
+[dependencies.AptosFramework]
+local = "/tmp/aptos-core/aptos-move/framework/aptos-framework"

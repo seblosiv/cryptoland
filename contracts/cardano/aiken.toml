@@ -1,0 +1,14 @@
+name = "cryptoland/tile"
+version = "0.1.0"
+compiler = "v1.1.9"
+plutus = "v3"
+
+[repository]
+user = "cryptoland"
+project = "tile"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v2"
+source = "github"

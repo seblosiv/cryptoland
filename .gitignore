@@ -65,3 +65,6 @@ contracts/artifacts/
 contracts/cache/
 contracts/package-lock.json
 contracts/starknet/target/
+contracts/cardano/build/
+contracts/aptos/build/
+contracts/algorand/*.teal

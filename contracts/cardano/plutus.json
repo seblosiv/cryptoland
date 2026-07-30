@@ -1,0 +1,76 @@
+{
+  "preamble": {
+    "title": "cryptoland/tile",
+    "version": "0.1.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.9+2217206"
+    }
+  },
+  "validators": [
+    {
+      "title": "tile.tile.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/tile~1MintRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "owner_vkh",
+          "schema": {
+            "$ref": "#/definitions/ByteArray"
+          }
+        }
+      ],
+      "compiledCode": "59011401010032323232323223225333004323232323253330093370e900018051baa001132533300a3370e900018059baa00313232323253330113013002132323232533301253330123371290000018a99980919b89003483fbfc0454ccc048cdc4a4000004266e2400920feff0114a0294052808008a5032330010013758602c602e602e602e602e602e602e602e602e60286ea8030894ccc05800452809991299980a99b8f00201314a22660080080026eb8c05c004c060004dd6980a180a8011bad30130013010375400e2c6eb4c044004c044008dd6980780098061baa00316375c601a60166ea800458c030c03400cc02c008c028008c028004c018dd50008a4c26cac6eb80055cd2ab9d5573caae7d5d0aba21",
+      "hash": "98dd674b391278b399fdd352df3f33451ce1f84f94e5a188ddc1cec5"
+    },
+    {
+      "title": "tile.tile.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "parameters": [
+        {
+          "title": "owner_vkh",
+          "schema": {
+            "$ref": "#/definitions/ByteArray"
+          }
+        }
+      ],
+      "compiledCode": "59011401010032323232323223225333004323232323253330093370e900018051baa001132533300a3370e900018059baa00313232323253330113013002132323232533301253330123371290000018a99980919b89003483fbfc0454ccc048cdc4a4000004266e2400920feff0114a0294052808008a5032330010013758602c602e602e602e602e602e602e602e602e60286ea8030894ccc05800452809991299980a99b8f00201314a22660080080026eb8c05c004c060004dd6980a180a8011bad30130013010375400e2c6eb4c044004c044008dd6980780098061baa00316375c601a60166ea800458c030c03400cc02c008c028008c028004c018dd50008a4c26cac6eb80055cd2ab9d5573caae7d5d0aba21",
+      "hash": "98dd674b391278b399fdd352df3f33451ce1f84f94e5a188ddc1cec5"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "tile/MintRedeemer": {
+      "title": "MintRedeemer",
+      "anyOf": [
+        {
+          "title": "MintRedeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "tx",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "ty",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
