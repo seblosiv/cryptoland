@@ -147,11 +147,30 @@ stage_apex() {
   local caddy="$OUT/Caddyfile"
   grep -q "^$DOMAIN, www.$DOMAIN {" "$caddy" 2>/dev/null && return 0
   mkdir -p "$OUT"
-  cat > "$caddy.apex" <<EOF
-$DOMAIN, www.$DOMAIN {
+  cat > "$caddy.apex" <<'APEXEOF'
+{{DOMAIN}}, www.{{DOMAIN}} {
     root * /srv/cryptoland/apex/dist
     # /about must resolve without the .html suffix — it is the URL that goes in
     # grant applications, and 85% of programme pages require founder details.
+    # /status — private deployment board. Basic auth over HTTPS, with the
+    # password stored ONLY as a bcrypt hash (cost 14); the plaintext is never in
+    # the repo or the server config. Also noindex, since it lists internal state.
+    @status path /status /status/ /status.html /status.csv
+    handle @status {
+        basic_auth {
+            blackside {{STATUS_HASH}}
+        }
+        header X-Robots-Tag "noindex, nofollow, noarchive"
+        @statuscsv path /status.csv
+        handle @statuscsv {
+            file_server
+        }
+        handle {
+            rewrite * /status.html
+            file_server
+        }
+    }
+
     @about path /about /about/ /about.html
     handle @about {
         # Third layer of crawler blocking, after the page's meta tags and
@@ -171,7 +190,11 @@ $DOMAIN, www.$DOMAIN {
     }
 }
 
-EOF
+APEXEOF
+  # Substitute AFTER the literal heredoc so the bcrypt hash survives bash intact.
+  sed -i.bak -e "s|{{DOMAIN}}|$DOMAIN|g" \
+             -e "s|{{STATUS_HASH}}|${CRYPTOLAND_STATUS_HASH:-}|g" "$caddy.apex"
+  rm -f "$caddy.apex.bak"
   cat "$caddy.apex" "$caddy" > "$caddy.new" 2>/dev/null || cp "$caddy.apex" "$caddy.new"
   mv "$caddy.new" "$caddy"; rm -f "$caddy.apex"
   echo "  ✓ caddy   -> apex block for $DOMAIN"

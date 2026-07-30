@@ -40,6 +40,14 @@ Environment knobs:
 | `CRYPTOLAND_DOMAIN` | `cryptoland.game` | apex domain for the subdomains, e.g. `CRYPTOLAND_DOMAIN=xono.ai` → `algorand.xono.ai` |
 | `CRYPTOLAND_API_HOST` | *(unset)* | if set, builds point `VITE_API_BASE` at this host |
 | `CRYPTOLAND_SEED_USERS` | `120` | owners generated per chain |
+| `CRYPTOLAND_STATUS_HASH` | *(unset)* | bcrypt hash for `/status` basic auth. Generate with `caddy hash-password`. Never store the plaintext. |
+
+> ⚠️ The apex heredoc in `deploy-chain.sh` is **single-quoted** (`<<'APEXEOF'`) and
+> substitutes `{{DOMAIN}}` / `{{STATUS_HASH}}` with `sed` afterwards. A bcrypt hash
+> begins `$2a$14$…`, and in an unquoted heredoc bash expands `$2` as a positional
+> parameter — under `set -u` that aborted `stage_apex` silently, the Caddyfile
+> shipped with no apex block, and **xono.ai went down** while all 27 subdomains
+> stayed up. Do not unquote that delimiter.
 
 ---
 

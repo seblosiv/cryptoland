@@ -89,8 +89,8 @@ header{padding:64px 0 30px}
 h1{font-size:clamp(28px,4.6vw,42px);letter-spacing:-.03em;font-weight:800;line-height:1.1}
 .role{color:var(--t2);margin-top:10px;font-size:16px}
 .who{display:flex;gap:22px;align-items:flex-start;margin-top:30px;flex-wrap:wrap}
-.avatar{width:104px;height:104px;border-radius:14px;background:var(--s2);border:1px solid var(--b0);
-display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:var(--acc);flex:0 0 auto}
+.avatar{width:104px;height:104px;border-radius:14px;border:1px solid var(--b0);
+object-fit:cover;flex:0 0 auto;background:var(--s2)}
 .bio{flex:1 1 360px;color:var(--t2)}
 .bio p+p{margin-top:12px}
 h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin:44px 0 14px}
@@ -116,7 +116,8 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
   <div class="role">Founder &amp; engineer — CryptoLand</div>
 
   <div class="who">
-    <div class="avatar">SB</div>
+    <img class="avatar" src="/founder.jpg" width="104" height="104"
+         alt="Founder portrait" loading="lazy" decoding="async">
     <div class="bio">
       <p>I build CryptoLand: a geospatial territory game over the real world, shipped as
       ${TARGETS} chain-native deployments from a single codebase.</p>
@@ -126,6 +127,13 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
       an ASA, a Move object, an FA2 token — reach the player rather than a lowest common
       denominator.</p>
     </div>
+  </div>
+
+  <div class="panel" style="margin-top:22px">
+    <h3>Registered entity</h3>
+    <p><strong>CryptoLand LTD</strong> — Mahé, Seychelles.<br>
+    Grants are received by the company; KYC/KYB can be completed on request, which
+    Starknet, Alliance DAO and Tezos each require before funds are released.</p>
   </div>
 
   <div class="links">
