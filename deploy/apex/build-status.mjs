@@ -171,12 +171,16 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   <tr><td>BNB Chain</td><td><code>0.002 BNB</code></td><td>BSC</td><td>$0.90</td><td>$0.09</td></tr>
   <tr><td>Avalanche</td><td><code>0.02 AVAX</code></td><td>AVAXC</td><td>$0.13</td><td>$0.00</td></tr>
   <tr><td>Celo</td><td><code>2 CELO</code></td><td>CELO</td><td>$0.13</td><td>$0.04</td></tr>
-  <tr><td>Ronin</td><td><code>40 RON</code></td><td>RON</td><td>$1.90</td><td>$0.00</td></tr>
+  <tr><td>Hedera</td><td><code>3 HBAR</code></td><td>HBAR</td><td>$0.55</td><td>$0.04</td></tr>
   </tbody></table></div>
   <p class="note"><strong>≈ $11 total</strong>, of which the deployments themselves cost $0.42.
   Going via a no-KYC swap service instead would cost <strong>~$108</strong>, because each swap
   carries a ~$12 minimum and you would need nine of them — leaving ~$107 of stranded dust.
-  <br><br><strong>SKALE is not on this list.</strong> Its deployment reverted because the chain
+  <br><br><strong>Ronin is NOT on this list.</strong> Binance lists RON as
+  <code>FIAT_MONEY</code> only — there is no on-chain RON withdrawal, so an earlier version of
+  this table would have failed. Same for Moonbeam (GLMR withdrawal disabled), Beam (disabled),
+  Oasys (not listed) and Injective (INJ network disabled) — those five need a different exchange
+  or a bridge.<br><br><strong>SKALE is not on this list either.</strong> Its deployment reverted because the chain
   gates contract deployment behind a deployer whitelist, not because of funds. That needs a
   request to the SKALE team; more sFUEL will not fix it.</p>
 </div>

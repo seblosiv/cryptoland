@@ -202,3 +202,54 @@ MVB — its base rate is ~1–2% anyway.
 Algorand, TON Foundation (522), Arbitrum Gaming Ventures (403), Cardano Foundation
 (429), Ronin (partial), Beam (partial). URLs move fast — the July dossier's links
 had already rotted in a week. **Open the real form before submitting to any of these.**
+
+---
+
+## 10. Application-window check — 2026-07-30
+
+Fetched all 46 live programme URLs through ISP proxies and looked for explicit
+open/closed language. **This answers "is it accepting applications", which the
+earlier sweep did not.**
+
+| Verdict | Count | Meaning |
+|---|---|---|
+| **OPEN** | 9 | page states applications are open / "apply now" |
+| **CLOSED** | 1 | page states closed, paused or archived |
+| MIXED | 1 | both signals present — check manually |
+| UNCLEAR | 20 | page loaded but says neither — **not evidence of open** |
+| UNREACHABLE | 15 | 404 / 429 / 403 — URL moved or blocked |
+
+### ✅ Confirmed OPEN (verbatim evidence on the page)
+
+- **#21 Avalanche Retro9000** — *"Apply Now Avalanche L1s & Infrastructure Tooling: The next project snapshot for grant disbursement will take place July 14th, 2026 at 12:00 PM UTC ."*
+- **#23 Cardano Catalyst** — *"Submit a proposal Want to solve a problem on Cardano or in the wider world?"*
+- **#29 Starknet Growth** — *"Apply now Ecosystem Integration Grants Bridge Starknet with other networks, expand interoperability and give your app and its users a scalable, low-co"*
+- **#31 Arbitrum Foundation Grants** — *"Managed by The Arbitrum Foundation Learn More Apply now Active Arbitrum Audit Program Active ArbiFuel ArbiFuel is a Gas Fee Sponsorship Program to hel"*
+- **#34 Solana Foundation** — *"In the application, make sure to: Provide a brief project overview Clarify how your project provides a public good for the Solana network Lay out a we"*
+- **#38 HBAR Foundation** — *"</p> Visit Our Ecosystem Introduction to our global team Submit a proposal <p>Ready to build on the world's most trusted, sustainable, enterprise-grad"*
+- **#45 Tezos Foundation** — *"Apply now Tezos Foundation Follow us first row Role of the Tezos Foundation Grants Program Bounty Program Bug Bounty Program second row Permanent Art "*
+- **#49 Outlier Base Camp** — *"> Learn More > Stay Updated FutureSpark Base Camp Register your interest for our upcoming accelerators based in Riyadh, Saudi Arabia – in partnership "*
+- **#51 Alliance DAO** — *"We strongly encourage teams to submit applications as early as possible, as it maximizes your chances of selection."*
+
+### 🔴 Confirmed CLOSED / archived
+
+- **#26 TON Grants & Bounties** — GitHub API confirms `archived: true`, read-only since 2026-05-20. Matches grants.md §0.
+
+### ⚠️ MIXED — verify before applying
+
+- **#44 BNB Chain MVB** — cohort programme; season windows open and close. Check the current season.
+
+### ❔ UNCLEAR (20) — page loaded, no explicit statement
+
+Do **not** read this as "open". Most are marketing pages that never state a window;
+the real answer is behind the apply form.
+
+#2 Gitcoin / Giveth QF, #3 Superteam Earn, #9 Scroll Community Grants, #10 Game3 Foundation, #12 Beam Foundation, #13 Stellar Community Fund, #15 Celo CeloPG, #16 Solana Mobile, #17 MultiversX Builders, #18 Starknet Seed, #22 Optimism Retro Funding, #25 Polygon Grants, #30 Oasys, #32 Celestia, #33 SafePal Builders, #36 NEAR Foundation, #41 Solana ecosystem grants, #46 Avalanche Research, #50 Animoca Brands, #52 a16z CSX
+
+### ⛔ UNREACHABLE (15) — could not verify at all
+
+#4 DoraHacks Grant DAOs (404), #5 Base Builder Grants (404), #6 Radix Booster Grants (404), #7 SKALE Indie Accelerator (429), #8 Tezos Ecosystem Grants (404), #11 Ronin Ecosystem Grants (404), #19 Aptos DoraHacks (404), #20 Moonbeam Grants (200), #24 Aptos Foundation Grants (429), #35 Sui Foundation (404), #37 Algorand Foundation (404), #40 Injective Ecosystem (404), #42 TON Society grants (522), #47 Arbitrum Gaming Ventures (403), #48 Cardano Foundation (429)
+
+> **Bottom line: 9 of 46 are positively confirmed open.** The rest are unknown, not
+> open. Before submitting to any programme outside the confirmed list, open its
+> apply form directly — the July dossier's URLs had already rotted within a week.
