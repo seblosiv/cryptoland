@@ -266,9 +266,10 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   </tbody></table></div>
 
   <p class="note" style="margin-top:12px">
-  <strong>SKIPPED means the toolchain is not on the machine that generated this page — never that
-  something is broken.</strong> ligo ships a Linux-only binary, so Tezos is verified on the server
-  (<code>ligo run test</code>: all three tests return <code>ok</code>) rather than on the build laptop.
+  <strong>Generated on the production box, where every toolchain exists — 14 passing, 0 skipped.</strong>
+  It used to run on a macOS laptop, where ligo (Linux-only binary) made Tezos permanently unverifiable.
+  Regenerate with <code>./scripts/verify-on-prod.sh</code>. A chain whose toolchain is missing records as
+  SKIPPED, never as passing — an absent toolchain is not evidence of anything.
   <br><br><strong>TON is the only chain whose payout target can actually be proven.</strong>
   <code>@ton/sandbox</code> executes the compiled bytecode on a real TVM, so the test deploys with a
   <em>separate</em> cold wallet and asserts the outgoing message is addressed there. With

@@ -99,6 +99,10 @@ node scripts/check-rpcs.mjs
 python3 server/seed_chain.py --chain algorand --db server/cryptoland.db --users 120 --reset
 npm run preview
 
+# Verify every contract where ALL toolchains exist (prod box: 14 passing, 0 skipped).
+# The laptop cannot verify Tezos — ligo ships a Linux-only binary.
+./scripts/verify-on-prod.sh
+
 # Contract tests — every chain has an executable suite (436 tests total)
 cd contracts        && npx hardhat test          # EVM, 34 — covers all 17 EVM chains
 cd contracts/ton    && npm test                  # TON,  9 — REAL TVM via @ton/sandbox
@@ -324,8 +328,14 @@ Beam is a subnet-evm that mints blocks on demand so `blockTime` is not a UX time
 > 🔑 **`deploy/apex/programs.mjs` is now the single source of truth for all 52
 > programmes** — status, deadline, evidence quote and the date that status was last
 > verified. It renders into `xono.ai/status` and exports `programs.csv`. Update it
-> there, not in prose. As of 2026-07-31: **35 open, 2 rolling, 1 restructuring,
-> 2 by-proposal, 2 no-form, 8 dead, 2 blocked — nothing unknown. 37 actionable.**
+> there, not in prose. As of 2026-07-31: **60 programmes** — 42 open, 3 rolling,
+> 1 restructuring, 2 by-proposal, 2 no-form, 8 dead, 2 blocked. **45 actionable,
+> nothing unknown.**
+>
+> The list is NOT fixed. 52 was one July dossier; diffing against five grant
+> aggregators surfaced 83 names it never mentioned, 8 of which verified open —
+> four of them EVM chains, which for us is a `CHAINS` entry, not an integration.
+> Re-run the aggregator diff each round (`documentation/program-requirements.md` §16).
 >
 > A second rule, learned the hard way: **a foundation that shuts a grants council
 > rarely stops funding — it renames.** Always ask "what replaced it?" before

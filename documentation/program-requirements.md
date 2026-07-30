@@ -598,3 +598,41 @@ confirmation:
 **37 of 52 are actionable**, up from 34.
 
 **Always ask what replaced it before writing a programme off.**
+
+---
+
+## 16. The list was never the universe — 52 → 60 (2026-07-31)
+
+Every previous section treated "the 52" as fixed. It was not: 52 was the contents
+of **one July dossier**. Scraping five grant aggregators (coinlaunch, rocknblock,
+coinfabrik, innmind, peony) and diffing the extracted names against ours surfaced
+**83 programmes the dossier never mentioned**. Eight verified as open.
+
+| # | Programme | Chain | Why it matters |
+|---|---|---|---|
+| 53 | **Ethereum Foundation ESP** | Any / EVM | *"Submit your application"* — the most credible name on the whole list |
+| 54 | **Filecoin Foundation** | Any | *"Apply Now"* — tile metadata and map assets are literally what decentralised storage is for |
+| 55 | **Mantle Grants** | Mantle (EVM) | *"rolling basis"* |
+| 56 | **Taiko Grants** | Taiko (EVM) | *"Submit a project"* |
+| 57 | **Rootstock Grants** | Rootstock (EVM) | Bitcoin-secured EVM — a genuinely different narrative |
+| 58 | **Flare Grants** | Flare (EVM) | *"Apply for"* |
+| 59 | **The Graph Foundation** | Any / EVM | wants a subgraph — which the empire pages need anyway |
+| 60 | **Flow Ecosystem Support** | Flow | **NFT-native chain** (NBA Top Shot). Needs a Cadence adapter — a real integration |
+
+> 🔑 **Four of these cost us a config entry, not an integration.** Mantle, Taiko,
+> Rootstock and Flare are EVM, and `adapters/evm.js` already covers any EVM chain.
+> A `CHAINS` entry in `config.js` plus `env/.env.<chain>` is the entire job — the
+> same reason 17 of our 29 mainnet chains share one Solidity contract.
+
+### Scoreboard
+
+| | §15 | §16 |
+|---|---|---|
+| Programmes tracked | 52 | **60** |
+| ✅ Open | 35 | **42** |
+| 🔁 Rolling | 2 | **3** |
+| **Actionable** | **37** | **45** |
+| 🔴 Dead | 8 | 8 |
+
+**45 of 60 actionable.** Re-run the aggregator diff before each submission round —
+the universe keeps moving, and a fixed list guarantees you miss the additions.

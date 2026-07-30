@@ -22,6 +22,11 @@
 
 export const VERIFIED_ON = '2026-07-31';
 
+// Expanded from 52 to 60 on 2026-07-31. The original 52 came from a single July
+// dossier; scraping five grant aggregators and diffing surfaced 83 names it never
+// mentioned, of which 8 verified as open. Treat the list as a living set, not a
+// fixed one — re-run the aggregator diff before each submission round.
+
 // Successor sweep 2026-07-31: a foundation that shuts a grants council rarely
 // stops funding — it renames. Three programmes previously recorded as dead or
 // form-less turned out to have live successors worth real money (#5 Base
@@ -227,6 +232,41 @@ export const PROGRAMS = [
     status: 'BLOCKED', verified: '2026-07-30', url: 'https://aztec.network',
     evidence: 'unaudited stack, no standard NFT contract, and NO arbitrary-message signing',
     note: 'Without message signing our wallet login cannot work at all. Not shipped.' },
+
+  // ── Discovered 2026-07-31 by scraping five grant aggregators and diffing
+  //    against the original 52. The July dossier was one source; it was not the
+  //    whole universe. Four of these are EVM chains, which for us is a CONFIG
+  //    ENTRY, not an integration — adapters/evm.js already covers any EVM chain.
+  { n: 53, name: 'Ethereum Foundation ESP', chain: 'Any / EVM', amount: '~$100K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://esp.ethereum.foundation/applicants',
+    evidence: '"Submit your application"',
+    note: 'The most credible name on the list. Wants public-goods framing and open source — the same angle as Gitcoin #2.' },
+  { n: 54, name: 'Filecoin Foundation', chain: 'Any', amount: '~$100K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://fil.org/grants',
+    evidence: '"Apply Now"',
+    note: 'Real fit: tile metadata and map assets are exactly what decentralised storage is for. Would need an IPFS/Filecoin pin for tile art.' },
+  { n: 55, name: 'Mantle Grants', chain: 'Mantle (EVM)', amount: '~$100K', equity: '0%',
+    status: 'ROLLING', verified: '2026-07-31', url: 'https://www.mantle.xyz/grants',
+    evidence: '"rolling basis"',
+    note: 'EVM L2 — a CHAINS entry in config.js and env/.env.mantle is the whole integration.' },
+  { n: 56, name: 'Taiko Grants', chain: 'Taiko (EVM)', amount: '~$50K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://taiko.xyz/ecosystem',
+    evidence: '"Submit a project"', note: 'EVM L2 — config entry only.' },
+  { n: 57, name: 'Rootstock Grants', chain: 'Rootstock (EVM)', amount: '~$50K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://rootstock.io/grants',
+    evidence: '"apply for"',
+    note: 'Bitcoin-secured EVM sidechain — config entry only, and a genuinely different narrative (a Bitcoin-native land game).' },
+  { n: 58, name: 'Flare Grants', chain: 'Flare (EVM)', amount: '~$50K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://flare.network/grants',
+    evidence: '"Apply for"', note: 'EVM — config entry only.' },
+  { n: 59, name: 'The Graph Foundation', chain: 'Any / EVM', amount: '~$60K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://thegraph.com/grants',
+    evidence: '"Apply for"',
+    note: 'Would want a subgraph indexing tile ownership — which we should build anyway for the empire pages.' },
+  { n: 60, name: 'Flow Ecosystem Support', chain: 'Flow', amount: '~$100K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://developers.flow.com/ecosystem/grants',
+    evidence: '"grant application"',
+    note: 'NFT-NATIVE CHAIN — built for exactly this kind of product (NBA Top Shot). Needs a Cadence adapter, so it is a real integration, not a config entry.' },
 ];
 
 export const STATUS_META = {

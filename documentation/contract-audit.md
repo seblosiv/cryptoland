@@ -457,3 +457,32 @@ what enforces that all 13 still agree.
 **13 passing, 0 failing, 1 skipped** (Tezos — ligo ships a Linux-only binary, so it
 verifies on the server). Plus 335 frontend, 23 backend, and 18/18 on-chain checks
 against the live Stellar deployment.
+
+---
+
+# Verification moved to prod — 14/14, nothing skipped (2026-07-31)
+
+Verification ran on a macOS laptop, which made one chain permanently unverifiable:
+**ligo publishes a Linux-only binary**, so Tezos could only ever record as SKIPPED.
+Splitting verification across two machines is how a status board starts lying.
+
+It now runs on the production box (aarch64 Linux), which has every toolchain:
+`./scripts/verify-on-prod.sh` syncs, runs, and pulls the JSON back.
+
+**Result: 14 passing, 0 failing, 0 skipped.**
+
+Two toolchains had no published aarch64-linux binary and were built from source:
+**aiken** (`cargo install aiken`) and **cargo-near** (binary installer worked).
+Sui ships an `ubuntu-aarch64` release.
+
+## Two production problems this surfaced
+
+**`/tmp` was 100% full** — 1.9 GB tmpfs, of which 1.8 GB was stale
+`cargo-install*` scratch from an earlier failed scrypto build. A full `/tmp` on a
+box running 27 backends is a live hazard, not a nuisance.
+
+**tmpfs silently truncates.** The Sui download "succeeded" at 290 KB instead of
+1.06 GB, and only failed later at `tar` with a confusing
+`Cannot write: No space left on device`. Anything large on that box must go to a
+disk path, and cargo builds must set `CARGO_TARGET_DIR` away from `/tmp`. This is
+recorded at the top of `verify-on-prod.sh`.
