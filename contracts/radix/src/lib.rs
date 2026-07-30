@@ -84,7 +84,7 @@ mod cryptoland_tile {
             self.tile_manager.mint_non_fungible(
                 &NonFungibleLocalId::integer(id),
                 TileData { token_id: id, tx, ty },
-            )
+            ).into()
         }
 
         /// PRIMARY SALE: the whole payment goes into the treasury vault.
@@ -94,10 +94,10 @@ mod cryptoland_tile {
             let id = token_id_from_key(tx, ty);
             self.treasury.put(payment.take(self.tile_price));
             self.minted += 1;
-            let tile = self.tile_manager.mint_non_fungible(
+            let tile: Bucket = self.tile_manager.mint_non_fungible(
                 &NonFungibleLocalId::integer(id),
                 TileData { token_id: id, tx, ty },
-            );
+            ).into();
             (tile, payment)   // change returned to the buyer
         }
 

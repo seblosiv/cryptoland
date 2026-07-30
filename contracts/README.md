@@ -1,77 +1,76 @@
 # Contracts
 
-## Status
+**13 contracts, 13 compiling.** One Solidity contract covers all 15 EVM chains;
+the other 12 chains each need their own language.
 
-| Chain family | Language | Status |
-|---|---|---|
-| **EVM** (15 chains) | Solidity | ✅ `src/CryptoLandTile.sol` — compiles, **19/19 tests pass** |
-| **Starknet** | Cairo | ✅ compiles — scarb 2.11.4, Sierra artifact |
-| **Cardano** | Aiken / Plutus V3 | ✅ compiles, **2/2 tests pass** |
-| **Algorand** | PyTeal | ✅ compiles — 781-byte approval.teal, encoding self-checked |
-| **Sui** | Move | ✅ compiles, **1/1 test passes** |
-| Aptos | Move | 📝 written — framework/CLI version mismatch, not yet building |
-| NEAR | Rust | 📝 written — `near-sdk` demands `cargo near build`, not plain cargo |
-| Stellar | Soroban / Rust | 📝 written — `soroban-env-host` fails on a `ChaCha20Rng` trait bound |
-| MultiversX | Rust / ESDT | 📝 written — not yet verified |
-| Solana, TON, Tezos, Radix | Rust / FunC / SmartPy / Scrypto | ⬜ not written |
+| Chain | Language | Status | Artifact |
+|---|---|---|---|
+| **15 EVM chains** | Solidity | ✅ **34/34 tests** | — |
+| Starknet | Cairo | ✅ compiles | Sierra |
+| Cardano | Aiken / Plutus V3 | ✅ **4/4 tests** | Plutus |
+| Algorand | PyTeal | ✅ compiles | 2.7 KB TEAL |
+| Sui | Move | ✅ **1/1 test** | — |
+| Solana | Anchor / Rust | ✅ **2/2 tests** | — |
+| MultiversX | Rust / ESDT | ✅ compiles | — |
+| TON | FunC (TEP-62) | ✅ compiles | 507-byte BOC |
+| Aptos | Move | ✅ compiles | — |
+| Radix | Scrypto | ✅ **1/1 test** | — |
+| Stellar | Soroban / Rust | ✅ compiles | 21 KB WASM |
+| NEAR | Rust | ✅ compiles | 273 KB WASM |
+| Tezos | CameLIGO (FA2) | ✅ compiles | 7.2 KB Michelson |
 
-## The one invariant every chain must satisfy
+## Every contract implements the same rules
+
+- **Primary sale → 100% to treasury.** The project sells the land, so it takes the
+  whole payment. Not a fee on someone else's trade.
+- **Resale → 7% default**, with a **hard 10% ceiling** that a compromised owner key
+  cannot exceed.
+- **`withdraw()` any time**, no timelock, to…
+- **`treasuryReceiver`** — a payout address separable from the admin key, so revenue
+  can sit on a cold wallet while the hot key keeps administering.
+- **Accounting zeroed before any external effect**, on every chain.
+
+## The one invariant
 
 ```
 token_id = (tx << 15) | ty        tx, ty ∈ [0, 16383]
 ```
 
-Equivalently `(tx * 32768) + ty` — identical because `ty < 2^15`, so the OR never
-carries. Verified against the Solidity, JS and Cairo implementations:
+Cairo, Aiken and CameLIGO have no shift on their integer type, so they compute
+`(tx * 32768) + ty` — identical because `ty < 2^15` means the OR never carries.
+Verified at `(16383, 16383) → 536854527` in every language.
 
-| tx | ty | `(tx<<15)\|ty` | `(tx*32768)+ty` |
-|---|---|---|---|
-| 16383 | 16383 | 536854527 | 536854527 |
-| 100 | 200 | 3277000 | 3277000 |
+## Toolchains
 
-**If any chain computes this differently, the same tile gets a different id per
-chain and the cross-chain story breaks silently.** `src/test/chains.test.js`
-enforces it on the JS side; each contract must match.
+Everything is built on the prod server (`/srv/cryptoland/contracts`), which has
+rustc 1.97 against the Mac's 1.90.
 
-## Effort, honestly assessed
+```
+solc (hardhat) · scarb 2.11.4 · aiken v1.1.9 · pyteal · sui 1.76 · aptos 9.5.0
+cargo + wasm32-unknown-unknown · func-js 0.4.6 · ligo 1.15.6
+```
 
-Writing 12 contracts is *not* 12 × the Solidity effort. Four chains need almost no
-contract at all, because their token standard is a protocol primitive:
+Two substitutions worth recording:
 
-- **Algorand** — an ASA is created by an `AssetConfig` transaction. No contract for
-  issuance; PyTeal only if you want on-chain marketplace logic.
-- **Stellar** — assets are protocol-level. Soroban contract only for the marketplace.
-- **MultiversX** — ESDT NFTs are issued by a builtin function call.
-- **Radix** — non-fungible resources are native; a Scrypto blueprint is optional.
-
-Seven have well-maintained reference implementations to build on:
-
-- **Starknet** — OpenZeppelin Cairo (done)
-- **Solana** — Metaplex Token Metadata / Core; can mint with no custom program
-- **Aptos** — `aptos-token-objects` framework
-- **Sui** — Move examples; the object model does most of the work
-- **NEAR** — `near-contract-standards` NEP-171 crate
-- **TON** — `ton-blockchain/token-contract` (audited TEP-62 collection + item)
-- **Tezos** — SmartPy / LIGO reference FA2
-
-**Cardano is the genuine outlier.** Minting a native asset needs only a policy
-script, but per-tile ownership and a marketplace in a UTXO model means Plutus/Aiken
-validators — a different mental model, not a translation.
-
-## Do not write a contract you cannot compile
-
-Each of these needs its own toolchain, and an unverified contract that holds asset
-ownership is worse than no contract. This repo installs a toolchain before adding a
-chain — that is why Starknet is done and the rest are not.
-
-Currently installed: `solc` (via hardhat), `scarb` 2.11.4 (Cairo), `cargo`.
+- **Tezos is CameLIGO, not SmartPy.** The pip package named `smartpy` is an
+  unrelated project, and both documented SmartPy installers return HTML. LIGO ships
+  an ARM64 binary that works.
+- **Stellar and NEAR build as `wasm32-unknown-unknown`**, which is the deployable
+  artifact. Their `cargo test` harnesses pull `soroban-env-host` / `near-sdk`
+  host crates that clash with rustc 1.97 — a test-harness problem, not a contract
+  problem.
 
 ## Build
 
 ```bash
-# EVM
-cd contracts && npx hardhat compile && npx hardhat test
-
-# Starknet
+cd contracts && npx hardhat test                    # EVM, 34 tests
 cd contracts/starknet && scarb build
+cd contracts/cardano  && aiken check                # 4 tests
+cd contracts/algorand && python3 cryptoland_tile.py
+cd contracts/sui      && sui move test
+cd contracts/aptos    && aptos move compile --named-addresses cryptoland=0x1
+cd contracts/tezos    && ligo compile contract cryptoland_tile.mligo -o tile.tz
+cd contracts/ton      && npx func-js contracts/stdlib.fc contracts/cryptoland_tile.fc --boc tile.boc
+# Rust (on prod): solana, radix, multiversx, near, stellar
+cargo build --target wasm32-unknown-unknown --release
 ```
