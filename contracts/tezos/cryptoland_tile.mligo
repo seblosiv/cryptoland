@@ -65,7 +65,7 @@ let claim_tile (p, s : claim_params * storage) : return =
     s with
       ledger   = Big_map.add token_id buyer s.ledger;
       total    = s.total + 1n;
-      treasury = s.treasury + s.tile_price;
+      treasury = s.treasury + Tezos.get_amount ();  (* credit what was actually sent, not just the price, so overpayment is not stranded *)
   }
 
 let set_tile_price (price, s : tez * storage) : return =

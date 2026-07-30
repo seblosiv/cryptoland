@@ -11,6 +11,9 @@ module cryptoland::cryptoland_tile {
     use std::string::String;
     use aptos_std::table::{Self, Table};
     use aptos_framework::event;
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::aptos_coin::AptosCoin;
+    use aptos_framework::aptos_account;
 
     /// Z14 grid: 16384 x 16384.
     const GRID_MAX: u64 = 16383;
@@ -34,8 +37,9 @@ module cryptoland::cryptoland_tile {
         tile_price: u64,
         /// Resale fee, 700 = 7%. Capped at MAX_FEE_BPS.
         market_fee_bps: u64,
-        /// 100% of primary sales + the resale cut.
-        treasury: u64,
+        /// 100% of primary sales + the resale cut. A real coin store, not a
+        /// counter — an audit found the previous u64 let tiles be claimed free.
+        treasury: Coin<AptosCoin>,
         /// Payout target — set to a cold wallet.
         treasury_receiver: address,
     }
@@ -56,7 +60,7 @@ module cryptoland::cryptoland_tile {
             total: 0,
             tile_price: 0,
             market_fee_bps: 700,
-            treasury: 0,
+            treasury: coin::zero<AptosCoin>(),
             treasury_receiver: signer::address_of(admin),
         });
     }
@@ -95,7 +99,9 @@ module cryptoland::cryptoland_tile {
         let to = signer::address_of(buyer);
         table::add(&mut reg.tiles, id, to);
         reg.total = reg.total + 1;
-        reg.treasury = reg.treasury + reg.tile_price;
+        // Actually take the money. Aborts if the buyer cannot cover the price.
+        let paid = coin::withdraw<AptosCoin>(buyer, reg.tile_price);
+        coin::merge(&mut reg.treasury, paid);
         event::emit(TileMinted { token_id: id, to, tx, ty });
     }
 
@@ -131,8 +137,12 @@ module cryptoland::cryptoland_tile {
     ) acquires Registry {
         let reg = borrow_global_mut<Registry>(registry_addr);
         assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
-        assert!(reg.treasury > 0, E_NOTHING_TO_WITHDRAW);
-        reg.treasury = 0;
+        let amount = coin::value(&reg.treasury);
+        assert!(amount > 0, E_NOTHING_TO_WITHDRAW);
+        // extract_all zeroes the store before the deposit; aptos_account::deposit
+        // auto-registers the receiver so a cold wallet needs no prior setup.
+        let payout = coin::extract_all(&mut reg.treasury);
+        aptos_account::deposit_coins(reg.treasury_receiver, payout);
     }
 
     #[view]
@@ -142,7 +152,7 @@ module cryptoland::cryptoland_tile {
 
     #[view]
     public fun treasury(registry_addr: address): u64 acquires Registry {
-        borrow_global<Registry>(registry_addr).treasury
+        coin::value(&borrow_global<Registry>(registry_addr).treasury)
     }
 
     #[view]

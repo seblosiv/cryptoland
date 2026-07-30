@@ -102,3 +102,8 @@ scheme — not built.
 The 12 non-EVM contracts implement **mint + ownership + the tokenId invariant only**
 — no marketplace, no fees yet. Getting ownership provably identical across 12
 languages was the priority; fee logic is per-chain work once a deployment is live.
+
+## Audit
+
+A line-by-line review of all 13 implementations — seven fund-losing findings, all
+fixed — is in [contract-audit.md](contract-audit.md). Read it before deploying.

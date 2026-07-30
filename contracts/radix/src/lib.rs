@@ -28,7 +28,29 @@ pub fn key_from_token_id(token_id: u64) -> (u64, u64) {
 }
 
 #[blueprint]
+#[types(TileData)]
 mod cryptoland_tile {
+    // AUTH. Without this every public method is callable by anyone — an audit
+    // found withdraw() completely ungated, which would have let any caller drain
+    // the treasury the moment the component went live. Admin methods now require
+    // the admin badge minted at instantiation.
+    enable_method_auth! {
+        roles {
+            admin => updatable_by: [];
+        },
+        methods {
+            claim_tile       => PUBLIC;          // buyers must be able to claim
+            tile_price       => PUBLIC;
+            market_fee_bps   => PUBLIC;
+            treasury_amount  => PUBLIC;
+            total_minted     => PUBLIC;
+            mint_tile        => restrict_to: [admin];
+            set_tile_price   => restrict_to: [admin];
+            set_market_fee_bps => restrict_to: [admin];
+            withdraw         => restrict_to: [admin];
+        }
+    }
+
     struct CryptoLandTile {
         tile_manager: NonFungibleResourceManager,
         minted: u64,

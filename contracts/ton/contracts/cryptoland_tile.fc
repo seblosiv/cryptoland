@@ -35,16 +35,26 @@ int token_id_from_key(int tx, int ty) inline {
     return (token_id >> COORD_SHIFT, token_id & 0x7FFF);
 }
 
-;; storage: owner_address, next_item_index, content, nft_item_code
-(slice, int, cell, cell) load_data() inline {
+;; storage: owner, next_item_index, tile_price, market_fee_bps, treasury_receiver,
+;; content, nft_item_code. price/fee/receiver live here so admin ops persist and
+;; so claim_tile prices from state instead of from the buyer's message.
+(slice, int, int, int, slice, cell, cell) load_data() inline {
     var ds = get_data().begin_parse();
-    return (ds~load_msg_addr(), ds~load_uint(64), ds~load_ref(), ds~load_ref());
+    slice owner = ds~load_msg_addr();
+    int total = ds~load_uint(64);
+    int price = ds~load_coins();
+    int fee = ds~load_uint(16);
+    slice recv = ds~load_msg_addr();
+    return (owner, total, price, fee, recv, ds~load_ref(), ds~load_ref());
 }
 
-() save_data(slice owner, int total, cell content, cell item_code) impure inline {
+() save_data(slice owner, int total, int price, int fee, slice recv, cell content, cell item_code) impure inline {
     set_data(begin_cell()
         .store_slice(owner)
         .store_uint(total, 64)
+        .store_coins(price)
+        .store_uint(fee, 16)
+        .store_slice(recv)
         .store_ref(content)
         .store_ref(item_code)
         .end_cell());
@@ -92,7 +102,7 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
     int op = in_msg_body~load_uint(32);
     in_msg_body~load_uint(64); ;; query_id
 
-    var (owner, total, content, item_code) = load_data();
+    var (owner, total, price, fee_bps, recv, content, item_code) = load_data();
 
     if (op == op::mint_tile) {
         throw_unless(error::not_owner, equal_slice_bits(sender, owner));
@@ -101,36 +111,50 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
         int item_index = token_id_from_key(tx, ty);
         cell nft_content = in_msg_body~load_ref();
         deploy_nft_item(item_index, item_code, 50000000, nft_content);
-        save_data(owner, total + 1, content, item_code);
+        save_data(owner, total + 1, price, fee_bps, recv, content, item_code);
         return ();
     }
 
-    ;; PRIMARY SALE: 100% of msg_value stays with the contract as treasury.
+    ;; PRIMARY SALE: price comes from STORAGE, never from the message body — the
+    ;; buyer used to supply it, which made every tile claimable for 1 nanoton.
     if (op == op::claim_tile) {
         int tx = in_msg_body~load_uint(32);
         int ty = in_msg_body~load_uint(32);
-        int price = in_msg_body~load_coins();
-        throw_unless(error::out_of_range, price > 0);
+        throw_unless(error::insufficient, price > 0);
         throw_unless(error::insufficient, msg_value >= price);
         int item_index = token_id_from_key(tx, ty);
         cell nft_content = in_msg_body~load_ref();
         deploy_nft_item(item_index, item_code, 50000000, nft_content);
-        save_data(owner, total + 1, content, item_code);
+        save_data(owner, total + 1, price, fee_bps, recv, content, item_code);
         return ();
     }
 
-    ;; Admin: price, fee, payout target, withdrawal. Owner only.
-    if ((op == op::set_tile_price) | (op == op::set_market_fee) | (op == op::set_treasury_recv)) {
+    ;; Admin: price, fee, payout target. Owner only. These persist now.
+    if (op == op::set_tile_price) {
         throw_unless(error::not_owner, equal_slice_bits(sender, owner));
+        save_data(owner, total, in_msg_body~load_coins(), fee_bps, recv, content, item_code);
+        return ();
+    }
+    if (op == op::set_market_fee) {
+        throw_unless(error::not_owner, equal_slice_bits(sender, owner));
+        int bps = in_msg_body~load_uint(16);
+        throw_unless(error::out_of_range, bps <= MAX_FEE_BPS);   ;; 10% ceiling
+        save_data(owner, total, price, bps, recv, content, item_code);
+        return ();
+    }
+    if (op == op::set_treasury_recv) {
+        throw_unless(error::not_owner, equal_slice_bits(sender, owner));
+        save_data(owner, total, price, fee_bps, in_msg_body~load_msg_addr(), content, item_code);
         return ();
     }
 
-    ;; Entire balance to the treasury receiver, minus what the message costs.
+    ;; Entire balance to the TREASURY RECEIVER — it used to hardcode `owner`,
+    ;; so setting a cold wallet had no effect on where the money went.
     if (op == op::withdraw) {
         throw_unless(error::not_owner, equal_slice_bits(sender, owner));
         var msg = begin_cell()
             .store_uint(0x18, 6)
-            .store_slice(owner)
+            .store_slice(recv)
             .store_coins(0)
             .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
         send_raw_message(msg.end_cell(), 128);   ;; carry the whole balance
@@ -141,12 +165,12 @@ slice calculate_nft_item_address(int wc, cell state_init) inline {
 
 ;; ---- get methods ----
 (int, cell, slice) get_collection_data() method_id {
-    var (owner, total, content, _) = load_data();
+    var (owner, total, _, _, _, content, _) = load_data();
     return (total, content, owner);
 }
 
 slice get_nft_address_by_index(int index) method_id {
-    var (_, _, _, item_code) = load_data();
+    var (_, _, _, _, _, _, item_code) = load_data();
     cell state_init = calculate_nft_item_state_init(index, item_code);
     return calculate_nft_item_address(0, state_init);
 }

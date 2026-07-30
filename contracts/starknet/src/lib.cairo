@@ -29,8 +29,22 @@ pub trait ICryptoLandTile<TState> {
     fn treasury_receiver(self: @TState) -> starknet::ContractAddress;
 }
 
+/// Minimal ERC20 surface — Starknet has no native msg.value, so the primary
+/// sale is a STRK transfer_from and the payout is a transfer.
+#[starknet::interface]
+pub trait IERC20<TState> {
+    fn transfer(ref self: TState, recipient: starknet::ContractAddress, amount: u256) -> bool;
+    fn transfer_from(
+        ref self: TState,
+        sender: starknet::ContractAddress,
+        recipient: starknet::ContractAddress,
+        amount: u256,
+    ) -> bool;
+}
+
 #[starknet::contract]
 pub mod CryptoLandTile {
+    use super::{IERC20Dispatcher, IERC20DispatcherTrait};
     use starknet::ContractAddress;
     use starknet::storage::{
         Map, StoragePointerReadAccess, StoragePointerWriteAccess,
@@ -58,6 +72,8 @@ pub mod CryptoLandTile {
         treasury: u256,
         // Where withdrawals land — set this to a cold wallet.
         treasury_receiver: ContractAddress,
+        // ERC20 the primary sale is denominated in (STRK).
+        pay_token: ContractAddress,
     }
 
     #[event]
@@ -77,8 +93,14 @@ pub mod CryptoLandTile {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, owner: ContractAddress, base_uri: felt252) {
+    fn constructor(
+        ref self: ContractState,
+        owner: ContractAddress,
+        base_uri: felt252,
+        pay_token: ContractAddress,
+    ) {
         self.owner.write(owner);
+        self.pay_token.write(pay_token);
         self.base_uri.write(base_uri);
         self.market_fee_bps.write(700);      // 7%
         self.treasury_receiver.write(owner); // change with set_treasury_receiver
@@ -131,6 +153,10 @@ pub mod CryptoLandTile {
             let caller = starknet::get_caller_address();
             self.minted.write(id, caller);
             self.total.write(self.total.read() + 1);
+            // Pull the price from the buyer. Reverts the whole claim if the
+            // buyer has not approved or cannot cover it.
+            IERC20Dispatcher { contract_address: self.pay_token.read() }
+                .transfer_from(caller, starknet::get_contract_address(), price);
             self.treasury.write(self.treasury.read() + price);
             self.emit(TileMinted { token_id: id, to: caller, tx, ty });
             id
@@ -160,7 +186,9 @@ pub mod CryptoLandTile {
             assert(starknet::get_caller_address() == self.owner.read(), 'not owner');
             let amount = self.treasury.read();
             assert(amount > 0, 'nothing to withdraw');
-            self.treasury.write(0);
+            self.treasury.write(0);          // zero before the external call
+            IERC20Dispatcher { contract_address: self.pay_token.read() }
+                .transfer(self.treasury_receiver.read(), amount);
         }
 
         fn tile_price(self: @ContractState) -> u256 { self.tile_price.read() }

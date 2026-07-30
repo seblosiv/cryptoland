@@ -62,6 +62,40 @@ pub mod cryptoland_tile {
         Ok(())
     }
 
+    /// PRIMARY SALE. Buyer pays `tile_price` lamports into the registry PDA,
+    /// which is exactly the balance withdraw() later pays to treasury_receiver.
+    pub fn claim_tile(ctx: Context<ClaimTile>, tx: u32, ty: u32) -> Result<()> {
+        let price = ctx.accounts.registry.tile_price;
+        require!(price > 0, TileError::ClaimingDisabled);
+        let id = token_id_from_key(tx as u64, ty as u64)?;
+
+        // Move the money before recording ownership.
+        anchor_lang::system_program::transfer(
+            CpiContext::new(
+                ctx.accounts.system_program.to_account_info(),
+                anchor_lang::system_program::Transfer {
+                    from: ctx.accounts.buyer.to_account_info(),
+                    to: ctx.accounts.registry.to_account_info(),
+                },
+            ),
+            price,
+        )?;
+
+        let buyer = ctx.accounts.buyer.key();
+        let tile = &mut ctx.accounts.tile;
+        tile.token_id = id;
+        tile.tx = tx as u64;
+        tile.ty = ty as u64;
+        tile.owner = buyer;
+        tile.bump = ctx.bumps.tile;
+
+        let reg = &mut ctx.accounts.registry;
+        reg.total = reg.total.checked_add(1).ok_or(TileError::Overflow)?;
+
+        emit!(TileMinted { token_id: id, to: buyer, tx: tx as u64, ty: ty as u64 });
+        Ok(())
+    }
+
     pub fn set_tile_price(ctx: Context<AdminOnly>, price: u64) -> Result<()> {
         ctx.accounts.registry.tile_price = price;
         Ok(())
@@ -147,6 +181,26 @@ pub struct Initialize<'info> {
     pub registry: Account<'info, Registry>,
     #[account(mut)]
     pub owner: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(tx: u32, ty: u32)]
+pub struct ClaimTile<'info> {
+    #[account(mut, seeds = [b"registry"], bump = registry.bump)]
+    pub registry: Account<'info, Registry>,
+    /// Same one-PDA-per-tile uniqueness as MintTile — a second claim for the
+    /// same coordinates collides with this account and fails.
+    #[account(
+        init,
+        payer = buyer,
+        space = 8 + 8 + 8 + 8 + 32 + 1,
+        seeds = [b"tile", &tx.to_le_bytes(), &ty.to_le_bytes()],
+        bump
+    )]
+    pub tile: Account<'info, Tile>,
+    #[account(mut)]
+    pub buyer: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 

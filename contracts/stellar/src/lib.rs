@@ -5,7 +5,7 @@
 //!
 //! CROSS-CHAIN INVARIANT: token_id = (tx << 15) | ty, tx/ty in [0, 16383].
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, String};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env, String};
 
 const GRID_MAX: u64 = 16383;
 const COORD_SHIFT: u64 = 15;
@@ -36,6 +36,8 @@ pub enum DataKey {
     Treasury,
     /// Payout target — set to a cold wallet.
     TreasuryReceiver,
+    /// SAC address of the asset the sale is denominated in (XLM by default).
+    PayToken,
 }
 
 /// 10% ceiling — survives a compromised owner key.
@@ -58,7 +60,7 @@ pub fn key_from_token_id(token_id: u64) -> (u64, u64) {
 
 #[contractimpl]
 impl CryptoLandTile {
-    pub fn init(env: Env, owner: Address, base_uri: String) {
+    pub fn init(env: Env, owner: Address, base_uri: String, pay_token: Address) {
         env.storage().instance().set(&DataKey::Owner, &owner);
         env.storage().instance().set(&DataKey::BaseUri, &base_uri);
         env.storage().instance().set(&DataKey::Total, &0u64);
@@ -66,6 +68,27 @@ impl CryptoLandTile {
         env.storage().instance().set(&DataKey::MarketFeeBps, &700u32);
         env.storage().instance().set(&DataKey::Treasury, &0i128);
         env.storage().instance().set(&DataKey::TreasuryReceiver, &owner);
+        env.storage().instance().set(&DataKey::PayToken, &pay_token);
+    }
+
+    /// Primary sale. Pulls `tile_price` from the buyer into the contract, so the
+    /// treasury figure is backed by real balance rather than a bare counter.
+    pub fn claim_tile(env: Env, buyer: Address, tx: u64, ty: u64) -> Result<u64, Error> {
+        buyer.require_auth();
+        let price: i128 = env.storage().instance().get(&DataKey::TilePrice).unwrap_or(0);
+        if price <= 0 { return Err(Error::ClaimingDisabled); }
+        let id = token_id_from_key(tx, ty)?;
+        if env.storage().persistent().has(&DataKey::Tile(id)) {
+            return Err(Error::AlreadyClaimed);
+        }
+        let pay: Address = env.storage().instance().get(&DataKey::PayToken).unwrap();
+        token::Client::new(&env, &pay).transfer(&buyer, &env.current_contract_address(), &price);
+        env.storage().persistent().set(&DataKey::Tile(id), &buyer);
+        let total: u64 = env.storage().instance().get(&DataKey::Total).unwrap_or(0);
+        env.storage().instance().set(&DataKey::Total, &(total + 1));
+        let t: i128 = env.storage().instance().get(&DataKey::Treasury).unwrap_or(0);
+        env.storage().instance().set(&DataKey::Treasury, &(t + price));
+        Ok(id)
     }
 
     fn require_owner(env: &Env) -> Address {
@@ -97,7 +120,10 @@ impl CryptoLandTile {
         Self::require_owner(&env);
         let amount: i128 = env.storage().instance().get(&DataKey::Treasury).unwrap_or(0);
         if amount <= 0 { return Err(Error::NothingToWithdraw); }
-        env.storage().instance().set(&DataKey::Treasury, &0i128);
+        env.storage().instance().set(&DataKey::Treasury, &0i128); // zero first
+        let pay: Address = env.storage().instance().get(&DataKey::PayToken).unwrap();
+        let to: Address = env.storage().instance().get(&DataKey::TreasuryReceiver).unwrap();
+        token::Client::new(&env, &pay).transfer(&env.current_contract_address(), &to, &amount);
         Ok(amount)
     }
 
