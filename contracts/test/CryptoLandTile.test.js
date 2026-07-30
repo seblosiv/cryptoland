@@ -265,5 +265,31 @@ describe('CryptoLandTile', () => {
       await expect(contract.connect(buyer).setTilePrice(PRICE)).to.be.reverted
       await expect(contract.connect(buyer).withdraw()).to.be.reverted
     })
+
+    it('can pay out to a separate cold wallet without giving up admin', async () => {
+      await contract.setTilePrice(PRICE)
+      await contract.connect(buyer).claimTile(128, '1:7', 'DE', { value: PRICE })
+      await contract.setTreasuryReceiver(other.address)
+      const before = await ethers.provider.getBalance(other.address)
+      await contract.withdraw()                 // still called by the OWNER
+      expect(await ethers.provider.getBalance(other.address) - before).to.equal(PRICE)
+      // Admin rights did not move.
+      expect(await contract.owner()).to.equal(owner.address)
+    })
+
+    it('can pay out to a separate cold wallet without giving up admin', async () => {
+      await contract.setTilePrice(PRICE)
+      await contract.connect(buyer).claimTile(128, '1:7', 'DE', { value: PRICE })
+      await contract.setTreasuryReceiver(other.address)
+      const before = await ethers.provider.getBalance(other.address)
+      await contract.withdraw()                 // still called by the OWNER
+      expect(await ethers.provider.getBalance(other.address) - before).to.equal(PRICE)
+      expect(await contract.owner()).to.equal(owner.address)   // admin did not move
+    })
+
+    it('rejects a zero payout address', async () => {
+      await expect(contract.setTreasuryReceiver(ethers.ZeroAddress))
+        .to.be.revertedWith('Zero address')
+    })
   })
 })

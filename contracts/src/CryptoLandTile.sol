@@ -118,6 +118,9 @@ contract CryptoLandTile is IERC721Metadata {
     uint256 public constant MAX_FEE_BPS = 1000;  // hard ceiling: 10%, cannot be exceeded
     // Everything withdrawable by the owner: primary sales + resale fees.
     uint256 public treasury;
+    /// Where withdrawals land. Defaults to `owner`, but can point at a COLD wallet
+    /// so the day-to-day admin key never has to be the key holding the revenue.
+    address public treasuryReceiver;
 
     // ── Pause ───────────────────────────────────────────────────────────────
     bool public paused;
@@ -132,6 +135,7 @@ contract CryptoLandTile is IERC721Metadata {
     event TileListed(uint256 indexed tokenId, address indexed seller, uint256 priceWei);
     event TileUnlisted(uint256 indexed tokenId, address indexed seller);
     event TilePriceUpdated(uint256 priceWei);
+    event TreasuryReceiverUpdated(address indexed to);
     event TileSold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 priceWei);
     event FeesWithdrawn(address to, uint256 amount);
     event OwnershipTransferred(address indexed previous, address indexed next);
@@ -144,6 +148,9 @@ contract CryptoLandTile is IERC721Metadata {
         _baseURI = baseURI_;
         owner    = msg.sender;
         minter   = msg.sender;
+        // Payouts default to the deployer; setTreasuryReceiver() can point them at a
+        // cold wallet later without handing over admin rights.
+        treasuryReceiver = msg.sender;
     }
 
     // ── ERC-165 ─────────────────────────────────────────────────────────────
@@ -402,16 +409,25 @@ contract CryptoLandTile is IERC721Metadata {
         uint256 amount = treasury;
         require(amount > 0, "Nothing to withdraw");
         treasury = 0;
-        (bool ok, ) = payable(owner).call{ value: amount }("");
+        address to = treasuryReceiver;
+        (bool ok, ) = payable(to).call{ value: amount }("");
         require(ok, "Withdraw failed");
-        emit FeesWithdrawn(owner, amount);
+        emit FeesWithdrawn(to, amount);
+    }
+
+    /// Point withdrawals at a different wallet without handing over admin rights.
+    /// Lets the hot admin key stay separate from the cold wallet holding revenue.
+    function setTreasuryReceiver(address to) external onlyOwner {
+        require(to != address(0), "Zero address");
+        treasuryReceiver = to;
+        emit TreasuryReceiverUpdated(to);
     }
 
     /// Sweep any balance that arrived outside the accounted paths (direct sends).
     function withdrawUnaccounted() external onlyOwner {
         uint256 stray = address(this).balance - treasury;
         require(stray > 0, "Nothing unaccounted");
-        (bool ok, ) = payable(owner).call{ value: stray }("");
+        (bool ok, ) = payable(treasuryReceiver).call{ value: stray }("");
         require(ok, "Sweep failed");
         emit FeesWithdrawn(owner, stray);
     }
