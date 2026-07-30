@@ -185,6 +185,51 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   request to the SKALE team; more sFUEL will not fix it.</p>
 </div>
 
+<h2>Contracts — 12 non-EVM + 1 EVM</h2>
+<div class="card pad" style="margin-bottom:18px">
+  <p style="margin-bottom:12px"><strong>CryptoLandTile.sol covers all 15 EVM chains.</strong> The other 12
+  chains each need their own contract in their own language — that is why they are listed separately.
+  Every one asserts the same invariant: <code>token_id = (tx &lt;&lt; 15) | ty</code>, verified at
+  <code>(16383,16383) → 536854527</code>. Cairo, Aiken and SmartPy cannot express a bit shift, so they
+  compute <code>(tx × 32768) + ty</code> — identical only because <code>ty &lt; 2^15</code> means the OR
+  never carries.</p>
+  <div class="scroll"><table style="min-width:820px">
+  <thead><tr><th>Chain</th><th>Language</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+  <tr><td><strong>15 EVM chains</strong></td><td>Solidity</td><td><span class="pill ok">COMPILES</span></td><td>19/19 tests pass</td></tr>
+  <tr><td>Starknet</td><td>Cairo</td><td><span class="pill ok">COMPILES</span></td><td>scarb 2.11.4, Sierra artifact</td></tr>
+  <tr><td>Cardano</td><td>Aiken / Plutus V3</td><td><span class="pill ok">COMPILES</span></td><td>2/2 tests pass</td></tr>
+  <tr><td>Algorand</td><td>PyTeal</td><td><span class="pill ok">COMPILES</span></td><td>781-byte approval.teal</td></tr>
+  <tr><td>Sui</td><td>Move</td><td><span class="pill ok">COMPILES</span></td><td>1/1 test passes</td></tr>
+  <tr><td>Solana</td><td>Anchor / Rust</td><td><span class="pill warn">WRITTEN</span></td><td>PDA-per-tile; building</td></tr>
+  <tr><td>Radix</td><td>Scrypto</td><td><span class="pill warn">WRITTEN</span></td><td>native resource; building</td></tr>
+  <tr><td>MultiversX</td><td>Rust / ESDT</td><td><span class="pill warn">WRITTEN</span></td><td>building</td></tr>
+  <tr><td>TON</td><td>FunC (TEP-62)</td><td><span class="pill warn">WRITTEN</span></td><td>item-per-tile contract</td></tr>
+  <tr><td>Tezos</td><td>SmartPy (FA2)</td><td><span class="pill warn">WRITTEN</span></td><td>needs SmartPy CLI</td></tr>
+  <tr><td>Aptos</td><td>Move</td><td><span class="pill no">BLOCKED</span></td><td>framework newer than CLI 9.5.0</td></tr>
+  <tr><td>NEAR</td><td>Rust</td><td><span class="pill no">BLOCKED</span></td><td>near-sdk requires cargo-near</td></tr>
+  <tr><td>Stellar</td><td>Soroban / Rust</td><td><span class="pill no">BLOCKED</span></td><td>ChaCha20Rng trait bound</td></tr>
+  </tbody></table></div>
+</div>
+
+<h2>Grant programmes — accepting applications?</h2>
+<div class="card pad" style="margin-bottom:18px">
+  <p style="margin-bottom:12px">46 programme pages checked twice: once with <code>curl_cffi</code> (TLS
+  impersonation, defeats 403/429) and once with a real headless browser via <strong>zendriver</strong>
+  (executes JavaScript, so SPA pages render). Merged, preferring whichever produced a decisive answer.</p>
+  <div class="scroll"><table style="min-width:700px">
+  <thead><tr><th>Verdict</th><th>Count</th><th>Meaning</th></tr></thead><tbody>
+  <tr><td><span class="pill ok">OPEN</span></td><td><strong>11</strong></td><td>page states applications are open</td></tr>
+  <tr><td><span class="pill no">CLOSED</span></td><td>1</td><td>TON — "The Grants &amp; Bounties program is currently paused"</td></tr>
+  <tr><td><span class="pill warn">UNCLEAR</span></td><td>33</td><td>page renders but states neither — <strong>not evidence of open</strong></td></tr>
+  <tr><td><span class="pill warn">ERROR</span></td><td>1</td><td>could not load</td></tr>
+  </tbody></table></div>
+  <p class="note"><strong>Confirmed OPEN:</strong> Avalanche Retro9000 · Cardano Catalyst · Starknet Growth ·
+  Arbitrum Foundation · Solana Foundation · HBAR Foundation · BNB Chain MVB · Tezos Foundation ·
+  Cardano Foundation · Outlier Base Camp · Alliance DAO.<br><br>
+  The 33 "unclear" are mostly marketing pages whose real window lives behind the apply form. Open the
+  form before submitting — the July dossier's URLs had already rotted within a week.</p>
+</div>
+
 <h2>Deployer wallet &amp; treasury</h2>
 <div class="wallet">
   <div class="card pad">

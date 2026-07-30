@@ -1,0 +1,116 @@
+;; CryptoLandTile — TON (FunC, TEP-62 style)
+;; =========================================
+;; On TON each NFT item is its OWN CONTRACT, deployed at an address derived from
+;; the collection address and the item index. That makes "one owner per tile"
+;; structural: the item address for a given index can only be deployed once, so a
+;; duplicate mint fails at the network level rather than by a stored check.
+;;
+;; CROSS-CHAIN INVARIANT: token_id = (tx << 15) | ty, tx/ty in [0, 16383].
+;; Must match evm.js, CryptoLandTile.sol, and the Cairo/Aiken/PyTeal/Move versions.
+
+const int GRID_MAX = 16383;
+const int COORD_SHIFT = 15;
+
+const int op::mint_tile = 0x1a0b9d51;
+
+const int error::not_owner = 401;
+const int error::out_of_range = 402;
+
+;; (tx << 15) | ty — identical to every other chain.
+int token_id_from_key(int tx, int ty) inline {
+    throw_unless(error::out_of_range, (tx >= 0) & (tx <= GRID_MAX));
+    throw_unless(error::out_of_range, (ty >= 0) & (ty <= GRID_MAX));
+    return (tx << COORD_SHIFT) | ty;
+}
+
+(int, int) key_from_token_id(int token_id) inline {
+    return (token_id >> COORD_SHIFT, token_id & 0x7FFF);
+}
+
+;; storage: owner_address, next_item_index, content, nft_item_code
+(slice, int, cell, cell) load_data() inline {
+    var ds = get_data().begin_parse();
+    return (ds~load_msg_addr(), ds~load_uint(64), ds~load_ref(), ds~load_ref());
+}
+
+() save_data(slice owner, int total, cell content, cell item_code) impure inline {
+    set_data(begin_cell()
+        .store_slice(owner)
+        .store_uint(total, 64)
+        .store_ref(content)
+        .store_ref(item_code)
+        .end_cell());
+}
+
+cell calculate_nft_item_state_init(int item_index, cell item_code) inline {
+    cell data = begin_cell()
+        .store_uint(item_index, 64)
+        .store_slice(my_address())
+        .end_cell();
+    return begin_cell()
+        .store_uint(0, 2).store_dict(item_code).store_dict(data).store_uint(0, 1)
+        .end_cell();
+}
+
+slice calculate_nft_item_address(int wc, cell state_init) inline {
+    return begin_cell()
+        .store_uint(4, 3)
+        .store_int(wc, 8)
+        .store_uint(cell_hash(state_init), 256)
+        .end_cell()
+        .begin_parse();
+}
+
+() deploy_nft_item(int item_index, cell item_code, int amount, cell nft_content) impure {
+    cell state_init = calculate_nft_item_state_init(item_index, item_code);
+    slice nft_address = calculate_nft_item_address(0, state_init);
+    var msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(nft_address)
+        .store_coins(amount)
+        .store_uint(4 + 2 + 1, 1 + 4 + 4 + 64 + 32 + 1 + 1 + 1)
+        .store_ref(state_init)
+        .store_ref(nft_content);
+    send_raw_message(msg.end_cell(), 1);
+}
+
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { return (); }
+    var cs = in_msg_full.begin_parse();
+    var flags = cs~load_uint(4);
+    if (flags & 1) { return (); }
+    slice sender = cs~load_msg_addr();
+
+    int op = in_msg_body~load_uint(32);
+    in_msg_body~load_uint(64); ;; query_id
+
+    var (owner, total, content, item_code) = load_data();
+
+    if (op == op::mint_tile) {
+        throw_unless(error::not_owner, equal_slices(sender, owner));
+        int tx = in_msg_body~load_uint(32);
+        int ty = in_msg_body~load_uint(32);
+        int item_index = token_id_from_key(tx, ty);
+        cell nft_content = in_msg_body~load_ref();
+        deploy_nft_item(item_index, item_code, 50000000, nft_content);
+        save_data(owner, total + 1, content, item_code);
+        return ();
+    }
+    throw(0xffff);
+}
+
+;; ---- get methods ----
+(int, cell, slice) get_collection_data() method_id {
+    var (owner, total, content, _) = load_data();
+    return (total, content, owner);
+}
+
+slice get_nft_address_by_index(int index) method_id {
+    var (_, _, _, item_code) = load_data();
+    cell state_init = calculate_nft_item_state_init(index, item_code);
+    return calculate_nft_item_address(0, state_init);
+}
+
+int get_token_id(int tx, int ty) method_id {
+    return token_id_from_key(tx, ty);
+}

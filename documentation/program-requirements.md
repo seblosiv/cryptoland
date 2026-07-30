@@ -315,3 +315,44 @@ apply window lives behind a form. **Not evidence of open.**
 The right tool is a real browser driven headlessly (Playwright, or zendriver for
 harder anti-bot). That is a separate build: form-filling is per-programme, and an
 auto-submitted application that gets a field wrong is worse than none.
+
+---
+
+## 13. Definitive open/closed — both methods merged, 2026-07-30
+
+Checked all 46 twice and merged, preferring whichever produced a decisive answer:
+
+1. **`curl_cffi`** (`scripts/probe-programs.py`) — replays a real Chrome TLS/JA3
+   handshake. Defeats 403/429, which key on the handshake and not the User-Agent.
+2. **zendriver headless Chrome** (`scripts/probe-browser.py`) — executes JavaScript,
+   so SPA pages actually render. Uses Chrome for Testing, never a personal profile.
+
+| Verdict | Count |
+|---|---|
+| **OPEN** | **11** |
+| CLOSED | 1 |
+| UNCLEAR | 33 |
+| ERROR | 1 |
+
+### ✅ Confirmed OPEN
+
+Avalanche Retro9000 · Cardano Catalyst · Starknet Growth · Arbitrum Foundation ·
+Solana Foundation · HBAR Foundation · BNB Chain MVB · Tezos Foundation ·
+Cardano Foundation · Outlier Base Camp · Alliance DAO
+
+### 🔴 CLOSED
+
+**TON Grants & Bounties** — the browser rendered the decisive sentence that the HTTP
+client could not see: *"The Grants & Bounties program is currently paused."* The
+GitHub repo is also `archived: true`, read-only since 2026-05-20.
+
+### Why the two methods disagree
+
+`curl_cffi` found 11 open, the browser 8, and the union is 11 — they fail on
+different things. TLS impersonation gets past rate limits but reads an empty SPA
+shell; the browser renders the SPA but has no proxy (Chrome cannot take proxy
+credentials on `--proxy-server`, which yields `ERR_NO_SUPPORTED_PROXIES`). Running
+both and merging is what produced a decisive answer on TON.
+
+> **33 UNCLEAR is not 33 available.** Those pages render but state no window. Open
+> the apply form before submitting.
