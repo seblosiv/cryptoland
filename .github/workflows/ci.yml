@@ -66,6 +66,25 @@ jobs:
       - run: cargo test
         working-directory: ${{ matrix.dir }}
 
+  contracts-status:
+    name: Regenerate the contracts status table
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci && (cd contracts && npm ci) && (cd contracts/ton && npm ci)
+      # Chains whose toolchain is absent on the runner record as SKIPPED, never
+      # as passing. This job exists so the status board derives build state from
+      # a build — it used to be prose, and claimed four chains BLOCKED weeks
+      # after they were fixed.
+      - run: ./scripts/verify-contracts.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: contracts-status
+          path: deploy/apex/contracts-status.json
+
   backend:
     name: Backend security invariants
     runs-on: ubuntu-latest

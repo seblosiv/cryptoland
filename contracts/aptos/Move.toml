@@ -8,5 +8,9 @@ cryptoland = "_"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
+# The CLI clones with `git clone --branch <rev>`, so this MUST be a tag or
+# branch — a commit SHA fails with git exit 128. Tag aptos-node-v1.9.7 =
+# c52fdc52074a1e7dd69c369a5483d2f09ec88327; verify with git ls-remote if the
+# framework ever appears newer than the CLI can parse (`map_add_all` errors).
 rev = "aptos-node-v1.9.7"
 subdir = "aptos-move/framework/aptos-framework"

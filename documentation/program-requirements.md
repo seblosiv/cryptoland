@@ -534,3 +534,67 @@ Three sources answered all 13:
 **Nothing is left unknown.** The lesson worth keeping: for any programme with a
 governance forum, check `/<forum>/search.json?q=grant` *first*. It is faster than
 crawling and it is the only source that cannot quietly go stale.
+
+---
+
+## 15. Successor sweep — 2026-07-31
+
+§14 closed every programme with a verdict, but one question went unasked:
+**a foundation that shuts a grants council rarely stops funding — it renames.**
+Asking "what replaced it?" moved three programmes out of the dead pile, and two
+of them are worth more than what they replaced.
+
+### 🟢 Three revivals
+
+| # | Was | Actually | Evidence |
+|---|---|---|---|
+| **5** | Base — "no public form, retroactive nomination only" | **Base Batches — OPEN** | *"The top 15 teams will receive a $10k grant, acceptance to an 8 week virtual program… A minimum of 3 teams will receive a $50k investment from the Base Ecosystem Fund"* |
+| **37** | Algorand — "dead, /grants 404s" | **xGov — OPEN** at `xgov.algorand.co` | live funded proposals: *"88,888 Tooling Retroactive — [Approved]"* (1 month ago) |
+| **50** | Animoca — "private VC, /contact-us 404s" | **Minds Investment Programme — OPEN** | *"APPLICATIONS OPEN — Ready to apply"*, up to a **$10M** fund |
+
+> 🔑 **Base Batches is the single best new lead.** Its startup track is explicitly
+> for teams *"pre-product, pre-launch, or pre-seed [that] have raised less than
+> ~$250k"* — which describes us exactly. $10k grant plus a shot at $50k from the
+> Base Ecosystem Fund, and Base is already one of our 27 builds.
+
+The lesson generalises: **the old page 404ing is evidence the URL died, not that
+the money did.** In all three cases the classic grants page really is gone — I was
+right about that — but the funding moved somewhere with a different name.
+
+### 🔵 One reclassification
+
+**#36 NEAR** moves from DEAD to **PROPOSAL**. The Foundation grants form is gone,
+but *House of Stake* (`houseofstake.org`) is live governance — 9 proposals, 281
+voters — and its remit explicitly covers *"Ecosystem funding rules"* and *"Public
+goods funding, ecosystem support programs"*. There is no form; you write a proposal.
+
+### 🔴 Deaths confirmed harder
+
+Re-probing did **not** rescue these, and two now have a second independent
+confirmation:
+
+- **#40 Injective** — zero grant threads on `gov.injective.network`, *and* the
+  DoraHacks Injective Grant DAO (`dorahacks.io/injective`) now 404s too. Two routes,
+  both gone.
+- **#7 SKALE** — both `/developers` and `/grants` 404, plus zero forum threads.
+- **#26 / #42 TON** — the archived repo, plus `society.ton.org` returning a
+  Cloudflare **522** and `ton.org` mentioning no grants anywhere. No successor.
+- **#22 Optimism** — no successor route exists *yet*: Governance Fund Missions has
+  nothing newer than Dec 2025, and `app.optimism.io/retropgf` is "Page not found".
+  Still FLUX rather than DEAD, because the dissolution proposal was contested.
+
+### Scoreboard
+
+| Verdict | §14 | §15 |
+|---|---|---|
+| ✅ Open | 32 | **35** |
+| 🔁 Rolling | 2 | 2 |
+| 🟡 Restructuring | 1 | 1 |
+| 📝 By proposal | 1 | **2** |
+| ⚪ No public form | 4 | **2** |
+| 🔴 Dead | 10 | **8** |
+| ⛔ Not pursued | 2 | 2 |
+
+**37 of 52 are actionable**, up from 34.
+
+**Always ask what replaced it before writing a programme off.**

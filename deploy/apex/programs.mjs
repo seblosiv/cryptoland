@@ -22,6 +22,12 @@
 
 export const VERIFIED_ON = '2026-07-31';
 
+// Successor sweep 2026-07-31: a foundation that shuts a grants council rarely
+// stops funding — it renames. Three programmes previously recorded as dead or
+// form-less turned out to have live successors worth real money (#5 Base
+// Batches, #37 Algorand xGov, #50 Animoca Minds). Always ask "what replaced
+// it?" before writing a programme off.
+
 export const PROGRAMS = [
   // ── Confirmed OPEN ────────────────────────────────────────────────────────
   { n: 2, name: 'Gitcoin / Giveth QF', chain: 'Any', amount: '~$20K', equity: '0%',
@@ -142,8 +148,8 @@ export const PROGRAMS = [
   // ── In flux — confirm before writing ──────────────────────────────────────
   { n: 22, name: 'Optimism Retro Funding', chain: 'Optimism', amount: '~$100K', equity: '0%',
     status: 'FLUX', verified: '2026-07-31', url: 'https://gov.optimism.io/t/10732',
-    evidence: '"Council Dissolution Proposal: Dissolve the Grants Council" (25 Jun 2026), contested by delegates',
-    note: 'Retro Funding was already paused. Current work is "S9 Impact Autopsy & S10 Capital Efficiency". Do not plan around the old council.' },
+    evidence: '"Council Dissolution Proposal: Dissolve the Grants Council" (25 Jun 2026), contested. No successor route found: Governance Fund Missions has nothing newer than Dec 2025 and app.optimism.io/retropgf is "Page not found"',
+    note: 'Retro Funding was already paused. Current work is "S9 Impact Autopsy & S10 Capital Efficiency". There is currently NO open way in.' },
 
   // ── Funded by proposal, no application form ───────────────────────────────
   { n: 9, name: 'Scroll Community Grants', chain: 'Scroll', amount: '~$50K', equity: '0%',
@@ -152,16 +158,17 @@ export const PROGRAMS = [
     note: 'No application form exists — apply by governance proposal. The live Tally form on scroll.io is a BD INTAKE form, not grants.' },
 
   // ── Alive but nothing public to apply to ──────────────────────────────────
-  { n: 5, name: 'Base Builder Grants', chain: 'Base', amount: '~$25K', equity: '0%',
-    status: 'NO-FORM', verified: '2026-07-31', url: 'https://paragraph.com/@grants.base.eth',
-    evidence: 'publication active; retroactive / nomination-based',
-    note: 'Nothing to apply to — you get nominated for shipping on Base.' },
-  { n: 50, name: 'Animoca Brands', chain: 'Any', amount: '~$500K', equity: 'equity',
-    status: 'NO-FORM', verified: '2026-07-31', url: 'https://www.animocabrands.com',
-    evidence: '/contact-us returns 404', note: 'Private VC — needs a warm intro.' },
+  { n: 5, name: 'Base Batches (was: Base Builder Grants)', chain: 'Base', amount: '$10K grant + $50K investment', equity: '0% / equity on the investment',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://www.basebatches.xyz',
+    evidence: '"The top 15 teams will receive a $10k grant, acceptance to an 8 week virtual program… A minimum of 3 teams will receive a $50k investment from the Base Ecosystem Fund"',
+    note: 'STARTUP TRACK FITS US: "pre-product, pre-launch, or pre-seed and have raised less than ~$250k". The retroactive grants.base.eth nomination route still exists separately, but Batches is a real open application.' },
+  { n: 50, name: 'Animoca — Minds Investment Programme', chain: 'Any', amount: 'up to $10M fund', equity: 'equity',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://build.hellominds.ai/en/program',
+    evidence: '"APPLICATIONS OPEN — Ready to apply" (Animoca Brands, 2026)',
+    note: 'animocabrands.com itself has no application path — the money moves through Minds. The Build East demo-day cohort closed 26 Jun 2026, but the programme page is still taking applications.' },
   { n: 52, name: 'a16z crypto CSX', chain: 'Any', amount: '~$500K', equity: 'equity',
-    status: 'NO-FORM', verified: '2026-07-31', url: 'https://a16zcrypto.com/csx/',
-    evidence: 'programme page states no cohort or deadline', note: 'Accelerator — dilutive.' },
+    status: 'NO-FORM', verified: '2026-07-31', url: 'https://a16zcrypto.com/accelerator/',
+    evidence: 'page live (/csx/ redirects here); states no cohort or deadline. ~3% acceptance rate', note: 'Accelerator — dilutive.' },
   { n: 14, name: 'Ronin Forge', chain: 'Ronin', amount: '~$300K', equity: '0%',
     status: 'NO-FORM', verified: '2026-07-31', url: 'https://roninchain.com',
     evidence: 'roninchain.com/grants returns Ronin\'s own 404 page',
@@ -174,7 +181,7 @@ export const PROGRAMS = [
     note: 'DoraHacks is a hackathon platform; grants run per-ecosystem, not centrally.' },
   { n: 7, name: 'SKALE Indie Game Accelerator', chain: 'SKALE', amount: '~$100K', equity: '0%',
     status: 'DEAD', verified: '2026-07-31', url: 'https://skale.space',
-    evidence: '/grants unreachable; ZERO grant threads on forum.skale.network',
+    evidence: 'skale.space/developers AND /grants both 404; ZERO grant threads on forum.skale.network',
     note: 'A chain funding a programme leaves a public governance trail. There is none.' },
   { n: 11, name: 'Ronin Ecosystem Grants', chain: 'Ronin', amount: '~$300K', equity: '0%',
     status: 'DEAD', verified: '2026-07-31', url: 'https://roninchain.com',
@@ -191,20 +198,22 @@ export const PROGRAMS = [
     status: 'DEAD', verified: '2026-07-31', url: 'https://forum.celestia.org',
     evidence: 'only an Ecosystem Delegation Program (2025); no grants threads',
     note: 'Also a DA layer, not a wallet chain — see config.js NOTE.' },
-  { n: 36, name: 'NEAR Foundation Funding', chain: 'NEAR', amount: '~$200K', equity: '0%',
-    status: 'DEAD', verified: '2026-07-31', url: 'https://gov.near.org',
-    evidence: 'no Foundation grants threads; governance moved to "House of Stake"',
-    note: 'The AI-agent / chain-abstraction hook would have fit well.' },
-  { n: 37, name: 'Algorand Foundation Grants', chain: 'Algorand', amount: '~$150K', equity: '0%',
-    status: 'DEAD', verified: '2026-07-30', url: 'https://algorand.foundation',
-    evidence: 'algorand.foundation/grants redirects to algorand.co/grants → 404',
-    note: 'xGov community funding may still exist as a separate track.' },
+  { n: 36, name: 'NEAR — House of Stake (replaces Foundation grants)', chain: 'NEAR', amount: '~$200K', equity: '0%',
+    status: 'PROPOSAL', verified: '2026-07-31', url: 'https://houseofstake.org',
+    evidence: 'live governance: 9 proposals, 281 voters; remit covers "Ecosystem funding rules" and "Public goods funding, ecosystem support programs"',
+    note: 'The Foundation grants form is gone; funding now runs through House of Stake governance. No form — you write a proposal. The AI-agent / chain-abstraction hook fits.' },
+  { n: 37, name: 'Algorand xGov (replaces Foundation Grants)', chain: 'Algorand', amount: '~$150K', equity: '0%',
+    status: 'OPEN', verified: '2026-07-31', url: 'https://xgov.algorand.co',
+    evidence: 'live funded proposals: "88,888 Tooling Retroactive — [Approved]" (1 month ago), "[Funded] Valar improvements to xGov Beta"',
+    note: 'The classic grants page IS dead (algorand.foundation/grants → algorand.co/grants → 404). Funding moved to xGov, which is community-voted and largely RETROACTIVE — ship first, then propose.' },
   { n: 40, name: 'Injective Ecosystem / AI fund', chain: 'Injective', amount: '~$150K', equity: '0%',
     status: 'DEAD', verified: '2026-07-31', url: 'https://gov.injective.network',
-    evidence: 'ZERO grant threads on the governance forum', note: 'Needs a finance or AI-agent hook anyway.' },
+    evidence: 'ZERO grant threads on gov.injective.network; the DoraHacks Injective Grant DAO (dorahacks.io/injective) now 404s too',
+    note: 'Two independent routes both gone.' },
   { n: 42, name: 'TON Society grants', chain: 'TON', amount: '~$100K', equity: '0%',
     status: 'DEAD', verified: '2026-07-30', url: 'https://github.com/ton-society/grants-and-bounties',
-    evidence: 'same archived repo as #26', note: 'Both TON grant tracks are closed.' },
+    evidence: 'same archived repo as #26; society.ton.org returns Cloudflare 522 and ton.org mentions no grants',
+    note: 'Both TON grant tracks are closed and no successor is visible.' },
   { n: 46, name: 'Avalanche Research Grants', chain: 'Avalanche', amount: '~$50K', equity: '0%',
     status: 'OPEN', verified: '2026-07-30', url: 'https://build.avax.network/grants',
     evidence: '"Apply Now"', note: 'Research track only — not for the game itself.' },

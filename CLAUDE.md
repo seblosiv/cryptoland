@@ -324,8 +324,15 @@ Beam is a subnet-evm that mints blocks on demand so `blockTime` is not a UX time
 > 🔑 **`deploy/apex/programs.mjs` is now the single source of truth for all 52
 > programmes** — status, deadline, evidence quote and the date that status was last
 > verified. It renders into `xono.ai/status` and exports `programs.csv`. Update it
-> there, not in prose. As of 2026-07-31: **32 open, 2 rolling, 1 restructuring,
-> 1 by-proposal, 4 no-form, 10 dead, 2 blocked — nothing unknown.**
+> there, not in prose. As of 2026-07-31: **35 open, 2 rolling, 1 restructuring,
+> 2 by-proposal, 2 no-form, 8 dead, 2 blocked — nothing unknown. 37 actionable.**
+>
+> A second rule, learned the hard way: **a foundation that shuts a grants council
+> rarely stops funding — it renames.** Always ask "what replaced it?" before
+> writing a programme off. That question alone revived Base (→ Base Batches,
+> $10k + a shot at $50k, and its startup track explicitly fits a pre-seed team
+> that has raised <$250k), Algorand (→ xGov) and Animoca (→ the $10M Minds
+> programme). See `documentation/program-requirements.md` §15.
 >
 > The decisive research technique is **Discourse governance forums**
 > (`/search.json?q=grant`), not marketing pages: funding a programme requires a
