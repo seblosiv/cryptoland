@@ -68,3 +68,7 @@ contracts/starknet/target/
 contracts/cardano/build/
 contracts/aptos/build/
 contracts/algorand/*.teal
+contracts/sui/build/
+contracts/near/target/
+contracts/stellar/target/
+contracts/multiversx/target/

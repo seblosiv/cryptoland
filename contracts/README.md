@@ -5,14 +5,15 @@
 | Chain family | Language | Status |
 |---|---|---|
 | **EVM** (15 chains) | Solidity | ✅ `src/CryptoLandTile.sol` — compiles, **19/19 tests pass** |
-| **Starknet** | Cairo | ✅ `starknet/` — compiles (scarb 2.11.4, Sierra artifact emitted) |
-| Solana | Rust / Anchor | ⬜ not written |
-| Aptos, Sui | Move | ⬜ not written |
-| TON | FunC / Tolk | ⬜ not written |
-| Tezos | SmartPy / LIGO | ⬜ not written |
-| NEAR | Rust | ⬜ not written |
-| Cardano | Aiken / Plutus | ⬜ not written |
-| Algorand, Stellar, MultiversX, Radix | see below | ⬜ mostly no contract needed |
+| **Starknet** | Cairo | ✅ compiles — scarb 2.11.4, Sierra artifact |
+| **Cardano** | Aiken / Plutus V3 | ✅ compiles, **2/2 tests pass** |
+| **Algorand** | PyTeal | ✅ compiles — 781-byte approval.teal, encoding self-checked |
+| **Sui** | Move | ✅ compiles, **1/1 test passes** |
+| Aptos | Move | 📝 written — framework/CLI version mismatch, not yet building |
+| NEAR | Rust | 📝 written — `near-sdk` demands `cargo near build`, not plain cargo |
+| Stellar | Soroban / Rust | 📝 written — `soroban-env-host` fails on a `ChaCha20Rng` trait bound |
+| MultiversX | Rust / ESDT | 📝 written — not yet verified |
+| Solana, TON, Tezos, Radix | Rust / FunC / SmartPy / Scrypto | ⬜ not written |
 
 ## The one invariant every chain must satisfy
 
