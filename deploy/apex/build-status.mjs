@@ -155,6 +155,32 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 <tr><td><strong>Real users</strong></td><td class="no">NO</td><td>Scoring lever, not a gate; worlds are seeded</td><td>—</td></tr>
 </tbody></table></div>
 
+<h2>How to fund — Binance withdrawals</h2>
+<div class="card pad" style="margin-bottom:18px">
+  <p style="margin-bottom:12px">Send each of these to the deployer address below. Pick the
+  <strong>network</strong> column exactly — sending on the wrong network loses the funds.
+  Amounts are ~10x the deploy cost so a gas spike cannot strand a deployment.</p>
+  <div class="scroll"><table style="min-width:700px">
+  <thead><tr><th>Chain</th><th>Withdraw</th><th>Binance network</th><th>≈ USD</th><th>Deploy cost</th></tr></thead>
+  <tbody>
+  <tr><td>Polygon</td><td><code>9.6 POL</code></td><td>MATIC</td><td>$1.20</td><td>$0.12</td></tr>
+  <tr><td>Base</td><td><code>0.002 ETH</code></td><td>BASE</td><td>$3.83</td><td>$0.04</td></tr>
+  <tr><td>Arbitrum</td><td><code>0.0007 ETH</code></td><td>ARBITRUM</td><td>$1.20</td><td>$0.12</td></tr>
+  <tr><td>Optimism</td><td><code>0.0001 ETH</code></td><td>OPTIMISM</td><td>$0.10</td><td>$0.01</td></tr>
+  <tr><td>Scroll</td><td><code>0.001 ETH</code></td><td>SCROLL</td><td>$1.92</td><td>$0.00</td></tr>
+  <tr><td>BNB Chain</td><td><code>0.002 BNB</code></td><td>BSC</td><td>$0.90</td><td>$0.09</td></tr>
+  <tr><td>Avalanche</td><td><code>0.02 AVAX</code></td><td>AVAXC</td><td>$0.13</td><td>$0.00</td></tr>
+  <tr><td>Celo</td><td><code>2 CELO</code></td><td>CELO</td><td>$0.13</td><td>$0.04</td></tr>
+  <tr><td>Ronin</td><td><code>40 RON</code></td><td>RON</td><td>$1.90</td><td>$0.00</td></tr>
+  </tbody></table></div>
+  <p class="note"><strong>≈ $11 total</strong>, of which the deployments themselves cost $0.42.
+  Going via a no-KYC swap service instead would cost <strong>~$108</strong>, because each swap
+  carries a ~$12 minimum and you would need nine of them — leaving ~$107 of stranded dust.
+  <br><br><strong>SKALE is not on this list.</strong> Its deployment reverted because the chain
+  gates contract deployment behind a deployer whitelist, not because of funds. That needs a
+  request to the SKALE team; more sFUEL will not fix it.</p>
+</div>
+
 <h2>Deployer wallet &amp; treasury</h2>
 <div class="wallet">
   <div class="card pad">
