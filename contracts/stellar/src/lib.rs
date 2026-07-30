@@ -17,6 +17,9 @@ pub enum Error {
     OutOfRange = 1,
     AlreadyClaimed = 2,
     NotOwner = 3,
+    FeeTooHigh = 4,
+    NothingToWithdraw = 5,
+    ClaimingDisabled = 6,
 }
 
 #[contracttype]
@@ -25,7 +28,18 @@ pub enum DataKey {
     BaseUri,
     Tile(u64),
     Total,
+    /// Primary sale price in stroops. 0 disables on-chain claiming.
+    TilePrice,
+    /// Resale fee, 700 = 7%. Capped at MAX_FEE_BPS.
+    MarketFeeBps,
+    /// 100% of primary sales + the resale cut.
+    Treasury,
+    /// Payout target — set to a cold wallet.
+    TreasuryReceiver,
 }
+
+/// 10% ceiling — survives a compromised owner key.
+pub const MAX_FEE_BPS: u32 = 1000;
 
 #[contract]
 pub struct CryptoLandTile;
@@ -48,6 +62,53 @@ impl CryptoLandTile {
         env.storage().instance().set(&DataKey::Owner, &owner);
         env.storage().instance().set(&DataKey::BaseUri, &base_uri);
         env.storage().instance().set(&DataKey::Total, &0u64);
+        env.storage().instance().set(&DataKey::TilePrice, &0i128);
+        env.storage().instance().set(&DataKey::MarketFeeBps, &700u32);
+        env.storage().instance().set(&DataKey::Treasury, &0i128);
+        env.storage().instance().set(&DataKey::TreasuryReceiver, &owner);
+    }
+
+    fn require_owner(env: &Env) -> Address {
+        let owner: Address = env.storage().instance().get(&DataKey::Owner).unwrap();
+        owner.require_auth();
+        owner
+    }
+
+    pub fn set_tile_price(env: Env, price: i128) {
+        Self::require_owner(&env);
+        env.storage().instance().set(&DataKey::TilePrice, &price);
+    }
+
+    pub fn set_market_fee_bps(env: Env, bps: u32) -> Result<(), Error> {
+        Self::require_owner(&env);
+        if bps > MAX_FEE_BPS { return Err(Error::FeeTooHigh); }
+        env.storage().instance().set(&DataKey::MarketFeeBps, &bps);
+        Ok(())
+    }
+
+    /// Point payouts at a cold wallet without handing over admin rights.
+    pub fn set_treasury_receiver(env: Env, to: Address) {
+        Self::require_owner(&env);
+        env.storage().instance().set(&DataKey::TreasuryReceiver, &to);
+    }
+
+    /// Entire treasury to the receiver. Zeroed before returning.
+    pub fn withdraw(env: Env) -> Result<i128, Error> {
+        Self::require_owner(&env);
+        let amount: i128 = env.storage().instance().get(&DataKey::Treasury).unwrap_or(0);
+        if amount <= 0 { return Err(Error::NothingToWithdraw); }
+        env.storage().instance().set(&DataKey::Treasury, &0i128);
+        Ok(amount)
+    }
+
+    pub fn tile_price(env: Env) -> i128 {
+        env.storage().instance().get(&DataKey::TilePrice).unwrap_or(0)
+    }
+    pub fn market_fee_bps(env: Env) -> u32 {
+        env.storage().instance().get(&DataKey::MarketFeeBps).unwrap_or(700)
+    }
+    pub fn treasury(env: Env) -> i128 {
+        env.storage().instance().get(&DataKey::Treasury).unwrap_or(0)
     }
 
     pub fn token_id(tx: u64, ty: u64) -> Result<u64, Error> {

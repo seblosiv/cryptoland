@@ -33,6 +33,38 @@ pub type MintRedeemer {
   ty: Int,
 }
 
+/// Registry parameters carried in the datum. Cardano is UTXO, so "admin state"
+/// lives in a datum the owner can update by spending and recreating the UTXO —
+/// there is no mutable storage slot to write.
+pub type RegistryDatum {
+  /// Primary sale price in lovelace. 0 disables on-chain claiming.
+  tile_price: Int,
+  /// Resale fee, 700 = 7%. Capped at max_fee_bps.
+  market_fee_bps: Int,
+  /// Where withdrawals go — a cold wallet key hash, separable from the admin.
+  treasury_receiver: ByteArray,
+  /// Accrued revenue held at the script address.
+  treasury: Int,
+}
+
+/// 10% ceiling: even with the owner key stolen, a sale cannot be confiscated.
+const max_fee_bps: Int = 1000
+
+/// A fee change is only valid if it stays under the ceiling.
+pub fn valid_fee(bps: Int) -> Bool {
+  bps >= 0 && bps <= max_fee_bps
+}
+
+/// The seller's share of a resale, in lovelace.
+pub fn seller_share(price: Int, fee_bps: Int) -> Int {
+  price - price * fee_bps / 10000
+}
+
+/// The project's cut of a resale.
+pub fn project_share(price: Int, fee_bps: Int) -> Int {
+  price * fee_bps / 10000
+}
+
 validator tile(owner_vkh: ByteArray) {
   mint(redeemer: MintRedeemer, _policy_id: PolicyId, self: Transaction) {
     let MintRedeemer { tx, ty } = redeemer
@@ -54,6 +86,15 @@ test token_id_matches_other_chains() {
   token_id_from_key(0, 1) == 1 &&
   token_id_from_key(100, 200) == 3277000 &&
   token_id_from_key(16383, 16383) == 536854527
+}
+
+test fee_split_is_7_percent() {
+  // 1 ADA = 1_000_000 lovelace; 7% to the project, 93% to the seller.
+  project_share(1000000, 700) == 70000 && seller_share(1000000, 700) == 930000
+}
+
+test fee_ceiling_holds() {
+  valid_fee(700) && valid_fee(1000) && !valid_fee(1001)
 }
 
 test round_trip() {

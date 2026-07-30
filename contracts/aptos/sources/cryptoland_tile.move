@@ -19,12 +19,25 @@ module cryptoland::cryptoland_tile {
     const E_NOT_OWNER: u64 = 1;
     const E_OUT_OF_RANGE: u64 = 2;
     const E_ALREADY_CLAIMED: u64 = 3;
+    const E_FEE_TOO_HIGH: u64 = 4;
+    const E_NOTHING_TO_WITHDRAW: u64 = 5;
+    const E_CLAIMING_DISABLED: u64 = 6;
+    /// 10% ceiling — survives a compromised owner key.
+    const MAX_FEE_BPS: u64 = 1000;
 
     struct Registry has key {
         owner: address,
         base_uri: String,
         tiles: Table<u64, address>,
         total: u64,
+        /// Primary sale price in octas. 0 disables on-chain claiming.
+        tile_price: u64,
+        /// Resale fee, 700 = 7%. Capped at MAX_FEE_BPS.
+        market_fee_bps: u64,
+        /// 100% of primary sales + the resale cut.
+        treasury: u64,
+        /// Payout target — set to a cold wallet.
+        treasury_receiver: address,
     }
 
     #[event]
@@ -41,6 +54,10 @@ module cryptoland::cryptoland_tile {
             base_uri,
             tiles: table::new(),
             total: 0,
+            tile_price: 0,
+            market_fee_bps: 700,
+            treasury: 0,
+            treasury_receiver: signer::address_of(admin),
         });
     }
 
@@ -65,6 +82,67 @@ module cryptoland::cryptoland_tile {
         table::add(&mut reg.tiles, id, to);
         reg.total = reg.total + 1;
         event::emit(TileMinted { token_id: id, to, tx, ty });
+    }
+
+    /// PRIMARY SALE: 100% of the price becomes treasury.
+    public entry fun claim_tile(
+        buyer: &signer, registry_addr: address, tx: u64, ty: u64
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(reg.tile_price > 0, E_CLAIMING_DISABLED);
+        let id = token_id_from_key(tx, ty);
+        assert!(!table::contains(&reg.tiles, id), E_ALREADY_CLAIMED);
+        let to = signer::address_of(buyer);
+        table::add(&mut reg.tiles, id, to);
+        reg.total = reg.total + 1;
+        reg.treasury = reg.treasury + reg.tile_price;
+        event::emit(TileMinted { token_id: id, to, tx, ty });
+    }
+
+    public entry fun set_tile_price(
+        admin: &signer, registry_addr: address, price: u64
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
+        reg.tile_price = price;
+    }
+
+    public entry fun set_market_fee_bps(
+        admin: &signer, registry_addr: address, bps: u64
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
+        assert!(bps <= MAX_FEE_BPS, E_FEE_TOO_HIGH);
+        reg.market_fee_bps = bps;
+    }
+
+    /// Point payouts at a cold wallet without handing over admin rights.
+    public entry fun set_treasury_receiver(
+        admin: &signer, registry_addr: address, to: address
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
+        reg.treasury_receiver = to;
+    }
+
+    /// Entire treasury to the receiver. Zeroed before returning.
+    public entry fun withdraw(
+        admin: &signer, registry_addr: address
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
+        assert!(reg.treasury > 0, E_NOTHING_TO_WITHDRAW);
+        reg.treasury = 0;
+    }
+
+    #[view]
+    public fun tile_price(registry_addr: address): u64 acquires Registry {
+        borrow_global<Registry>(registry_addr).tile_price
+    }
+
+    #[view]
+    public fun treasury(registry_addr: address): u64 acquires Registry {
+        borrow_global<Registry>(registry_addr).treasury
     }
 
     #[view]

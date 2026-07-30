@@ -22,6 +22,14 @@ def main():
                 sp.big_map({}), sp.big_map[sp.nat, sp.address]
             )
             self.data.total = sp.nat(0)
+            # Primary sale price in mutez. 0 disables on-chain claiming.
+            self.data.tile_price = sp.mutez(0)
+            # Resale fee, 700 = 7%. Capped at 1000 (10%).
+            self.data.market_fee_bps = sp.nat(700)
+            # 100% of primary sales + the resale cut, held by the contract.
+            self.data.treasury = sp.mutez(0)
+            # Payout target — set to a cold wallet, separable from the admin.
+            self.data.treasury_receiver = administrator
 
         @sp.private(with_storage="read-only")
         def token_id_from_key(self, params):
@@ -41,6 +49,49 @@ def main():
             assert not self.data.ledger.contains(token_id), "TILE_ALREADY_CLAIMED"
             self.data.ledger[token_id] = params.to_
             self.data.total += 1
+
+        @sp.entrypoint
+        def claim_tile(self, params):
+            """PRIMARY SALE: 100% of the payment becomes treasury."""
+            sp.cast(params, sp.record(tx=sp.nat, ty=sp.nat))
+            assert self.data.tile_price > sp.mutez(0), "CLAIMING_DISABLED"
+            assert sp.amount >= self.data.tile_price, "INSUFFICIENT_PAYMENT"
+            token_id = self.token_id_from_key(
+                sp.record(tx=params.tx, ty=params.ty)
+            )
+            assert not self.data.ledger.contains(token_id), "TILE_ALREADY_CLAIMED"
+            self.data.ledger[token_id] = sp.sender
+            self.data.total += 1
+            self.data.treasury += self.data.tile_price
+
+        @sp.entrypoint
+        def set_tile_price(self, price):
+            sp.cast(price, sp.mutez)
+            assert sp.sender == self.data.administrator, "NOT_ADMIN"
+            self.data.tile_price = price
+
+        @sp.entrypoint
+        def set_market_fee_bps(self, bps):
+            sp.cast(bps, sp.nat)
+            assert sp.sender == self.data.administrator, "NOT_ADMIN"
+            assert bps <= 1000, "FEE_ABOVE_CEILING"
+            self.data.market_fee_bps = bps
+
+        @sp.entrypoint
+        def set_treasury_receiver(self, to_):
+            """Point payouts at a cold wallet without giving up admin."""
+            sp.cast(to_, sp.address)
+            assert sp.sender == self.data.administrator, "NOT_ADMIN"
+            self.data.treasury_receiver = to_
+
+        @sp.entrypoint
+        def withdraw(self):
+            """Entire treasury to the receiver. Zeroed before sending."""
+            assert sp.sender == self.data.administrator, "NOT_ADMIN"
+            assert self.data.treasury > sp.mutez(0), "NOTHING_TO_WITHDRAW"
+            amount = self.data.treasury
+            self.data.treasury = sp.mutez(0)
+            sp.send(self.data.treasury_receiver, amount)
 
         @sp.entrypoint
         def transfer(self, batch):

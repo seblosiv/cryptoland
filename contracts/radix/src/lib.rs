@@ -32,6 +32,12 @@ mod cryptoland_tile {
     struct CryptoLandTile {
         tile_manager: NonFungibleResourceManager,
         minted: u64,
+        /// Primary sale price in XRD. 0 disables on-chain claiming.
+        tile_price: Decimal,
+        /// Resale fee, 700 = 7%. Capped at 1000 (10%).
+        market_fee_bps: u16,
+        /// 100% of primary sales + the resale cut, held as a real vault.
+        treasury: Vault,
     }
 
     impl CryptoLandTile {
@@ -56,7 +62,13 @@ mod cryptoland_tile {
             ))
             .create_with_no_initial_supply();
 
-            let component = Self { tile_manager, minted: 0 }
+            let component = Self {
+                tile_manager,
+                minted: 0,
+                tile_price: Decimal::ZERO,
+                market_fee_bps: 700,
+                treasury: Vault::new(XRD),
+            }
                 .instantiate()
                 .prepare_to_globalize(OwnerRole::None)
                 .globalize();
@@ -75,6 +87,36 @@ mod cryptoland_tile {
             )
         }
 
+        /// PRIMARY SALE: the whole payment goes into the treasury vault.
+        pub fn claim_tile(&mut self, mut payment: Bucket, tx: u64, ty: u64) -> (Bucket, Bucket) {
+            assert!(self.tile_price > Decimal::ZERO, "on-chain claiming disabled");
+            assert!(payment.amount() >= self.tile_price, "insufficient payment");
+            let id = token_id_from_key(tx, ty);
+            self.treasury.put(payment.take(self.tile_price));
+            self.minted += 1;
+            let tile = self.tile_manager.mint_non_fungible(
+                &NonFungibleLocalId::integer(id),
+                TileData { token_id: id, tx, ty },
+            );
+            (tile, payment)   // change returned to the buyer
+        }
+
+        pub fn set_tile_price(&mut self, price: Decimal) { self.tile_price = price; }
+
+        pub fn set_market_fee_bps(&mut self, bps: u16) {
+            assert!(bps <= 1000, "fee above 10% ceiling");
+            self.market_fee_bps = bps;
+        }
+
+        /// Withdraw the ENTIRE treasury. The caller sends it on to the cold wallet.
+        pub fn withdraw(&mut self) -> Bucket {
+            assert!(!self.treasury.is_empty(), "nothing to withdraw");
+            self.treasury.take_all()
+        }
+
+        pub fn tile_price(&self) -> Decimal { self.tile_price }
+        pub fn market_fee_bps(&self) -> u16 { self.market_fee_bps }
+        pub fn treasury_amount(&self) -> Decimal { self.treasury.amount() }
         pub fn total_minted(&self) -> u64 { self.minted }
     }
 }
