@@ -110,9 +110,14 @@ contract CryptoLandTile is IERC721Metadata {
     mapping(uint256 => bool)     public minted;
 
     // ── Fee parameters ──────────────────────────────────────────────────────
-    uint256 public mintFeeBps    = 250;   // 2.5% of msg.value on mint
-    uint256 public marketFeeBps  = 250;   // 2.5% of resale price
-    uint256 public accruedFees;
+    // PRIMARY SALE: the project sells the land, so 100% of a claim goes to the
+    // treasury. There is no "fee" on a primary sale — the whole payment is revenue.
+    uint256 public tilePriceWei;          // 0 = on-chain claiming disabled
+    // RESALE: the project takes a cut of peer-to-peer sales; the seller gets the rest.
+    uint256 public marketFeeBps  = 700;   // 7% of resale price
+    uint256 public constant MAX_FEE_BPS = 1000;  // hard ceiling: 10%, cannot be exceeded
+    // Everything withdrawable by the owner: primary sales + resale fees.
+    uint256 public treasury;
 
     // ── Pause ───────────────────────────────────────────────────────────────
     bool public paused;
@@ -126,6 +131,7 @@ contract CryptoLandTile is IERC721Metadata {
     event TileMinted(uint256 indexed tokenId, address indexed owner, string tileKey, string country);
     event TileListed(uint256 indexed tokenId, address indexed seller, uint256 priceWei);
     event TileUnlisted(uint256 indexed tokenId, address indexed seller);
+    event TilePriceUpdated(uint256 priceWei);
     event TileSold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 priceWei);
     event FeesWithdrawn(address to, uint256 amount);
     event OwnershipTransferred(address indexed previous, address indexed next);
@@ -213,8 +219,54 @@ contract CryptoLandTile is IERC721Metadata {
     }
 
     /**
-     * Mint a new tile NFT. Called by backend after payment confirmation.
-     * msg.value: optional on-chain mint fee (can be 0 for off-chain payments).
+     * PRIMARY SALE, on-chain. Anyone may claim an unowned tile by paying
+     * `tilePriceWei`. The ENTIRE payment becomes treasury — this is the project
+     * selling land, not a fee on someone else's trade.
+     *
+     * Overpayment is refunded so a stale price in a user's wallet cannot
+     * silently overcharge them.
+     *
+     * Set `tilePriceWei = 0` to disable on-chain claiming and fall back to the
+     * off-chain payment rail (NOWPayments) with `mint()` below.
+     */
+    function claimTile(
+        uint256 tokenId,
+        string calldata tileKey,
+        string calldata country
+    ) external payable whenNotPaused {
+        require(tilePriceWei > 0, "On-chain claiming disabled");
+        require(msg.value >= tilePriceWei, "Insufficient payment");
+        require(!minted[tokenId], "Already minted");
+        require(bytes(tileKey).length > 0, "Empty tileKey");
+
+        uint256 price = tilePriceWei;
+
+        minted[tokenId]       = true;
+        keyToTokenId[tileKey] = tokenId;
+        tileData[tokenId] = TileData({
+            tileKey:   tileKey,
+            country:   country,
+            mintedAt:  block.timestamp,
+            listPrice: 0,
+            listed:    false
+        });
+
+        // 100% of the primary sale is revenue.
+        treasury += price;
+
+        _mint(msg.sender, tokenId);
+        emit TileMinted(tokenId, msg.sender, tileKey, country);
+
+        // Refund any overpayment AFTER state is settled (checks-effects-interactions).
+        if (msg.value > price) {
+            (bool refunded, ) = payable(msg.sender).call{ value: msg.value - price }("");
+            require(refunded, "Refund failed");
+        }
+    }
+
+    /**
+     * Mint a tile with no on-chain payment. Used by the backend after an
+     * off-chain payment (NOWPayments) has cleared. Restricted to owner/minter.
      */
     function mint(
         address to,
@@ -239,10 +291,9 @@ contract CryptoLandTile is IERC721Metadata {
 
         _mint(to, tokenId);
 
-        // Accrue mint fee
+        // Any value sent alongside an off-chain mint is revenue too.
         if (msg.value > 0) {
-            uint256 fee = (msg.value * mintFeeBps) / 10000;
-            accruedFees += fee;
+            treasury += msg.value;
         }
 
         emit TileMinted(tokenId, to, tileKey, country);
@@ -278,7 +329,7 @@ contract CryptoLandTile is IERC721Metadata {
         // Clear listing before transfer (reentrancy guard)
         td.listed    = false;
         td.listPrice = 0;
-        accruedFees += fee;
+        treasury += fee;
 
         // Transfer NFT
         _transfer(seller, msg.sender, tokenId);
@@ -323,9 +374,15 @@ contract CryptoLandTile is IERC721Metadata {
         minter = minter_;
     }
 
+    /// Primary sale price per tile, in wei. 0 disables on-chain claiming.
+    function setTilePrice(uint256 priceWei) external onlyOwner {
+        tilePriceWei = priceWei;
+        emit TilePriceUpdated(priceWei);
+    }
+
     function setMintFeePercent(uint256 bps) external onlyOwner {
         require(bps <= 1000, "Max 10%");
-        mintFeeBps = bps;
+        // retained for ABI compatibility; primary sales take 100%, not a fee.
     }
 
     function setMarketFeePercent(uint256 bps) external onlyOwner {
@@ -333,12 +390,30 @@ contract CryptoLandTile is IERC721Metadata {
         marketFeeBps = bps;
     }
 
-    function withdrawFees() external onlyOwner {
-        uint256 amount = accruedFees;
-        accruedFees    = 0;
-        (bool ok, )    = payable(owner).call{ value: amount }("");
+    /**
+     * Withdraw the ENTIRE treasury — primary sales plus resale fees — to the
+     * contract owner, on this chain. Callable at any time, no timelock.
+     *
+     * Each chain holds its own balance, so this is called once per deployment.
+     * Zeroes the accounting BEFORE transferring (checks-effects-interactions), so
+     * a re-entrant call sees nothing left to take.
+     */
+    function withdraw() external onlyOwner {
+        uint256 amount = treasury;
+        require(amount > 0, "Nothing to withdraw");
+        treasury = 0;
+        (bool ok, ) = payable(owner).call{ value: amount }("");
         require(ok, "Withdraw failed");
         emit FeesWithdrawn(owner, amount);
+    }
+
+    /// Sweep any balance that arrived outside the accounted paths (direct sends).
+    function withdrawUnaccounted() external onlyOwner {
+        uint256 stray = address(this).balance - treasury;
+        require(stray > 0, "Nothing unaccounted");
+        (bool ok, ) = payable(owner).call{ value: stray }("");
+        require(ok, "Sweep failed");
+        emit FeesWithdrawn(owner, stray);
     }
 
     function setPaused(bool paused_) external onlyOwner {

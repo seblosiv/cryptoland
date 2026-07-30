@@ -137,7 +137,7 @@ describe('CryptoLandTile', () => {
 
     expect(await contract.ownerOf(tokenId)).to.equal(other.address)
     // Seller received price minus 2.5% fee
-    const fee      = price * 250n / 10000n
+    const fee      = price * 700n / 10000n
     const expected = price - fee
     expect(sellerAfter - sellerBefore).to.be.closeTo(expected, ethers.parseEther('0.001'))
   })
@@ -171,7 +171,7 @@ describe('CryptoLandTile', () => {
     await contract.connect(other).buy(tokenId, { value: price })
 
     const before = await ethers.provider.getBalance(owner.address)
-    const tx     = await contract.withdrawFees()
+    const tx     = await contract.withdraw()
     const rcpt   = await tx.wait()
     const after  = await ethers.provider.getBalance(owner.address)
     expect(after).to.be.greaterThan(before)
@@ -188,5 +188,82 @@ describe('CryptoLandTile', () => {
     expect(await contract.owner()).to.equal(owner.address)
     await contract.connect(buyer).acceptOwnership()
     expect(await contract.owner()).to.equal(buyer.address)
+  })
+
+  // ── Primary sales: 100% of a claim must reach the owner ──────────────────
+  describe('on-chain primary sales', () => {
+    const PRICE = ethers.parseEther('0.01')
+
+    it('rejects claiming while the price is unset', async () => {
+      await expect(
+        contract.connect(buyer).claimTile(123, '1:2', 'DE', { value: PRICE })
+      ).to.be.revertedWith('On-chain claiming disabled')
+    })
+
+    it('lets anyone claim once a price is set, and credits 100% to treasury', async () => {
+      await contract.setTilePrice(PRICE)
+      await contract.connect(buyer).claimTile(123, '1:2', 'DE', { value: PRICE })
+      expect(await contract.ownerOf(123)).to.equal(buyer.address)
+      // The WHOLE payment is revenue — not a percentage of it.
+      expect(await contract.treasury()).to.equal(PRICE)
+    })
+
+    it('refunds overpayment', async () => {
+      await contract.setTilePrice(PRICE)
+      const before = await ethers.provider.getBalance(buyer.address)
+      const tx = await contract.connect(buyer)
+        .claimTile(124, '1:3', 'DE', { value: PRICE * 3n })
+      const r = await tx.wait()
+      const spent = before - await ethers.provider.getBalance(buyer.address)
+      // Paid the price + gas, not the 3x sent.
+      expect(spent).to.be.lt(PRICE + r.gasUsed * r.gasPrice + ethers.parseEther('0.001'))
+      expect(await contract.treasury()).to.equal(PRICE)
+    })
+
+    it('rejects underpayment and double-claiming', async () => {
+      await contract.setTilePrice(PRICE)
+      await expect(
+        contract.connect(buyer).claimTile(125, '1:4', 'DE', { value: PRICE - 1n })
+      ).to.be.revertedWith('Insufficient payment')
+      await contract.connect(buyer).claimTile(125, '1:4', 'DE', { value: PRICE })
+      await expect(
+        contract.connect(other).claimTile(125, '1:4', 'DE', { value: PRICE })
+      ).to.be.revertedWith('Already minted')
+    })
+
+    it('pays the whole treasury out to the owner on withdraw', async () => {
+      await contract.setTilePrice(PRICE)
+      await contract.connect(buyer).claimTile(126, '1:5', 'DE', { value: PRICE })
+      const before = await ethers.provider.getBalance(owner.address)
+      const tx = await contract.withdraw()
+      const r = await tx.wait()
+      const after = await ethers.provider.getBalance(owner.address)
+      expect(after - before + r.gasUsed * r.gasPrice).to.equal(PRICE)
+      expect(await contract.treasury()).to.equal(0)
+    })
+
+    it('takes 7% on a resale and pays the seller 93%', async () => {
+      await contract.setTilePrice(PRICE)
+      await contract.connect(buyer).claimTile(127, '1:6', 'DE', { value: PRICE })
+      await contract.withdraw()                       // clear primary revenue
+      const LIST = ethers.parseEther('1')
+      await contract.connect(buyer).listForSale(127, LIST)
+      const sellerBefore = await ethers.provider.getBalance(buyer.address)
+      await contract.connect(other).buy(127, { value: LIST })
+      const fee = LIST * 700n / 10000n
+      expect(await contract.treasury()).to.equal(fee)
+      expect(await ethers.provider.getBalance(buyer.address) - sellerBefore)
+        .to.equal(LIST - fee)
+    })
+
+    it('caps the market fee at 10%', async () => {
+      await expect(contract.setMarketFeePercent(1001))
+        .to.be.revertedWith('Max 10%')
+    })
+
+    it('only the owner can set the price or withdraw', async () => {
+      await expect(contract.connect(buyer).setTilePrice(PRICE)).to.be.reverted
+      await expect(contract.connect(buyer).withdraw()).to.be.reverted
+    })
   })
 })
