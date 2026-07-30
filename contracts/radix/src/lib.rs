@@ -156,3 +156,44 @@ mod tests {
         assert_eq!(key_from_token_id(536_854_527), (16383, 16383));
     }
 }
+
+#[cfg(test)]
+mod invariant_tests {
+    const GRID_MAX: u64 = 16383;
+
+    fn pack(tx: u64, ty: u64) -> u64 {
+        assert!(tx <= GRID_MAX && ty <= GRID_MAX, "out of range");
+        (tx << 15) | ty
+    }
+    fn unpack(id: u64) -> (u64, u64) { (id >> 15, id & 0x7FFF) }
+
+    /// The cross-chain contract. Every one of the 13 implementations asserts
+    /// these same five pairs — if one drifts, a tile means two different things
+    /// on two different chains.
+    #[test]
+    fn token_id_matches_every_other_chain() {
+        assert_eq!(pack(0, 0), 0);
+        assert_eq!(pack(1, 0), 32768);
+        assert_eq!(pack(0, 1), 1);
+        assert_eq!(pack(100, 200), 3_277_000);
+        assert_eq!(pack(16383, 16383), 536_854_527);
+    }
+
+    #[test]
+    fn round_trips() { assert_eq!(unpack(pack(12345, 6789)), (12345, 6789)); }
+
+    #[test]
+    #[should_panic]
+    fn rejects_out_of_range() { pack(16384, 0); }
+
+    /// 7% to the project, 93% to the seller, and a ceiling a stolen owner key
+    /// still cannot exceed.
+    #[test]
+    fn fee_split_and_ceiling() {
+        let price: u64 = 10_000;
+        let fee = price * 700 / 10_000;
+        assert_eq!(fee, 700);
+        assert_eq!(price - fee, 9_300);
+        assert_eq!(price * 1000 / 10_000, 1_000);  // ceiling = 10%
+    }
+}

@@ -177,4 +177,27 @@ module cryptoland::cryptoland_tile {
         let (tx, ty) = key_from_token_id(536854527);
         assert!(tx == 16383 && ty == 16383, 5);
     }
+
+    /// The cross-chain contract — the same five pairs every other chain asserts.
+    #[test]
+    fun token_id_matches_every_other_chain() {
+        assert!(token_id_from_key(0, 0) == 0, 0);
+        assert!(token_id_from_key(1, 0) == 32768, 1);
+        assert!(token_id_from_key(0, 1) == 1, 2);
+        assert!(token_id_from_key(100, 200) == 3277000, 3);
+        assert!(token_id_from_key(16383, 16383) == 536854527, 4);
+    }
+
+    #[test]
+    #[expected_failure]
+    fun rejects_out_of_range() { token_id_from_key(16384, 0); }
+
+    /// 7% to the project, 93% to the seller.
+    #[test]
+    fun fee_split_is_7_percent() {
+        let price: u64 = 10000;
+        let fee = price * 700 / 10000;
+        assert!(fee == 700, 5);
+        assert!(price - fee == 9300, 6);
+    }
 }

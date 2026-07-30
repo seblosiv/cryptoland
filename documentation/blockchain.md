@@ -241,3 +241,17 @@ VITE_MARKETPLACE_POLYGON=0x...
 # Token ($CLND)
 VITE_TOKEN_POLYGON=0x...
 ```
+
+## Sui: JSON-RPC on public fullnodes is deprecated (2026-07-30)
+
+`https://fullnode.mainnet.sui.io` — which was our primary — now answers **every**
+method with `-32601` and a notice to migrate to gRPC or GraphQL. Our adapter speaks
+only JSON-RPC, so the primary was dead for every transaction lookup while
+`check-rpcs.mjs` was the only thing that noticed.
+
+Primary is now `sui-rpc.publicnode.com` (`Access-Control-Allow-Origin: *`), with
+`sui-mainnet-endpoint.blockvision.org` as the fallback. Both still serve JSON-RPC.
+
+**This will need revisiting.** JSON-RPC is being retired ecosystem-wide on Sui; the
+adapter will eventually need a GraphQL path. Re-run `node scripts/check-rpcs.mjs`
+before every submission round — this is exactly the failure mode it exists to catch.

@@ -20,6 +20,11 @@ const int op::withdraw           = 0x1a0b9d56;
 
 const int MAX_FEE_BPS = 1000;   ;; 10% ceiling, survives a stolen owner key
 
+;; FunC has no constructor: initial storage comes from the deploy payload. The
+;; deploy script MUST pack this as market_fee_bps, or the collection launches at
+;; a 0% resale fee. Every other chain sets it in its constructor.
+const int DEFAULT_FEE_BPS = 700;   ;; 7%
+
 const int error::not_owner = 401;
 const int error::out_of_range = 402;
 const int error::insufficient = 403;

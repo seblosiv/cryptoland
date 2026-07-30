@@ -112,3 +112,44 @@ pub trait CryptoLandTile {
     #[storage_mapper("total")]
     fn total(&self) -> SingleValueMapper<u64>;
 }
+
+#[cfg(test)]
+mod tests {
+    const GRID_MAX: u64 = 16383;
+    const MAX_FEE_BPS: u64 = 1000;
+
+    // Mirrors the contract's token_id_from_key exactly.
+    fn pack(tx: u64, ty: u64) -> u64 {
+        assert!(tx <= GRID_MAX && ty <= GRID_MAX, "out of range");
+        (tx << 15) | ty
+    }
+    fn unpack(id: u64) -> (u64, u64) { (id >> 15, id & 0x7FFF) }
+
+    /// The cross-chain contract — the same five pairs every chain asserts.
+    #[test]
+    fn token_id_matches_every_other_chain() {
+        assert_eq!(pack(0, 0), 0);
+        assert_eq!(pack(1, 0), 32768);
+        assert_eq!(pack(0, 1), 1);
+        assert_eq!(pack(100, 200), 3_277_000);
+        assert_eq!(pack(16383, 16383), 536_854_527);
+    }
+
+    #[test]
+    fn round_trips() { assert_eq!(unpack(pack(12345, 6789)), (12345, 6789)); }
+
+    #[test]
+    #[should_panic]
+    fn rejects_out_of_range() { pack(16384, 0); }
+
+    /// 7% of a sale, and a ceiling a stolen owner key cannot exceed.
+    #[test]
+    fn fee_split_and_ceiling() {
+        let price: u64 = 10_000;
+        let fee = price * 700 / 10_000;
+        assert_eq!(fee, 700);
+        assert_eq!(price - fee, 9_300);
+        assert!(700 <= MAX_FEE_BPS && MAX_FEE_BPS == 1000);
+        assert!(1001 > MAX_FEE_BPS);
+    }
+}

@@ -109,6 +109,12 @@ for (const c of MAINNET_CHAINS) {
   if (c.rpcUrlFallback && c.rpcUrlFallback !== c.rpcUrl) {
     targets.push({ key: c.key, family: c.family, role: 'fallback', url: c.rpcUrlFallback })
   }
+  // Cardano's browser-reachable source is statusUrl (Mithril), not rpcUrl
+  // (Koios sends no CORS header). Without this the run reported "no working
+  // endpoint at all: cardano" while the badge was in fact working.
+  if (c.statusUrl && c.statusUrl !== c.rpcUrl) {
+    targets.push({ key: c.key, family: c.family, role: 'status', url: c.statusUrl })
+  }
 }
 
 const results = await Promise.all(

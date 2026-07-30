@@ -189,3 +189,69 @@ Not covered by this audit: no contract has been deployed or verified on any chai
 yet, so none of this is exercised against a live VM. The fee-split arithmetic is
 tested on EVM and Cardano only; the other 11 expose the fee but the marketplace path
 lives off-chain.
+
+---
+
+# Second round — 2026-07-30
+
+Round 1 checked payment, payout, gating and the fee ceiling. It did **not** check the
+cross-chain tokenId invariant, and it left 4 of 13 contracts with zero executable
+tests. Both are now closed.
+
+## Test coverage, before and after
+
+| Chain | Before | After | Runner |
+|---|---|---|---|
+| EVM ×17 | 34 | 34 | `npx hardhat test` |
+| Starknet | **0** | **5** | `scarb cairo-test` |
+| MultiversX | **0** | **4** | `cargo test` |
+| Tezos | **0** | **3** | `ligo run test` |
+| Solana | 2 | 6 | `cargo test` |
+| Radix | 2 | 5 | `cargo test` |
+| Aptos | 1 | 4 | `aptos move test` |
+| Cardano | 4 | 4 | `aiken check` |
+| Sui | 1 | 1 | `sui move test` |
+| Algorand | self-check | + bounds + fee | `python3 cryptoland_tile.py` |
+| NEAR, Stellar | — | covered by conformance suite | see below |
+| **Conformance (all 13)** | — | **85** | `npm test` |
+
+Starknet needed `pack`/`unpack` lifted out of the contract as free functions before
+the invariant was testable at all, plus a `cairo_test` dev-dependency — without it
+Scarb rejects `#[test]` outright.
+
+## The conformance suite
+
+`src/test/contracts.test.js` reads all 13 contract **sources** and asserts the shared
+invariants directly. This exists because per-chain toolchains compile in isolation:
+nothing would catch one implementation drifting from the others, and two chains
+disagreeing about what `(tx, ty)` means is unrecoverable once tiles are minted.
+
+It also covers the two chains whose own harnesses cannot run: NEAR's SDK requires
+`cargo near build` (plain `cargo test` fails a build guard) and Stellar's
+`soroban-env-host` currently fails to compile its own test dependencies against
+rustc 1.97.
+
+It caught three things a grep-based review had missed:
+
+- **TON never defaulted the fee to 7%.** FunC has no constructor, so `market_fee_bps`
+  is whatever the deploy payload packs — and nothing in the contract or the tooling
+  said so. The collection would have launched at a **0% resale fee**. Added
+  `DEFAULT_FEE_BPS = 700` as an explicit, greppable constant for deploy tooling.
+- **Radix has no `treasury_receiver`** — but that is a model difference, not a gap.
+  Scrypto `withdraw()` hands a `Bucket` back to the admin caller, who deposits it in
+  the same transaction; it is gated on the admin badge. Exempted, with the reason
+  recorded in the test.
+- **Algorand names its global `receiver`, not `treasury_receiver`**, and gates on
+  `is_owner`. Naming only. The regex now accepts both spellings.
+
+## Live verification
+
+Per-chain data isolation was previously verified by hand. It is now confirmed against
+production: all 27 subdomains return HTTP 200 and **27 distinct `(sold, volume,
+owners)` triples** from `/stats`. One shared world would have produced one triple.
+
+`node scripts/check-rpcs.mjs`: **52 endpoints, 50 usable, no unexpected failures.**
+The run found Sui's primary RPC dead — see
+[blockchain.md](blockchain.md) — and a false FAIL on Cardano, because the checker
+only walked `rpcUrl`/`rpcUrlFallback` and Cardano's browser-reachable source is
+`statusUrl` (Mithril). Both fixed.

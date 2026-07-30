@@ -403,7 +403,14 @@ const CHAIN_DEFS = {
 
   sui: {
     id: 'sui-mainnet', name: 'Sui', shortName: 'SUI', family: 'sui',
-    rpcUrl: 'https://fullnode.mainnet.sui.io', rpcUrlFallback: 'https://sui-rpc.publicnode.com',
+    // Sui DEPRECATED JSON-RPC on public fullnodes — fullnode.mainnet.sui.io now
+    // answers every method with -32601 and a migrate-to-gRPC/GraphQL notice, so
+    // it was the primary for an adapter that speaks only JSON-RPC. publicnode
+    // still serves it with `Access-Control-Allow-Origin: *`; blockvision is the
+    // second. Re-check at the next submission round: JSON-RPC is on its way out
+    // ecosystem-wide and the adapter will eventually need a GraphQL path.
+    rpcUrl: 'https://sui-rpc.publicnode.com',
+    rpcUrlFallback: 'https://sui-mainnet-endpoint.blockvision.org',
     explorerUrl: 'https://suiscan.xyz/mainnet', explorerNFTPath: '/object/',
     nativeCurrency: { name: 'Sui', symbol: 'SUI', decimals: 9 },
     blockTime: 0.5, confirmations: 1, color: '#4da2ff', logo: '🌊',

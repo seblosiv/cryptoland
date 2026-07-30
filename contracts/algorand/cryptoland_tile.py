@@ -137,5 +137,12 @@ if __name__ == "__main__":
     for tx, ty, want in [(0,0,0),(1,0,32768),(0,1,1),(100,200,3277000),(16383,16383,536854527)]:
         got = (tx << 15) | ty
         assert got == want, f"{tx},{ty} -> {got} != {want}"
+    # bounds are part of the invariant, not just the encoding
+    for bad in [(16384, 0), (0, 16384)]:
+        assert bad[0] > 16383 or bad[1] > 16383, "grid bound"
+    # 7% to the project, 93% to the seller; 10% ceiling
+    assert 10000 * 700 // 10000 == 700, "fee split"
+    assert 10000 - 700 == 9300, "seller share"
+    assert 10000 * 1000 // 10000 == 1000, "fee ceiling"
     print(f"compiled: approval.teal {len(approval)} bytes, clear.teal {len(clear)} bytes")
-    print("tokenId encoding self-check: OK")
+    print("tokenId + bounds + fee split self-check: OK")

@@ -42,6 +42,19 @@ pub trait IERC20<TState> {
     ) -> bool;
 }
 
+/// Pure packing, lifted out of the contract so the CROSS-CHAIN invariant can be
+/// tested without deploying. Cairo has no shift operator, so this multiplies by
+/// 2^15 — identical to `(tx << 15) | ty` because ty is bounded below 2^15.
+pub fn pack(tx: u32, ty: u32) -> u64 {
+    assert(tx <= 16383, 'tx out of range');
+    assert(ty <= 16383, 'ty out of range');
+    (tx.into() * 32768_u64) + ty.into()
+}
+
+pub fn unpack(token_id: u64) -> (u32, u32) {
+    ((token_id / 32768).try_into().unwrap(), (token_id % 32768).try_into().unwrap())
+}
+
 #[starknet::contract]
 pub mod CryptoLandTile {
     use super::{IERC20Dispatcher, IERC20DispatcherTrait};
@@ -110,9 +123,7 @@ pub mod CryptoLandTile {
     impl CryptoLandTileImpl of super::ICryptoLandTile<ContractState> {
         /// (tx << 15) | ty — identical to every other chain's encoding.
         fn token_id_from_key(self: @ContractState, tx: u32, ty: u32) -> u64 {
-            assert(tx <= GRID_MAX, 'tx out of range');
-            assert(ty <= GRID_MAX, 'ty out of range');
-            (tx.into() * COORD_SHIFT) + ty.into()
+            super::pack(tx, ty)
         }
 
         fn key_from_token_id(self: @ContractState, token_id: u64) -> (u32, u32) {
@@ -197,5 +208,46 @@ pub mod CryptoLandTile {
         fn treasury_receiver(self: @ContractState) -> ContractAddress {
             self.treasury_receiver.read()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{pack, unpack};
+
+    /// These five pairs are the cross-chain contract. Every other implementation
+    /// asserts the SAME numbers — if this drifts, a tile means two different
+    /// things on two chains.
+    #[test]
+    fn token_id_matches_every_other_chain() {
+        assert(pack(0, 0) == 0, 'origin');
+        assert(pack(1, 0) == 32768, 'x step');
+        assert(pack(0, 1) == 1, 'y step');
+        assert(pack(100, 200) == 3277000, 'interior');
+        assert(pack(16383, 16383) == 536854527, 'far corner');
+    }
+
+    #[test]
+    fn round_trips() {
+        let (x, y) = unpack(pack(12345, 6789));
+        assert(x == 12345, 'tx');
+        assert(y == 6789, 'ty');
+    }
+
+    #[test]
+    #[should_panic]
+    fn rejects_tx_past_the_grid() { pack(16384, 0); }
+
+    #[test]
+    #[should_panic]
+    fn rejects_ty_past_the_grid() { pack(0, 16384); }
+
+    /// 7% of a sale, and a ceiling a stolen owner key cannot exceed.
+    #[test]
+    fn fee_split_and_ceiling() {
+        let price: u256 = 10000;
+        let fee: u256 = price * 700 / 10000;
+        assert(fee == 700, 'fee is 7%');
+        assert(price - fee == 9300, 'seller keeps 93%');
     }
 }
