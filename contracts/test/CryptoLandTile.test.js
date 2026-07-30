@@ -293,3 +293,53 @@ describe('CryptoLandTile', () => {
     })
   })
 })
+
+describe('CryptoLandTile — hardening', () => {
+  let contract, owner, buyer, other
+  const PRICE = ethers.parseEther('0.01')
+
+  beforeEach(async () => {
+    ;[owner, buyer, other] = await ethers.getSigners()
+    const F = await ethers.getContractFactory('CryptoLandTile')
+    contract = await F.deploy('CryptoLand Tiles', 'CLND', 'https://xono.ai/metadata/')
+    await contract.waitForDeployment()
+  })
+
+  it('blocks a seller that re-enters buy() when paid', async () => {
+    const R = await ethers.getContractFactory('ReentrantSeller')
+    const attacker = await R.deploy(await contract.getAddress())
+    await attacker.waitForDeployment()
+
+    // Give the attacker a tile, then have it list and someone buy it.
+    await contract.mint(await attacker.getAddress(), 999, '9:9', 'DE')
+    await attacker.list(999, PRICE)
+    await contract.connect(buyer).buy(999, { value: PRICE })
+
+    expect(await attacker.tried()).to.equal(true)          // it did attempt
+    expect(await contract.ownerOf(999)).to.equal(buyer.address)  // and still failed
+  })
+
+  it('lets the owner change price and fee at will', async () => {
+    await contract.setTilePrice(ethers.parseEther('0.05'))
+    expect(await contract.tilePriceWei()).to.equal(ethers.parseEther('0.05'))
+    await contract.setMarketFeePercent(300)
+    expect(await contract.marketFeeBps()).to.equal(300)
+    await contract.setTilePrice(0)                          // disable on-chain claiming
+    await expect(contract.connect(buyer).claimTile(1, '0:1', 'DE', { value: PRICE }))
+      .to.be.revertedWith('On-chain claiming disabled')
+  })
+
+  it('exposes provenance on-chain', async () => {
+    expect(await contract.OFFICIAL_SITE()).to.equal('https://xono.ai')
+    expect(await contract.PROJECT()).to.equal('CryptoLand')
+    expect(await contract.PUBLISHER()).to.contain('Seychelles')
+  })
+
+  it('never lets withdrawals be frozen by pause', async () => {
+    await contract.setTilePrice(PRICE)
+    await contract.connect(buyer).claimTile(2, '0:2', 'DE', { value: PRICE })
+    await contract.setPaused(true)
+    await contract.withdraw()                               // must still work
+    expect(await contract.treasury()).to.equal(0)
+  })
+})

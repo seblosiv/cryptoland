@@ -1,0 +1,30 @@
+# NOTICE
+
+CryptoLand
+Copyright (c) 2026 CryptoLand LTD, Mahé, Seychelles
+
+This software is released under the MIT Licence (see LICENSE). You may use, copy,
+modify and redistribute it, including commercially.
+
+## What the licence does NOT grant
+
+MIT covers **code**. It does not grant rights to names, marks or identity:
+
+- **"CryptoLand"** and **"xono.ai"** are used as marks of CryptoLand LTD.
+- The logomarks in `src/components/logos/` are third-party trademarks of their
+  respective blockchain foundations, reproduced for identification only. They are
+  **not** covered by this licence and their owners' brand guidelines apply.
+
+If you deploy a fork, please change the project name, the domain, and the
+`OFFICIAL_SITE` / `PROJECT` / `PUBLISHER` constants in `contracts/src/CryptoLandTile.sol`
+so users can tell your deployment from the official one. Those constants are
+readable on-chain precisely so the difference is checkable.
+
+## The official deployment
+
+- Site: https://xono.ai
+- Per-chain builds: `<chain>.xono.ai` (27 of them)
+- Publisher: CryptoLand LTD, Mahé, Seychelles
+
+Contract addresses are published at https://xono.ai/status once deployed. A
+contract not listed there is not ours, whatever it claims on-chain.

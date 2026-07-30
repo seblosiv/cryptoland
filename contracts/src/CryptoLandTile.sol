@@ -71,6 +71,13 @@ contract CryptoLandTile is IERC721Metadata {
     address public pendingOwner;
     address public minter;  // backend minter address (for gasless mint flow)
 
+    modifier nonReentrant() {
+        require(_entered == 1, "Reentrant call");
+        _entered = 2;
+        _;
+        _entered = 1;
+    }
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
@@ -121,6 +128,12 @@ contract CryptoLandTile is IERC721Metadata {
     /// Where withdrawals land. Defaults to `owner`, but can point at a COLD wallet
     /// so the day-to-day admin key never has to be the key holding the revenue.
     address public treasuryReceiver;
+
+    /// Reentrancy guard. buy() pays a seller that may be a contract, which hands
+    /// control to code we do not control. The ordering below is already
+    /// checks-effects-interactions, but this makes the guarantee explicit so a
+    /// later edit cannot silently break it.
+    uint256 private _entered = 1;
 
     // ── Provenance ──────────────────────────────────────────────────────────
     // Written into the contract at construction and readable by any explorer,
@@ -250,7 +263,7 @@ contract CryptoLandTile is IERC721Metadata {
         uint256 tokenId,
         string calldata tileKey,
         string calldata country
-    ) external payable whenNotPaused {
+    ) external payable whenNotPaused nonReentrant {
         require(tilePriceWei > 0, "On-chain claiming disabled");
         require(msg.value >= tilePriceWei, "Insufficient payment");
         require(!minted[tokenId], "Already minted");
@@ -333,7 +346,7 @@ contract CryptoLandTile is IERC721Metadata {
         emit TileUnlisted(tokenId, msg.sender);
     }
 
-    function buy(uint256 tokenId) external payable whenNotPaused {
+    function buy(uint256 tokenId) external payable whenNotPaused nonReentrant {
         TileData storage td = tileData[tokenId];
         require(td.listed, "Not listed for sale");
         require(msg.value >= td.listPrice, "Insufficient payment");
@@ -415,7 +428,7 @@ contract CryptoLandTile is IERC721Metadata {
      * Zeroes the accounting BEFORE transferring (checks-effects-interactions), so
      * a re-entrant call sees nothing left to take.
      */
-    function withdraw() external onlyOwner {
+    function withdraw() external onlyOwner nonReentrant {
         uint256 amount = treasury;
         require(amount > 0, "Nothing to withdraw");
         treasury = 0;
@@ -434,7 +447,7 @@ contract CryptoLandTile is IERC721Metadata {
     }
 
     /// Sweep any balance that arrived outside the accounted paths (direct sends).
-    function withdrawUnaccounted() external onlyOwner {
+    function withdrawUnaccounted() external onlyOwner nonReentrant {
         uint256 stray = address(this).balance - treasury;
         require(stray > 0, "Nothing unaccounted");
         (bool ok, ) = payable(treasuryReceiver).call{ value: stray }("");
