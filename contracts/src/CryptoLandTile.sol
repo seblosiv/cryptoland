@@ -122,6 +122,16 @@ contract CryptoLandTile is IERC721Metadata {
     /// so the day-to-day admin key never has to be the key holding the revenue.
     address public treasuryReceiver;
 
+    // ── Provenance ──────────────────────────────────────────────────────────
+    // Written into the contract at construction and readable by any explorer,
+    // wallet or marketplace. A fork can redeploy the code, but a redeployment
+    // that keeps these values is visibly claiming to be us; one that changes
+    // them is visibly not the official deployment. Costs one storage slot each
+    // and settles "which contract is real" without a trademark fight.
+    string public constant OFFICIAL_SITE = "https://xono.ai";
+    string public constant PROJECT       = "CryptoLand";
+    string public constant PUBLISHER     = "CryptoLand LTD, Mahe, Seychelles";
+
     // ── Pause ───────────────────────────────────────────────────────────────
     bool public paused;
 
