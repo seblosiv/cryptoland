@@ -64,3 +64,4 @@ contracts/node_modules/
 contracts/artifacts/
 contracts/cache/
 contracts/package-lock.json
+contracts/starknet/target/

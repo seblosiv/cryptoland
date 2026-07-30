@@ -1,0 +1,13 @@
+[package]
+name = "cryptoland"
+version = "0.1.0"
+edition = "2024_07"
+
+[dependencies]
+starknet = "2.11.4"
+openzeppelin_token = "1.0.0"
+openzeppelin_introspection = "1.0.0"
+openzeppelin_access = "1.0.0"
+
+[[target.starknet-contract]]
+sierra = true
