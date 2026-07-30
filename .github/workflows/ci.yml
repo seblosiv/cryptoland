@@ -1,0 +1,77 @@
+name: CI
+
+# The chain-scoping and payment-binding invariants in CLAUDE.md §4 were verified
+# by hand for months. This is the gate that stops them regressing silently.
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    name: Frontend + cross-chain conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      # Includes src/test/contracts.test.js, which reads all 13 contract sources
+      # and fails if any implementation drifts from the shared tokenId encoding.
+      - run: npm test
+
+  evm-contracts:
+    name: EVM contract (covers 17 chains)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci
+        working-directory: contracts
+      - run: npx hardhat test
+        working-directory: contracts
+
+  ton-contract:
+    name: TON on a real TVM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci
+        working-directory: contracts/ton
+      # @ton/sandbox executes the compiled bytecode — this is the only chain
+      # whose payout target can be verified, since with recv == owner the
+      # correct and incorrect implementations look identical.
+      - run: npm test
+        working-directory: contracts/ton
+
+  rust-contracts:
+    name: Rust contracts (Solana, NEAR, Stellar, MultiversX, Radix)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: solana,     dir: contracts/solana/programs/cryptoland-tile }
+          - { name: near,       dir: contracts/near }
+          - { name: stellar,    dir: contracts/stellar }
+          - { name: multiversx, dir: contracts/multiversx }
+          - { name: radix,      dir: contracts/radix }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
+        working-directory: ${{ matrix.dir }}
+
+  backend:
+    name: Backend security invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r server/requirements.txt pytest httpx
+      - run: python -m pytest server/tests -q

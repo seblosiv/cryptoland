@@ -11,6 +11,7 @@
 import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 const { MAINNET_CHAINS } = await import('../../src/lib/blockchain/config.js')
 const { PROFILES } = await import('../../src/config/profiles.js')
+const { PROGRAMS, STATUS_META, VERIFIED_ON, tally } = await import('./programs.mjs')
 
 const T = ['polygon','avalanche','base','arbitrum','ronin','bnb','optimism','scroll','celo',
   'moonbeam','beam','oasys','skale','hedera','injective','solana','ton','aptos','sui','starknet',
@@ -71,6 +72,16 @@ const csv = [COLS.map(c => c[1]).join(',')]
   .concat(rows.map(r => COLS.map(c => `"${String(r[c[0]]).replace(/"/g,'""')}"`).join(',')))
   .join('\n')
 writeFileSync('deploy/apex/dist/status.csv', csv)
+
+// Programmes as their own sheet — the grant table is what gets pasted into a
+// tracker, and it changes on a different cadence to the chain table.
+const PCOLS = ['n','name','chain','amount','equity','status','deadline','evidence','note','url','verified']
+const pcsv = [PCOLS.join(',')].concat(
+  PROGRAMS.slice()
+    .sort((a, b) => (STATUS_META[a.status].rank - STATUS_META[b.status].rank) || (a.n - b.n))
+    .map(p => PCOLS.map(c => `"${String(p[c] ?? '').replace(/"/g, '""')}"`).join(','))
+).join('\n')
+writeFileSync('deploy/apex/dist/programs.csv', pcsv)
 
 const deployed = rows.filter(r => r.deployed === 'YES').length
 const html = `<!doctype html>
@@ -211,23 +222,75 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   </tbody></table></div>
 </div>
 
-<h2>Grant programmes — accepting applications?</h2>
+<h2>Grant programmes — all 52, with the evidence</h2>
 <div class="card pad" style="margin-bottom:18px">
-  <p style="margin-bottom:12px">46 programme pages checked twice: once with <code>curl_cffi</code> (TLS
-  impersonation, defeats 403/429) and once with a real headless browser via <strong>zendriver</strong>
-  (executes JavaScript, so SPA pages render). Merged, preferring whichever produced a decisive answer.</p>
-  <div class="scroll"><table style="min-width:700px">
-  <thead><tr><th>Verdict</th><th>Count</th><th>Meaning</th></tr></thead><tbody>
-  <tr><td><span class="pill ok">OPEN</span></td><td><strong>11</strong></td><td>page states applications are open</td></tr>
-  <tr><td><span class="pill no">CLOSED</span></td><td>1</td><td>TON — "The Grants &amp; Bounties program is currently paused"</td></tr>
-  <tr><td><span class="pill warn">UNCLEAR</span></td><td>33</td><td>page renders but states neither — <strong>not evidence of open</strong></td></tr>
-  <tr><td><span class="pill warn">ERROR</span></td><td>1</td><td>could not load</td></tr>
+  <p style="margin-bottom:6px">Every row was established by a probe, never assumed. <strong>Verified ${VERIFIED_ON}.</strong>
+  Re-run before citing: <code>node scripts/probe-render.mjs</code> and <code>python3 scripts/probe-forums.py</code>.</p>
+  <p class="note" style="margin-bottom:14px">Marketing pages are the one place a programme's real status is never
+  written. The decisive source turned out to be <strong>Discourse governance forums</strong> (<code>/search.json</code>) —
+  funding a programme requires a public proposal, so a forum cannot go quietly stale the way a landing page can.
+  Absence of grant threads is itself evidence a programme is gone.</p>
+
+  <div class="scroll" style="margin-bottom:14px"><table style="min-width:640px">
+  <thead><tr><th>Status</th><th>Count</th><th>What it means for you</th></tr></thead><tbody>
+  ${(() => {
+    const t = tally()
+    const rowsFor = [
+      ['OPEN',     'apply now — the page or form says so in words'],
+      ['ROLLING',  'accepts applications continuously, no window'],
+      ['FLUX',     'being restructured — confirm before writing'],
+      ['PROPOSAL', 'no form; apply by governance proposal'],
+      ['NO-FORM',  'alive but nothing public to apply to'],
+      ['DEAD',     'closed, archived, or the page 404s'],
+      ['BLOCKED',  'deliberately not pursued'],
+    ]
+    return rowsFor.filter(([k]) => t[k]).map(([k, meaning]) => {
+      const m = STATUS_META[k]
+      return `<tr><td><span class="pill ${m.cls === 'ok' ? 'ok' : m.cls === 'bad' ? 'no' : 'warn'}">${m.label}</span></td>` +
+             `<td><strong>${t[k]}</strong></td><td>${meaning}</td></tr>`
+    }).join('')
+  })()}
   </tbody></table></div>
-  <p class="note"><strong>Confirmed OPEN:</strong> Avalanche Retro9000 · Cardano Catalyst · Starknet Growth ·
-  Arbitrum Foundation · Solana Foundation · HBAR Foundation · BNB Chain MVB · Tezos Foundation ·
-  Cardano Foundation · Outlier Base Camp · Alliance DAO.<br><br>
-  The 33 "unclear" are mostly marketing pages whose real window lives behind the apply form. Open the
-  form before submitting — the July dossier's URLs had already rotted within a week.</p>
+
+  <p style="margin-bottom:10px"><strong>${(tally().OPEN || 0) + (tally().ROLLING || 0)} of 52 are actionable right now.</strong>
+  Sorted by status, then by number.</p>
+
+  <div class="scroll"><table style="min-width:1120px">
+  <thead><tr><th>#</th><th>Programme</th><th>Chain</th><th>Max</th><th>Equity</th><th>Status</th>
+  <th>Deadline / note</th><th>Evidence</th><th>Verified</th></tr></thead><tbody>
+  ${PROGRAMS.slice().sort((a, b) =>
+      (STATUS_META[a.status].rank - STATUS_META[b.status].rank) || (a.n - b.n))
+    .map(p => {
+      const m = STATUS_META[p.status]
+      const pill = m.cls === 'ok' ? 'ok' : m.cls === 'bad' ? 'no' : 'warn'
+      const dl = p.deadline
+        ? `<strong style="color:var(--warn)">${esc(p.deadline)}</strong>`
+        : esc(p.note ?? '')
+      return `<tr>
+        <td>${p.n}</td>
+        <td><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a></td>
+        <td>${esc(p.chain)}</td><td>${esc(p.amount)}</td><td>${esc(p.equity)}</td>
+        <td><span class="pill ${pill}">${m.label}</span></td>
+        <td>${dl}</td>
+        <td style="color:var(--dim)">${esc(p.evidence ?? '')}</td>
+        <td style="white-space:nowrap;color:var(--dim)">${esc(p.verified)}</td>
+      </tr>`
+    }).join('')}
+  </tbody></table></div>
+
+  <p class="note" style="margin-top:12px">
+  <strong>Read these before applying.</strong>
+  <br>· <strong>#15 / #28 Celo</strong> — the programme is called <strong>Prezenti</strong>, not CeloPG. That naming is
+  why celopg.eco read as "unclear" through five automated passes. Season 3 is funded ($165,000 redeployed).
+  <br>· <strong>#21 Avalanche Retro9000</strong> — the snapshot deadline of 17 Jul 2026 has <strong>passed</strong>.
+  The page still says "Apply Now", so a next window is presumably open, but confirm the date first.
+  <br>· <strong>#22 Optimism</strong> — the Foundation filed a proposal to <strong>dissolve the Grants Council</strong>
+  on 25 Jun 2026, contested by delegates. Retro Funding was already paused.
+  <br>· <strong>#9 Scroll</strong> — the live Tally form is a <strong>BD intake form</strong>, not a grants application.
+  <br>· <strong>#26 / #42 TON</strong> — both tracks are one archived GitHub repo. The Mini App is still worth building
+  for distribution; just do not schedule it <em>for</em> the grant.
+  <br>· <strong>Seeded data.</strong> The world on every chain is seeded demo data with generated owner addresses.
+  Say so plainly in any application — a reviewer who discovers it themselves is a lost grant.</p>
 </div>
 
 <h2>Deployer wallet &amp; treasury</h2>

@@ -9,8 +9,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 soroban-sdk = "22"
 
-[dev-dependencies]
-soroban-sdk = { version = "22", features = ["testutils"] }
+# testutils pulls soroban-env-host, which fails to compile its own ed25519_dalek
+# dependency under rustc 1.97. Nothing in src/ uses it — the invariant tests are
+# pure arithmetic — so dropping it makes the suite runnable without touching the
+# SDK version that the wasm build needs.
 
 [profile.release]
 opt-level = "z"

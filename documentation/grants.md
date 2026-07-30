@@ -1,5 +1,15 @@
 # Grant Programs — Chain & Requirement Matrix
 
+> 🔑 **Live status lives in [`deploy/apex/programs.mjs`](../deploy/apex/programs.mjs)**,
+> not in this file. That module carries every programme's status, deadline, evidence quote
+> and the date it was last verified, and renders into `xono.ai/status` plus a
+> `programs.csv` export. **This file carries the strategy** — fit, framing, and what
+> each programme actually rewards.
+>
+> As of **2026-07-31**: 32 open · 2 rolling · 1 restructuring · 1 by-proposal ·
+> 4 no-public-form · 10 dead · 2 deliberately not pursued. **Nothing unknown.**
+
+
 Source: *Crypto Grants, Accelerators & Capital Dossier* (52 programs, verified 22 July 2026).
 This document maps every program to the chain it requires and to CryptoLand's readiness,
 so an application is never blocked on missing tech.

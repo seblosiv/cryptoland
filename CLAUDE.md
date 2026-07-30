@@ -78,7 +78,7 @@ as a first-class native app on each chain.
 ```bash
 # Frontend (repo root)
 npm run dev                     # vite dev server on :5173, opens browser, proxies API → 127.0.0.1:8000
-npm test                        # vitest run — 6 files, 250 tests, all passing
+npm test                        # vitest run — 7 files, 335 tests (incl. cross-chain contract conformance)
 npm run test:watch
 npm run test:coverage           # v8, scoped to src/lib/nowpayments.js + src/store/gameStore.js
 npm run lint                    # eslint . — see §8, ~90 PRE-EXISTING errors
@@ -98,6 +98,20 @@ node scripts/check-rpcs.mjs
 # Seed one chain's world (chain-correct addresses, realistic retention)
 python3 server/seed_chain.py --chain algorand --db server/cryptoland.db --users 120 --reset
 npm run preview
+
+# Contract tests — every chain has an executable suite (436 tests total)
+cd contracts        && npx hardhat test          # EVM, 34 — covers all 17 EVM chains
+cd contracts/ton    && npm test                  # TON,  9 — REAL TVM via @ton/sandbox
+cd contracts/starknet && scarb cairo-test        # 5
+cd contracts/sui    && sui move test             # 1
+cd contracts/aptos  && aptos move test --named-addresses cryptoland=0x1   # 4
+cd contracts/cardano && aiken check              # 4
+cd contracts/tezos  && ligo run test test_cryptoland.mligo                # 3
+cd contracts/algorand && python3 cryptoland_tile.py                       # self-check
+for d in solana/programs/cryptoland-tile near stellar multiversx radix; do
+  (cd contracts/$d && cargo test)                # 6 / 5 / 5 / 4 / 5
+done
+python3 -m pytest server/tests -q                # backend §4 invariants, 23
 
 # Backend (from server/)
 pip install -r requirements.txt
@@ -307,7 +321,19 @@ Beam is a subnet-evm that mints blocks on demand so `blockTime` is not a UX time
 
 ## 6. Grant work
 
-**`documentation/grants.md` is the source of truth for all 52 programs** — chain
+> 🔑 **`deploy/apex/programs.mjs` is now the single source of truth for all 52
+> programmes** — status, deadline, evidence quote and the date that status was last
+> verified. It renders into `xono.ai/status` and exports `programs.csv`. Update it
+> there, not in prose. As of 2026-07-31: **32 open, 2 rolling, 1 restructuring,
+> 1 by-proposal, 4 no-form, 10 dead, 2 blocked — nothing unknown.**
+>
+> The decisive research technique is **Discourse governance forums**
+> (`/search.json?q=grant`), not marketing pages: funding a programme requires a
+> public proposal, so a forum cannot go quietly stale the way a landing page can.
+> Absence of grant threads is itself evidence a programme is gone. See
+> `documentation/program-requirements.md` §14.
+
+**`documentation/grants.md` carries the per-programme strategy notes** — chain
 requirement, max amount, equity, readiness, and §0 "status corrections" (TON grants
 paused, Optimism Retro Funding paused, Gitcoin restructured onto Giveth, etc.). Do not
 re-derive any of it; update it if you learn something new (via SearXNG).
@@ -382,47 +408,37 @@ Done and working:
 
 Known gaps — be honest about these, do not paper over them:
 
-- **`mintTile()` is stubbed on every chain** until `VITE_CONTRACT_<CHAIN>` is set. No
-  contract is deployed anywhere yet. Purchases work; the on-chain mint returns
-  `{ minted: false }`. `contracts/CryptoLandTile.sol` + Hardhat config exist but the
-  contract tests run under their own toolchain (vitest excludes `contracts/**`).
-- **On-chain activity is ~1 tx per purchase**, which is structurally uncompetitive for
-  retroactive rounds (Retro9000 ranks by AVAX burned by your contracts; OP's template
-  wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days). Competing needs
-  recurring gameplay (daily check-in, upgrade, transfer) moved on-chain — a product
-  decision, written up in `documentation/grants.md` §7. Not a config change.
+- **NOTHING IS DEPLOYED.** All 13 contracts compile, all have executable tests, and
+  TON runs on a real TVM — but **no contract has ever executed on a real chain**.
+  Blocked on ~$11 to the deployer wallet. This is the single biggest gap and every
+  claim about on-chain behaviour is emulator-level until it closes.
+- **On-chain activity is ~1 tx per purchase**, which is structurally uncompetitive
+  for retroactive rounds (Retro9000 ranks by AVAX burned by your contracts; OP's
+  template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).
+  Competing needs recurring gameplay moved on-chain — a product decision, written up
+  in `documentation/grants.md` §7. Not a config change.
+- **Seeded data is demo data.** All 27 chains are seeded so no build looks empty, and
+  `/stats` returns 27 genuinely distinct triples — but those owners are generated
+  addresses. Say plainly in any application which numbers are seeded and which are
+  organic. A reviewer who discovers the difference on their own is a lost grant.
 - **94 ESLint errors + 27 warnings are pre-existing, not regressions**: 58
-  `no-unused-vars`, 18 `no-empty` (empty catch blocks), plus `react-hooks` warnings.
-  `npm run lint` is therefore not a clean gate — compare counts before/after your
-  change rather than expecting zero.
-- **No CI** (`.github/` does not exist), **no Dockerfile / compose**, **no backend
-  tests** (all 250 tests are frontend: `chains.test.js`, `gameStore.test.js`,
-  `nowpayments.test.js`, `chainStatus.test.js`, `addr.test.js`, `theme.test.js`).
-  The chain-scoping and payment-binding invariants in §4 are therefore verified by
-  hand against a running server, not by a suite — the highest-value gap to close.
-- **Public RPCs rot and it is invisible.** A single audit found six chains on
-  `rpc.ankr.com/*` returning **HTTP 200 with a JSON-RPC error body**, plus a
-  Cloudflare 521, an NXDOMAIN, and Polygon's own primary answering 401. All are
-  fixed and `scripts/check-rpcs.mjs` exists to catch the next round — but it is a
-  manual pre-flight, so **run it before every submission**.
+  `no-unused-vars`, 18 `no-empty`, plus `react-hooks` warnings. `npm run lint` is not
+  a clean gate — compare counts before/after your change rather than expecting zero.
+- **Public RPCs rot and it is invisible.** `scripts/check-rpcs.mjs` checks response +
+  body + CORS across 52 endpoints. It has already caught six Ankr endpoints returning
+  HTTP 200 with a JSON-RPC error body, a Cloudflare 521, an NXDOMAIN, Polygon's own
+  primary answering 401, and — most recently — **Sui deprecating JSON-RPC on public
+  fullnodes entirely**. It is a manual pre-flight: **run it before every submission**.
 - **Cardano's live badge is a CERTIFIED height, not the tip.** Koios sends no
-  `Access-Control-Allow-Origin`, so the browser cannot read it; the badge uses
-  Mithril (`statusUrl`), which lags ~100 blocks and is labelled as such. Do not
-  "fix" the label to say live.
-- **Stale docs to distrust:** root `README.md` is still the stock Vite template, and
-  `.env.example` lists only the original 11 chains (the per-chain templates in `env/`
-  are current — note they are dotfiles, so use `ls -A env/`).
-  `documentation/` itself was swept for accuracy on 2026-07-25: multichain.md,
-  styling.md, frontend.md, architecture.md, blockchain.md and README.md were corrected
-  for the Z14 grid (268,435,456 tiles), the 13 adapter families, and the unified
-  bit-packed tokenId. Treat them as current; if you find a contradiction, the code wins
-  and the doc needs fixing.
-- **`LICENSE` now exists (MIT), but there is still no public git remote** — Gitcoin/
-  Giveth QF (#2) needs the repo published, not just licensed.
-- **Seeded data is demo data.** All 29 chains are locally seeded so no build looks
-  empty, but those owners are generated addresses. Say plainly in any application
-  which numbers are seeded and which are organic — a reviewer who discovers the
-  difference on their own is a lost grant.
+  `Access-Control-Allow-Origin`, so the browser cannot read it; the badge uses Mithril
+  (`statusUrl`), which lags ~100 blocks and is labelled as such. Do not "fix" the
+  label to say live.
+- **Stale docs to distrust:** `.env.example` lists only the original 11 chains (the
+  per-chain templates in `env/` are current — they are dotfiles, so use `ls -A env/`).
+  `documentation/` was swept 2026-07-25 and again 2026-07-31; treat it as current, and
+  if you find a contradiction, **the code wins and the doc needs fixing**.
+- **No public git remote yet.** `LICENSE` (MIT) exists; Gitcoin/Giveth QF (#2) needs
+  the repo actually published.
 
 Recent history (`git log --oneline`, newest first): `812d6af` per-chain link previews +
 legal pages + licence · `d6fbe03` per-chain seed data + subdomain deploy tooling ·

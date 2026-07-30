@@ -292,3 +292,56 @@ pin fails deep inside `StorageUsed` serialization with an unhelpful
 treasury sender rather than hand-built `sendMessage({info})` payloads.
 
 Run: `cd contracts/ton && npm test`
+
+---
+
+# Every chain now has an executable suite — 2026-07-31
+
+The second round left NEAR and Stellar covered only by the source-reading
+conformance suite, because both SDKs failed their own test harnesses. Both were
+version problems, not real ones.
+
+**NEAR.** `near-sdk` resolved to 5.29, which carries a `compile_error!` unless the
+crate is built by `cargo-near` — and `cargo near` has no `test` subcommand, so there
+was no supported way to run a unit test at all. Pinning `near-sdk = "=5.6.0"` (the
+version the manifest already intended, before `^` floated it forward) restores plain
+`cargo test`. The wasm build is unaffected: 246,300 bytes.
+
+**Stellar.** The `testutils` feature pulls `soroban-env-host`, which fails to compile
+its own `ed25519_dalek` dependency under rustc 1.97. Bumping soroban-sdk to 27 fixed
+the tests but broke the **wasm build**, which matters more. Nothing in `src/` uses
+`testutils` — the invariant tests are pure arithmetic — so dropping that one
+dev-dependency makes the suite runnable while keeping SDK 22 and a working
+27,080-byte wasm.
+
+Also worth recording: updating rustc to 1.97 silently dropped the
+`wasm32-unknown-unknown` target, which surfaces as a baffling
+`can't find crate for 'core'`. `rustup target add wasm32-unknown-unknown`.
+
+## Final coverage — 436 tests
+
+| Suite | Tests | Runner |
+|---|---|---|
+| Frontend + cross-chain conformance | **335** | `npm test` |
+| EVM (covers 17 chains) | 34 | `npx hardhat test` |
+| **Backend §4 security invariants** | **23** | `python -m pytest server/tests` |
+| **TON — real TVM** | **9** | `cd contracts/ton && npm test` |
+| Solana | 6 | `cargo test` |
+| Starknet | 5 | `scarb cairo-test` |
+| NEAR | 5 | `cargo test` |
+| Stellar | 5 | `cargo test` |
+| Radix | 5 | `cargo test` |
+| Aptos | 4 | `aptos move test` |
+| MultiversX | 4 | `cargo test` |
+| Cardano | 4 | `aiken check` |
+| Tezos | 3 | `ligo run test` |
+| Sui | 1 | `sui move test` |
+| Algorand | self-check | `python3 cryptoland_tile.py` |
+
+All of it runs in CI (`.github/workflows/ci.yml`) on push and PR.
+
+**What this still does not prove.** Every test above is compile-level or
+emulator-level. **No contract has executed on a real chain.** Emulators model the VM,
+not the network: gas schedules, mainnet contract-size limits, wallet-adapter quirks
+and RPC behaviour are all unverified until a real deployment. Treat the suite as
+protection against regression, not as proof of production readiness.
