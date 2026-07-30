@@ -83,7 +83,7 @@ run "TON"        "FunC (TEP-62)" contracts/ton                          "node --
 run "Tezos"      "CameLIGO"      contracts/tezos                        "ligo run test test_cryptoland.mligo"                     'ok'              "tests"
 
 printf '{"verified":"%s","contracts":[%s]}\n' \
-  "$(date -u +%Y-%m-%d)" "$(IFS=,; echo "${rows[*]}")" > "$OUT"
+  "$(date -u "+%Y-%m-%d %H:%M UTC")" "$(IFS=,; echo "${rows[*]}")" > "$OUT"
 
 pass=$(printf '%s\n' "${rows[@]}" | grep -c PASSES)
 fail=$(printf '%s\n' "${rows[@]}" | grep -c FAILS)
