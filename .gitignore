@@ -72,3 +72,8 @@ contracts/sui/build/
 contracts/near/target/
 contracts/stellar/target/
 contracts/multiversx/target/
+
+# contract build artifacts (per-toolchain)
+contracts/*/target/
+contracts/*/build/
+scripts/node_modules/

@@ -356,3 +356,102 @@ both and merging is what produced a decisive answer on TON.
 
 > **33 UNCLEAR is not 33 available.** Those pages render but state no window. Open
 > the apply form before submitting.
+
+---
+
+## 13. Headless-browser resolution — 2026-07-30 (supersedes §11 and §12)
+
+§11 got 11 OPEN with TLS impersonation and left 23 UNCLEAR / 11 UNREACHABLE.
+This round ran **five probe passes** with Playwright's bundled Chromium (never the
+user's own Chrome), because the blocker was never TLS — it was **JavaScript
+rendering plus URL rot**.
+
+| Pass | Method | Newly resolved |
+|---|---|---|
+| 1 | Render the known landing page with JS | #2, #17, #25, #41, #47 OPEN |
+| 2 | Start at root domain, follow the site's own nav | #3, #20 OPEN |
+| 3 | Several candidate URLs each, **including subdomains** | #8, #35, #46 OPEN · #42 CLOSED |
+| 4 | Follow the apply CTA to the actual form | #6, #9 forms reached |
+| 5 | Open each form and read it | #6 confirmed · 3 false positives killed |
+
+**Pass 3 mattered most.** Grant pages live on subdomains — `retro9000.avax.network`,
+`tezos.foundation/grants`, `communityfund.stellar.org` — which a same-host link
+scrape structurally cannot reach. That single change resolved four programmes.
+
+### Newly confirmed OPEN (17 beyond §11)
+
+| # | Programme | Evidence | Where |
+|---|---|---|---|
+| 2 | Gitcoin / Giveth QF | "Applications open" | giveth.io |
+| 3 | Superteam Earn | "Apply Now" | superteam.fun/earn/grants |
+| 6 | **Radix Grants Program** | live Google Form titled *"Radix Grants Program Application Form"* | docs.google.com/forms/… |
+| 8 | Tezos Foundation Grants | "Apply now" | tezos.foundation/grants |
+| 17 | MultiversX Builders | "apply for a grant" | multiversx.com |
+| 20 | Moonbeam Grants | "Apply now" | moonbeam.foundation |
+| 25 | Polygon Grants | "APPLY NOW" | polygon.technology/village |
+| 35 | Sui Foundation | "Apply now" | sui.io/developers |
+| 41 | Solana ecosystem grants | "rolling basis" | solana.org/grants-funding |
+| 46 | Avalanche Retro9000 | "Apply Now" — ⏰ **deadline was 17 Jul 2026 18:00 UTC** | retro9000.avax.network |
+| 47 | Arbitrum Gaming Ventures | "APPLY NOW" | arbitrum.foundation |
+
+Plus #10 Game3, #12 Beam, #16 Solana Mobile, #18 Starknet Seed, #24 Aptos Foundation,
+#33 SafePal from the deep-probe pass.
+
+> ⚠️ **#46's snapshot deadline (17 Jul 2026) has already passed** — today is 30 Jul
+> 2026. The page still says "Apply Now", so the next snapshot window is presumably
+> open, but treat the date as stale and confirm before writing the application.
+
+### 🔴 Confirmed dead or gone
+
+- **#26 TON Grants & Bounties** — GitHub repo `archived: true` since 2026-05-20.
+- **#42 TON Society grants** — same archived repo. Both TON grant tracks are closed.
+- **#37 Algorand Foundation** — `algorand.foundation/grants` redirects to
+  `algorand.co/grants`, which returns **404**. No grants page exists.
+- **#11 Ronin Ecosystem Grants** — `roninchain.com/grants` returns **404** with the
+  site's own "This page could not be found".
+- **#30 Oasys** — `oasys.games/grants` returns **404**, same.
+
+The last three are not "unreachable"; the programme pages are **gone**. Do not plan
+around them without a direct contact.
+
+### ❔ Still genuinely unknown (13)
+
+#4 DoraHacks Grant DAOs, #5 Base Builder Grants, #7 SKALE Indie Accelerator,
+#13 Stellar Community Fund, #15 Celo CeloPG, #19 Aptos DoraHacks,
+#22 Optimism Retro Funding, #32 Celestia, #36 NEAR Foundation,
+#40 Injective Ecosystem, #50 Animoca Brands, #52 a16z CSX, and #9 Scroll (see below).
+
+These render fine and describe a programme, but **state no window anywhere on the
+page or behind the CTA**. For these the answer needs a human: an email to the
+programme, or a Discord/Telegram ask. No amount of crawling resolves a page that
+does not contain the fact.
+
+**#9 Scroll is a near-miss worth flagging.** The apply CTA leads to a live Tally form
+— but it is titled *"Scroll BD Intake Form"*, a business-development contact form,
+**not** the community grants application. Counting it as OPEN would be wrong.
+
+### False positives this pass caught
+
+Pass 4's keyword regex matched `Next` and `your email` on documentation pages and, in
+Algorand's case, on a **HubSpot privacy policy**. Pass 5 opened each candidate and
+killed all three. A keyword match on an unread page is not evidence — the two
+survivors (#6, #9) were confirmed only by reading the form's own title.
+
+### Scoreboard
+
+| Verdict | Count |
+|---|---|
+| ✅ Confirmed OPEN | **28** |
+| 🔴 Confirmed closed / page gone | **5** |
+| ❔ Genuinely unknown | **13** |
+
+Up from 11 confirmed-open in §11. The residual 13 are a **human-contact problem, not
+a tooling problem** — five automated passes with JS rendering, TLS impersonation,
+subdomain enumeration and form-following could not extract a fact the pages do not
+publish.
+
+**Reproduce:** the probe scripts are in the session scratchpad
+(`probe/crawl*.mjs`, `verify.mjs`). SearXNG's engines (brave, duckduckgo, google cse,
+startpage) were rate-limited/CAPTCHA'd by the sweep volume during this run and
+returned empty for most queries — the browser passes carried it. Give the engines
+time to un-suspend before the next sweep.

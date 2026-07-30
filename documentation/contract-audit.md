@@ -169,8 +169,21 @@ a valid Aptos, Sui, TON or Stellar account. See
   `ReentrantSeller` attacker contract that proves the guard fires.
 - Frontend: `npm test` — **250 passing**, includes the cross-chain tokenId
   invariant `(16383,16383) → 536854527` checked against every adapter.
-- All 13 contracts compile: Solidity, Cairo, Aiken, PyTeal, Move ×2, Rust ×4, FunC,
-  CameLIGO.
+- All 13 contracts compile — **re-verified individually on 2026-07-30**, each with
+  its own toolchain:
+
+  | | | | |
+  |---|---|---|---|
+  | EVM ×17 `hardhat test` 34 ✅ | Starknet `scarb build` ✅ | Sui `sui move build` ✅ | Aptos `aptos move compile` ✅ |
+  | Cardano `aiken check` 4 tests ✅ | Algorand `pyteal` ✅ | Solana `cargo check` ✅ | Stellar wasm32 ✅ |
+  | NEAR wasm32 ✅ | MultiversX wasm32 ✅ | Radix `cargo test` ✅ | Tezos `ligo compile` ✅ |
+  | TON `func-js` ✅ | | | |
+
+  An earlier sweep reported four failures — all were **missing toolchains on the
+  build box, not broken code**. The box is ARM64 Linux, where aiken ships no
+  aarch64 build and scrypto will not compile; those were verified on macOS ARM
+  instead. Radix builds with `scrypto build`, not plain
+  `cargo build --target wasm32`, which is what actually failed there.
 
 Not covered by this audit: no contract has been deployed or verified on any chain
 yet, so none of this is exercised against a live VM. The fee-split arithmetic is
