@@ -79,26 +79,55 @@ const html = `<!doctype html>
 <title>CryptoLand — deployment status</title>
 <meta name="robots" content="noindex, nofollow, noarchive">
 <style>
-:root{--bg:#0f0f0f;--s1:#141414;--s2:#1a1a1a;--b0:rgba(255,255,255,.08);--t1:#fff;--t2:#a8a8a8;--t3:#6e6e6e;--acc:#4ade80}
+:root{--bg:#f6f7f9;--card:#fff;--line:#e3e7ec;--ink:#11161c;--mid:#5a6470;--dim:#8b95a1;
+--ok:#0f9d58;--bad:#d93025;--warn:#e8a317;--accent:#2563eb;--accent-soft:#eef4ff}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--t1);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;padding:34px 20px 80px}
-.wrap{max-width:1500px;margin:0 auto}
-h1{font-size:26px;letter-spacing:-.02em;margin-bottom:6px}
-.sub{color:var(--t2);margin-bottom:20px}
-.stats{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px}
-.stat{background:var(--s2);border:1px solid var(--b0);border-radius:9px;padding:10px 14px}
-.stat b{display:block;font-size:19px}.stat span{color:var(--t3);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em}
-.bar{display:flex;gap:9px;margin-bottom:14px}
-button,a.btn{background:var(--s2);border:1px solid var(--b0);color:var(--t1);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;text-decoration:none}
-button:hover,a.btn:hover{border-color:var(--acc)}
-.scroll{overflow-x:auto;border:1px solid var(--b0);border-radius:11px}
-table{border-collapse:collapse;width:100%;min-width:1300px;background:var(--s1)}
-th{background:var(--s2);text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);position:sticky;top:0;white-space:nowrap}
-td{padding:9px 12px;border-top:1px solid var(--b0);white-space:nowrap}
-td.wrap-ok{white-space:normal;min-width:210px;color:var(--t2)}
-.yes{color:var(--acc);font-weight:700}.no{color:#f87171;font-weight:700}
-a{color:var(--acc)}
-code{background:var(--s2);padding:1px 5px;border-radius:4px;font-size:12px}
+body{background:var(--bg);color:var(--ink);
+font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+-webkit-font-smoothing:antialiased;padding:30px 22px 90px}
+.wrap{max-width:1560px;margin:0 auto}
+h1{font-size:27px;letter-spacing:-.025em;font-weight:750}
+.sub{color:var(--mid);margin:6px 0 22px;font-size:14px}
+.sub code{background:#eceff3;padding:1px 6px;border-radius:5px;font-size:12.5px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);
+margin:30px 0 11px;font-weight:700}
+.stats{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px 16px;
+box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.stat b{display:block;font-size:23px;letter-spacing:-.02em;font-weight:750}
+.stat span{color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.stat.good b{color:var(--ok)} .stat.bad b{color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+box-shadow:0 1px 2px rgba(16,24,40,.04);overflow:hidden}
+.card.pad{padding:18px 20px}
+.wallet{display:grid;gap:16px;grid-template-columns:1fr;margin-bottom:6px}
+.addr{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+background:var(--accent-soft);border:1px solid #d3e2ff;color:#1749b3;
+padding:9px 12px;border-radius:8px;display:inline-block;word-break:break-all}
+.note{color:var(--mid);font-size:13px;margin-top:9px}
+.bar{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 12px}
+button,a.btn{background:var(--card);border:1px solid var(--line);color:var(--ink);
+border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none}
+button:hover,a.btn:hover{border-color:var(--accent);color:var(--accent)}
+a.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:13px}
+th{background:#fbfcfd;text-align:left;padding:11px 13px;font-size:10.5px;text-transform:uppercase;
+letter-spacing:.06em;color:var(--dim);white-space:nowrap;border-bottom:1px solid var(--line);
+position:sticky;top:0;font-weight:700}
+td{padding:10px 13px;border-bottom:1px solid #f0f2f5;white-space:nowrap;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+td.wrap-ok{white-space:normal;min-width:220px;color:var(--mid)}
+.yes{color:var(--ok);font-weight:700}.no{color:var(--bad);font-weight:700}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.pill.ok{background:#e7f6ec;color:#0f7a43}
+.pill.no{background:#fdeceb;color:#b3261e}
+.pill.warn{background:#fdf4e3;color:#9a6a06}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code{background:#eceff3;padding:2px 6px;border-radius:5px;font-size:12px;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.who{font-size:12px;color:var(--dim)}
 </style></head><body><div class="wrap">
 <h1>CryptoLand — deployment status</h1>
 <p class="sub">Generated from <code>config.js</code>, <code>profiles.js</code> and <code>env/</code>. Re-run
@@ -126,8 +155,29 @@ code{background:var(--s2);padding:1px 5px;border-radius:4px;font-size:12px}
 <tr><td><strong>Real users</strong></td><td class="no">NO</td><td>Scoring lever, not a gate; worlds are seeded</td><td>—</td></tr>
 </tbody></table></div>
 
+<h2>Deployer wallet &amp; treasury</h2>
+<div class="wallet">
+  <div class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-weight:700;margin-bottom:7px">Deployer address — same on every EVM chain</div>
+        <span class="addr" id="dep">0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58</span>
+      </div>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('dep').textContent.trim()).then(()=>alert('Address copied'))">Copy address</button>
+    </div>
+    <p class="note"><strong>Retained key.</strong> Generated on the server at
+    <code>/srv/cryptoland/deployer/key.json</code> (0600, root-only), never on a laptop and never in
+    a chat. Verified by a sign/recover round-trip — the exact operation Avalanche Retro9000 and
+    Optimism OP Atlas require to claim contract ownership. <strong>Never rotate it.</strong></p>
+  </div>
+  <div class="card">
+    <table id="bal"><thead><tr><th>Chain</th><th>Balance</th><th>Needed to deploy</th><th>Status</th></tr></thead>
+    <tbody><tr><td colspan="4" style="color:var(--dim)">Reading live balances…</td></tr></tbody></table>
+  </div>
+</div>
+
 <div class="bar">
-  <a class="btn" href="/status.csv" download>Download CSV (Excel)</a>
+  <a class="btn primary" href="/status.csv" download>Download CSV (Excel)</a>
   <button onclick="cp()">Copy table for Excel</button>
 </div>
 <div class="scroll"><table id="t">
@@ -144,6 +194,42 @@ ${rows.map(r => `<tr>${COLS.map(([k]) => {
 }).join('')}</tr>`).join('\n')}
 </tbody></table></div>
 <script>
+// Live balances, read from each chain's OWN public RPC in the browser. Nothing is
+// cached server-side, so this table cannot go stale between deploys.
+const WALLET='0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58'
+const RPCS=[
+ ['SKALE Nebula','https://mainnet.skalenodes.com/v1/green-giddy-denebola','sFUEL','0 (gasless)'],
+ ['Polygon','https://polygon-bor-rpc.publicnode.com','POL','~$0.12'],
+ ['Base','https://mainnet.base.org','ETH','~$0.04'],
+ ['Arbitrum','https://arb1.arbitrum.io/rpc','ETH','~$0.12'],
+ ['Optimism','https://optimism-rpc.publicnode.com','ETH','~$0.01'],
+ ['BNB','https://bsc-dataseed.bnbchain.org','BNB','~$0.09'],
+ ['Avalanche','https://api.avax.network/ext/bc/C/rpc','AVAX','~$0.00'],
+ ['Celo','https://forno.celo.org','CELO','~$0.04'],
+ ['Ronin','https://api.roninchain.com/rpc','RON','~$0.00'],
+ ['Scroll','https://rpc.scroll.io','ETH','~$0.00'],
+]
+async function bals(){
+  const tb=document.querySelector('#bal tbody'); tb.innerHTML=''
+  for(const [name,url,sym,need] of RPCS){
+    const tr=document.createElement('tr')
+    tr.innerHTML='<td>'+name+'</td><td style="color:var(--dim)">…</td><td>'+need+'</td><td></td>'
+    tb.appendChild(tr)
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[WALLET,'latest']})})
+      const j=await r.json()
+      const v=parseInt(j.result,16)/1e18
+      tr.children[1].textContent=v.toFixed(6)+' '+sym
+      tr.children[1].style.color=v>0?'var(--ok)':'var(--dim)'
+      tr.children[3].innerHTML=v>0?'<span class="pill ok">FUNDED</span>':'<span class="pill no">EMPTY</span>'
+    }catch(e){
+      tr.children[1].textContent='—'
+      tr.children[3].innerHTML='<span class="pill warn">RPC unreachable</span>'
+    }
+  }
+}
+bals()
 function cp(){
   const t=document.getElementById('t')
   const rows=[...t.querySelectorAll('tr')].map(r=>[...r.children].map(c=>c.innerText.trim()).join('\\t')).join('\\n')
