@@ -20,6 +20,7 @@
 import { ACTIVE_CHAIN } from './config.js'
 
 const ADAPTERS = {
+  flow:       () => import('./adapters/flow.js'),
   evm:        () => import('./adapters/evm.js'),
   solana:     () => import('./adapters/solana.js'),
   ton:        () => import('./adapters/ton.js'),

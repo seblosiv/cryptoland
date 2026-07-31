@@ -404,6 +404,28 @@ const CHAIN_DEFS = {
 
   // ══ Non-EVM chains ════════════════════════════════════════════════════════
 
+
+  // ══ Flow ══════════════════════════════════════════════════════════════════
+  // The only chain here built specifically for consumer NFTs (NBA Top Shot,
+  // NFL All Day), which makes a land-NFT the use case it was designed around
+  // rather than one it tolerates. Cadence's resource model needs its own
+  // adapter — this is not an EVM config entry.
+  flow: {
+    id: 747, name: 'Flow', shortName: 'FLOW', family: 'flow',
+    rpcUrl: 'https://rest-mainnet.onflow.org',
+    explorerUrl: 'https://www.flowscan.io', explorerTxPath: '/tx/',
+    nativeCurrency: { name: 'Flow', symbol: 'FLOW', decimals: 8 },
+    blockTime: 1, confirmations: 1, color: '#00ef8b', logo: '🌊',
+    grant: 'Flow Ecosystem Support',
+  },
+  'flow-testnet': {
+    id: 646, name: 'Flow Testnet', shortName: 'FLOW', family: 'flow',
+    rpcUrl: 'https://rest-testnet.onflow.org',
+    explorerUrl: 'https://testnet.flowscan.io', explorerTxPath: '/tx/',
+    nativeCurrency: { name: 'Flow', symbol: 'FLOW', decimals: 8 },
+    blockTime: 1, confirmations: 1, color: '#00ef8b', logo: '🌊', testnet: true,
+  },
+
   solana: {
     id: 'mainnet-beta', name: 'Solana', shortName: 'SOL', family: 'solana',
     rpcUrl: 'https://solana-rpc.publicnode.com', rpcUrlFallback: 'https://api.mainnet-beta.solana.com',

@@ -152,13 +152,13 @@ detection").
 
 `scripts/build-chain.sh <chain>` copies `env/.env.<chain>` → `.env.production`, then
 runs `npx vite build --outDir dist-<chain>`. `env/` holds one **blank** template per
-target (they are dotfiles — list them with `ls -A env/`), currently **31**:
+target (they are dotfiles — list them with `ls -A env/`), currently **32**:
 
 ```
 EVM      polygon avalanche base arbitrum ronin bnb optimism scroll celo moonbeam
          beam oasys skale hedera injective mantle taiko rootstock flare
 non-EVM  solana ton aptos sui starknet cardano near stellar algorand multiversx
-         radix tezos
+         radix tezos flow
 ```
 
 Ownership is **DB-canonical**: within a build, the SQLite `blocks` table is the source
@@ -289,9 +289,20 @@ allows only `Authorization`, `Content-Type`, `X-Session-ID` headers.
 
 ## 5. Chains — the real numbers
 
-`src/lib/blockchain/config.js` defines **59 chain entries = 33 mainnet + 26 testnet,
-across 13 adapter families**. 35 entries (21 mainnet) are `family: 'evm'` and share the
+`src/lib/blockchain/config.js` defines **61 chain entries = 34 mainnet + 27 testnet,
+across 14 adapter families**. 35 entries (21 mainnet) are `family: 'evm'` and share the
 single `adapters/evm.js`.
+
+**Flow is the 14th family**, added 2026-07-31 for programme #60. It is the only
+chain here built specifically for consumer NFTs (NBA Top Shot, NFL All Day), so a
+land NFT is the use case it was designed around. Three things make its adapter
+unlike the others: there is **no injected provider** (wallets are reached through
+FCL Discovery, so `detectWallets()` cannot sniff globals), `@onflow/fcl` is
+dynamically imported and marked external in `vite.config.js`, and Cadence uses
+**linear-typed resources** — an NFT physically lives in the owner's account
+storage, so "who owns tile N" is a script against a capability, not a mapping
+read. `contracts/flow/CryptoLandTile.cdc` keeps a `tileOwners` index for lookups,
+but the resource is the record of truth.
 
 > **Mantle, Taiko, Rootstock and Flare were added 2026-07-31** purely to reach four
 > open grant programmes we had no chain for. Because they are EVM, the entire

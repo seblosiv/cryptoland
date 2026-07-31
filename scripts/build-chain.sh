@@ -26,7 +26,7 @@ CHAINS=(
   # non-EVM
   solana ton aptos sui starknet cardano near stellar algorand multiversx
   radix tezos \
-  mantle taiko rootstock flare)
+  mantle taiko rootstock flare flow)
 
 build_one() {
   local chain="$1"

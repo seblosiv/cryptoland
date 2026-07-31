@@ -266,7 +266,7 @@ export const PROGRAMS = [
   { n: 60, name: 'Flow Ecosystem Support', chain: 'Flow', amount: '~$100K', equity: '0%',
     status: 'OPEN', verified: '2026-07-31', url: 'https://developers.flow.com/ecosystem/grants',
     evidence: '"grant application"',
-    note: 'NFT-NATIVE CHAIN — built for exactly this kind of product (NBA Top Shot). Needs a Cadence adapter, so it is a real integration, not a config entry.' },
+    note: 'CHAIN NOW CONFIGURED (2026-07-31): 14th adapter family, Cadence contract written. NFT-native — the chain NBA Top Shot runs on, so a land NFT is what it was designed for. Ready to apply.' },
 ];
 
 export const STATUS_META = {

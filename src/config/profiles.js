@@ -601,4 +601,19 @@ export const PROFILES = {
     },
   },
 
+  // The one chain whose entire reason for existing is consumer NFTs.
+  flow: {
+    tagline: 'OWN THE WORLD · BUILT FOR THIS',
+    pitch: 'Flow was built for consumer NFTs — NBA Top Shot and NFL All Day run here. A parcel of land held in your own account storage is the use case the chain was designed around, not one it tolerates.',
+    connectLabel: 'Connect Flow Wallet',
+    hero: { motif: 'waves', colors: ['#00ef8b', '#00a862'] },
+    onboarding: {
+      why: 'Flow was designed for consumer NFTs at scale, so a tile is a first-class asset in your own account storage rather than a row in a contract you have to trust.',
+      nativeTerm: 'a Cadence resource NFT',
+      chainStat: { value: 'Resource', label: 'Ownership model' },
+      feeNote: 'Gas is a fraction of a cent, paid in FLOW.',
+      walletHelp: { name: 'Flow Wallet', note: 'Flow uses a wallet chooser rather than a browser extension — pick yours when prompted.' },
+    },
+  },
+
 }

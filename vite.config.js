@@ -84,6 +84,7 @@ export default defineConfig({
       // marked external so the bundler doesn't fail when the package isn't
       // installed (each per-chain deployment installs only the SDK it needs).
       external: [
+      '@onflow/fcl',
         // Solana
         '@solana/web3.js', '@solana-mobile/wallet-standard-mobile',
         // TON

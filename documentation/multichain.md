@@ -831,3 +831,42 @@ both but sends no `Access-Control-Allow-Origin`, so their primaries are load-bea
 The fifth missing chain is **Flow** (#60, NFT-native, the chain NBA Top Shot runs
 on). It is *not* free: Cadence needs its own adapter and contract, so it is a real
 integration rather than a config entry.
+
+## Flow — the 14th adapter family (2026-07-31)
+
+Flow was the fifth and last chain blocking an open programme (#60, Flow Ecosystem
+Support), and the only one that was **not** a config entry. Cadence needs its own
+adapter and its own contract.
+
+It is worth having beyond grant reach: Flow is the one chain here **built for
+consumer NFTs** — NBA Top Shot and NFL All Day run on it — so a parcel of land is
+the use case the chain was designed around rather than one it tolerates.
+
+Three things make `adapters/flow.js` unlike every other adapter:
+
+1. **There is no injected provider.** Every other adapter sniffs a global
+   (`window.ethereum`, `window.aptos`, `window.solana`). Flow wallets are reached
+   through **FCL Discovery**, which presents the chooser itself, so
+   `detectWallets()` returns a single entry and the wallet list is decided at
+   connect time.
+2. **FCL is configured per network, and crossing the wires is the usual failure.**
+   The access node *and* the Discovery endpoint both differ between mainnet and
+   testnet; `fcl()` sets both from `ACTIVE_CHAIN`.
+3. **Transactions are submitted as Cadence source**, not an encoded call. The
+   contract address is interpolated into the `import`, so a transaction is bound
+   to whichever contract that build was configured with.
+
+`contracts/flow/CryptoLandTile.cdc` follows the same invariants as the other
+twelve — `(tx << 15) | ty` with the bound enforced, 7% default fee, a 10% ceiling,
+sales closed until the admin opens them, and `withdraw()` paying
+`treasuryReceiver` rather than the caller.
+
+Two Cadence-specific notes:
+
+- **No reentrancy guard, because there is no reentrancy.** Cadence has no fallback
+  functions and a linear resource cannot exist in two places at once.
+- **Authorisation is possession of a resource**, not an address comparison. Holding
+  the `Admin` resource *is* the permission.
+
+`check-rpcs.mjs` needed a `flow` probe path: the Access API is REST and returns
+**400 on a bare root**, so it is probed at `/v1/blocks?height=sealed`.

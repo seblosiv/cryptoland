@@ -48,6 +48,8 @@ const GET_PATH = {
   algorand:   '/v2/status',
   stellar:    '/',
   radix:      '',
+  // Flow's Access API is REST and 400s on a bare root — it needs a resource.
+  flow:       '/v1/blocks?height=sealed',
   cardano:    '',   // resolved per-URL below (koios vs mithril)
 }
 
