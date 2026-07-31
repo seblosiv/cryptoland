@@ -470,7 +470,16 @@ Known gaps — be honest about these, do not paper over them:
   > `claimTile` accepted any raw uint256, making `2^200` claimable. Fixed, with
   > 5 regression tests. **Three deployments have now produced three defects no
   > test could reach. Deploy early.**
-- **The other 20 testnets are faucet-blocked, not code-blocked.** Oasys was the
+- **Contract readiness across the 45 actionable programmes: 100% compiled,
+  64% proven on a real testnet, 0% mainnet.** Nine chains close the gap —
+  Solana, Sui, Starknet, Cardano, Algorand, MultiversX, Radix, Tezos, Flow —
+  and **every one of their faucets is deliberately human-gated** (captcha,
+  wallet-connect, or social login). Starknet advertises an API "for a script or
+  AI agent" but every documented endpoint 404s; only the GitHub route works.
+  `documentation/testnet-funding.md` has the addresses and the exact click list.
+  This is not engineerable around, and it costs nothing — Aptos and Ronin were
+  funded that way and deployed a minute later.
+- **The other testnets are faucet-blocked, not code-blocked.** Oasys was the
   only EVM faucet without a captcha, login, mainnet-balance or puzzle gate; NEAR's
   helper funds an account from a plain POST; Solana devnet is globally degraded.
   See `deploy/apex/deployments.mjs` for the per-chain reason.
