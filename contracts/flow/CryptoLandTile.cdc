@@ -28,6 +28,11 @@
 // import missing entirely on the first check, which is why the CLI is now part
 // of scripts/verify-contracts.sh.
 import "FungibleToken"
+// FlowToken is needed to CREATE the treasury vault. The initializer originally
+// took the vault as a parameter, which lints clean but cannot be deployed:
+// Cadence does not allow a resource as a contract-deployment argument, so
+// `flow project deploy` fails with "required arguments 1, but provided 0".
+import "FlowToken"
 
 access(all) contract CryptoLandTile {
 
@@ -198,7 +203,7 @@ access(all) contract CryptoLandTile {
         }
     }
 
-    init(emptyVault: @{FungibleToken.Vault}) {
+    init() {
         self.GRID_MAX = 16383
         self.MAX_TOKEN_ID = 536854527
         self.MAX_FEE_BPS = 1000
@@ -208,7 +213,7 @@ access(all) contract CryptoLandTile {
         self.marketFeeBps = 700       // 7%
         self.treasuryReceiver = self.account.address
         self.tileOwners = {}
-        self.treasury <- emptyVault
+        self.treasury <- FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>())
 
         self.CollectionStoragePath = /storage/CryptoLandTileCollection
         self.CollectionPublicPath = /public/CryptoLandTileCollection

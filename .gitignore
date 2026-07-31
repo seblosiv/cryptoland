@@ -88,3 +88,6 @@ contracts/*/.stellar/
 
 # Throwaway TESTNET keys. Still keys — never commit.
 contracts/.testnet/
+
+# holds a testnet private key
+contracts/flow/flow.json

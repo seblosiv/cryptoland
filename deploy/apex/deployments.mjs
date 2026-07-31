@@ -175,6 +175,58 @@ export const DEPLOYMENTS = [
       { name: 'full entrypoint surface',  result: 'PASS', detail: 'claim_tile, set_tile_price, set_market_fee_bps, set_treasury_receiver, withdraw, transfer' },
     ],
   },
+  {
+    chain: 'Flow',
+    network: 'testnet',
+    family: 'flow',
+    lang: 'Cadence',
+    date: '2026-07-31',
+    contract: '0xc5aef0580ee607ca',
+    deployTx: 'e59c0ee76e5737f1046c7f0f8ae50b8612712c52c3a593263a6e3121c4eabeb7',
+    explorer: 'https://testnet.flowdiver.io/account/0xc5aef0580ee607ca',
+    wasmBytes: 0,
+    note:
+      'Deploying found a defect the linter passed: init() took the treasury vault as a PARAMETER, ' +
+      'and Cadence cannot pass a resource as a contract-deployment argument — `flow project deploy` ' +
+      'fails with "required arguments 1, but provided 0". init() now creates its own vault via ' +
+      'FlowToken.createEmptyVault. Note the faucet distinction: /fund-account needs an existing ' +
+      'address, /create-account takes a 128-char public key and mints the account.',
+    checks: [
+      { name: 'deploys on-chain',          result: 'PASS', detail: 'contract live at 0xc5aef0580ee607ca' },
+      { name: 'tokenId — origin',          result: 'PASS', detail: 'tokenIdFromKey(0,0) = 0' },
+      { name: 'tokenId — x step',          result: 'PASS', detail: 'tokenIdFromKey(1,0) = 32768' },
+      { name: 'tokenId — far corner',      result: 'PASS', detail: 'tokenIdFromKey(16383,16383) = 536854527' },
+      { name: 'tokenId — bounds',          result: 'PASS', detail: 'tokenIdFromKey(16384,0) → pre-condition failed' },
+      { name: 'valid id accepted',         result: 'PASS', detail: 'isValidTokenId(536854527) = true' },
+      { name: 'off-grid id rejected',      result: 'PASS', detail: 'isValidTokenId(2^60) = false' },
+      { name: 'fee defaults to 7%',        result: 'PASS', detail: 'marketFeeBps = 700' },
+      { name: 'fee ceiling is 10%',        result: 'PASS', detail: 'MAX_FEE_BPS = 1000' },
+      { name: 'grid constant correct',     result: 'PASS', detail: 'GRID_MAX = 16383' },
+      { name: 'sales start closed',        result: 'PASS', detail: 'tilePrice = 0, treasuryBalance = 0' },
+    ],
+  },
+  {
+    chain: 'Solana',
+    network: 'devnet',
+    family: 'solana',
+    lang: 'Anchor / Rust',
+    date: '2026-07-31',
+    contract: '7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi',
+    deployTx: '5DGMpGh8SQK9ax8AFktcG6XTt4DgPTGdt57SPGqPm57xGfqbQwVrGAaRvtwd53nqqWjEFJqfgZRdz6Ty6JHcUMK1',
+    explorer: 'https://explorer.solana.com/address/7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi?cluster=devnet',
+    wasmBytes: 245192,
+    note:
+      'PARTIAL. The program is on devnet but the deployed BINARY carries the placeholder ' +
+      'declare_id! "CLND1111…", not its real address. Anchor compares declare_id! against the ' +
+      'executing program on every instruction, so all of them would fail with ' +
+      'DeclaredProgramIdMismatch. The source is fixed and rebuilt; the redeploy needs ~1.8 SOL of ' +
+      'buffer and devnet airdrop is returning "Internal error" from three separate IPs.',
+    checks: [
+      { name: 'builds a deployable .so',   result: 'PASS', detail: '245,192 bytes via cargo-build-sbf' },
+      { name: 'deploys to devnet',         result: 'PASS', detail: 'program id 7MRdUfDa…, owner BPFLoaderUpgradeable' },
+      { name: 'declare_id matches address',result: 'FAIL', detail: 'deployed binary says CLND1111… — every instruction would abort. Fixed in source, redeploy blocked on airdrop.' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */
@@ -184,8 +236,10 @@ export const DEPLOYMENTS = [
  * these is a human-verification step on the faucet, not our code.
  */
 export const BLOCKED_DEPLOYMENTS = [
-  { chain: 'Solana', network: 'devnet',
-    reason: 'airdrop returns "rate limit reached" from three IPs and the RPC requestAirdrop returns Internal error — devnet faucet is globally degraded, not IP-throttled.' },
+  { chain: 'Solana redeploy', network: 'devnet',
+    reason: 'Deployed, but needs ~1.8 SOL more to push the declare_id fix. Airdrop returns "Internal error" from three separate IPs — the devnet faucet is degraded, not throttling us.' },
+  { chain: 'Cardano', network: 'preprod',
+    reason: 'Address funded by the faucet. Cardano is UTXO: there is no contract to deploy — the validator (hash 136221254c9413270c543ede66c58e73964ee2820ed8406f52c6511c) is referenced by a spending transaction, optionally published as a reference script. Building the first minting tx is the remaining work.' },
   { chain: '12 other EVM testnets', network: 'various',
     reason: 'Every other EVM faucet gates on a captcha (Injective, Moonbase, BNB, Fuji), a wallet/social login (Beam, Hedera, Fuji), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin: rotate an Axie). Oasys was the only one automatable — and since all 17 EVM chains share one bytecode, one deployment covers the contract logic for all of them.' },
   { chain: 'TON', network: 'testnet',

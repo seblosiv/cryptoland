@@ -10,7 +10,12 @@
 //! Must match evm.js, CryptoLandTile.sol, and the Cairo/Aiken/PyTeal/Move versions.
 use anchor_lang::prelude::*;
 
-declare_id!("CLND1111111111111111111111111111111111111111");
+// The real deployed program id. This was the placeholder "CLND1111…" and the
+// program deployed perfectly happily with it — but Anchor compares declare_id!
+// against the executing program on EVERY instruction, so all of them would have
+// failed with DeclaredProgramIdMismatch. A deploy-only defect: nothing in
+// `cargo test` or a build touches this.
+declare_id!("7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi");
 
 pub const GRID_MAX: u64 = 16383;
 pub const COORD_SHIFT: u64 = 15;
