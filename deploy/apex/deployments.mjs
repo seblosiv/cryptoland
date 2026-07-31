@@ -271,7 +271,7 @@ export const BLOCKED_DEPLOYMENTS = [
   { chain: 'TON', network: 'testnet',
     reason: 'faucet is a Telegram bot (@testgiver_ton_bot) — needs a Telegram account.' },
   { chain: 'Radix', network: 'stokenet',
-    reason: 'FUNDED — 10,000 XRD, obtained with no wallet by calling the on-chain faucet component directly (lock_fee / free / deposit_batch, notarised with @radixdlt/radix-engine-toolkit; CommittedSuccess). Deployment is blocked on the package BUILD: `blst`, a Scrypto dependency, compiles its C for the host and will not link for wasm32 under Apple clang. Building on the Linux box instead.' },
+    reason: 'FUNDED — 10,000 XRD, obtained with NO WALLET by calling the on-chain faucet component directly (lock_fee / free / deposit_batch, notarised with @radixdlt/radix-engine-toolkit; CommittedSuccess). Blocked on the package BUILD, not on funding. On macOS `blst` compiles its C for the host and will not link for wasm32 under Apple clang; on Linux it gets past blst and then rust-lld rejects the Radix Engine host functions (object_call, buffer_consume, sys_panic…) as undefined symbols. Those are meant to be wasm IMPORTS supplied by the runtime. Tried --allow-undefined (scrypto build overrides RUSTFLAGS so it never reaches the linker) and cdylib-only (same failure). scrypto CLI 1.3.1 and the scrypto crate 1.3.1 agree, so this is a toolchain issue rather than our contract — which compiles and passes 5 tests under cargo test.' },
   { chain: 'Algorand', network: 'testnet',
     reason: '`algokit dispenser fund` exists but requires `algokit dispenser login` (OAuth). The classic bank.testnet dispenser is now an explorer wanting a connected wallet.' },
   { chain: 'MultiversX', network: 'devnet',
