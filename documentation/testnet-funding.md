@@ -117,3 +117,34 @@ it wants a connected wallet.
 | Cardano | address generated; needs captcha |
 | Solana | address generated; faucet needs GitHub sign-in |
 | Sui, Starknet, Algorand, MultiversX, Radix | need a browser wallet or social login |
+
+---
+
+## CLI faucets — what actually works (2026-07-31)
+
+I reported nine chains as needing a human. **Six did not.** The mistake was
+anchoring on the first faucet's web UI instead of checking whether the official
+CLI had its own path. Findings, so nobody repeats it:
+
+| Chain | CLI faucet | Result |
+|---|---|---|
+| **Sui** | `sui client faucet` | ✅ **devnet works, no browser.** On testnet the same command prints "please use the Web UI" — devnet and testnet are different networks with different gates |
+| **NEAR** | `helper.testnet.near.org` POST | ✅ creates *and* funds an account |
+| **Tezos** | — | web faucet, but funding came through fine |
+| **Flow** | `/create-account` | ✅ mints the account from a public key (`/fund-account` needs one that already exists) |
+| **Solana** | `solana airdrop` | ⚠️ devnet faucet degraded — `Internal error` from three IPs |
+| **MultiversX** | `mxpy faucet request` | ⚠️ **exists**, logs the request, but nothing arrives — silently rate-limited |
+| **Algorand** | `algokit dispenser fund` | ⛔ requires `algokit dispenser login` (OAuth) |
+| **Starknet** | — | GitHub login, or the official **MetaMask Snap** (`@consensys/starknet-snap`, 47K installs) |
+| **Radix** | on-chain faucet component | ⛔ reachable, but needs signed manifests via `@radixdlt/radix-engine-toolkit` — real work, not a command |
+
+### The order to try, before ever asking a human
+
+1. **The official CLI** — it usually has a faucet subcommand
+2. **devnet, not just testnet** — different network, often a different gate
+3. **Generate the key yourself** — addresses are pure crypto (ed25519 + blake2b +
+   bech32/base58); "connect wallet" is about naming a recipient, not needing an extension
+4. **Install the tool on the prod box** — it will run anything
+
+Only genuine captchas and social logins need a person. Those are deliberate
+anti-bot controls; do not automate around them, and decline captcha-solving services.
