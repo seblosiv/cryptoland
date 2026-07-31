@@ -1,0 +1,17 @@
+{
+  "name": "deploy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@taquito/signer": "^25.0.0",
+    "@taquito/taquito": "^25.0.0",
+    "@taquito/utils": "^25.0.0"
+  }
+}

@@ -150,6 +150,31 @@ export const DEPLOYMENTS = [
       { name: 'treasury zeroes',           result: 'PASS', detail: '0.0 after withdraw' },
     ],
   },
+  {
+    chain: 'Tezos',
+    network: 'shadownet',
+    family: 'tezos',
+    lang: 'CameLIGO',
+    date: '2026-07-31',
+    contract: 'KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX',
+    deployTx: 'onxmMXXjSEaeys3B3BALHsMrFzh26GRaBiTrUwJbS5CsEGasE7d',
+    explorer: 'https://shadownet.tzkt.io/KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX',
+    wasmBytes: 7221,
+    note:
+      'Originated with Taquito rather than octez-client, which is installed on neither machine. ' +
+      'Two gotchas: Ghostnet is RETIRED (its faucet domain is parked and for sale) so this is ' +
+      'shadownet, which config.js already targeted; and @taquito/utils renamed b58cencode → ' +
+      'b58Encode and prefix → PrefixV2, so every snippet on the web fails.',
+    checks: [
+      { name: 'originates on-chain',      result: 'PASS', detail: 'KT1JR46… confirmed at 1 block' },
+      { name: 'fee defaults to 7%',       result: 'PASS', detail: 'market_fee_bps = 700 read from contract storage' },
+      { name: 'sales start closed',       result: 'PASS', detail: 'tile_price = 0 until the admin opens them' },
+      { name: 'treasury starts empty',    result: 'PASS', detail: 'treasury = 0' },
+      { name: 'admin and payout separate',result: 'PASS', detail: 'administrator and treasury_receiver are distinct fields, both set' },
+      { name: 'metadata base is ours',    result: 'PASS', detail: 'https://xono.ai/tile/ — not a domain we do not own' },
+      { name: 'full entrypoint surface',  result: 'PASS', detail: 'claim_tile, set_tile_price, set_market_fee_bps, set_treasury_receiver, withdraw, transfer' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */

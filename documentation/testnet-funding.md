@@ -31,8 +31,9 @@ exactly this way and both deployed within a minute afterwards.
 Solana    RMctie1kFQGdX3gJneumjKfayQZSyCvhGaq2RTfMx2M
 Sui       0x82c45d90dcb6cbd737fd7bc693440bc1d3c507b7e9ae49d61b3b63a0c2d85a57
 Algorand  QRIYMYF5ZPIVHDHCQ5PVJWKJ5Z4N4RBN4URVB5L3PYUEZEERJFIP7XWDKA
-Tezos     tz1Whez4WzFAHmdaeUnXCgX3rNyGEh4TG5QT
-Flow      (public key, not an address — the faucet creates the account)
+Tezos     tz1Whez4WzFAHmdaeUnXCgX3rNyGEh4TG5QT   ← FUNDED, contract deployed
+Cardano   addr_test1vqh4y67ws8jhj2pmnq6ml6gs6lx636pvn5ep6909lxtwczq0cnup3
+Flow      (128-char PUBLIC KEY — use /create-account, NOT /fund-account)
           9bd43b368620eb46e6a05ce69d4e8201ec19834f5852befac942edd5c26fa798b5e4650ab51b94a499b0f4ef792bf934e3a4fe7bc92303f69783d9e516ba44d6
 ```
 
@@ -47,10 +48,10 @@ keys, so they are not committed.
 | 1 | **Solana** | https://faucet.solana.com | paste address, sign in with GitHub |
 | 2 | **Sui** | https://faucet.sui.io | connect a wallet, then paste the address above |
 | 3 | **Algorand** | https://bank.testnet.algorand.network | paste address |
-| 4 | **Tezos** | https://faucet.ghostnet.teztnets.xyz | paste address, solve captcha |
-| 5 | **Flow** | https://faucet.flow.com/fund-account | paste the PUBLIC KEY, solve captcha |
+| 4 | ~~Tezos~~ | **DONE 2026-07-31** | deployed: `KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX` |
+| 5 | **Flow** | https://faucet.flow.com/**create-account** | paste the 128-char PUBLIC KEY + captcha → 100,000 FLOW |
 | 6 | **Starknet** | https://starknet-faucet.vercel.app | connect GitHub (100 STRK without) |
-| 7 | **Cardano** | https://docs.cardano.org/cardano-testnets/tools/faucet | captcha; needs an address from a Cardano wallet |
+| 7 | **Cardano** | https://docs.cardano.org/cardano-testnets/tools/faucet | captcha; address generated: `addr_test1vqh4y67ws8jhj2pmnq6ml6gs6lx636pvn5ep6909lxtwczq0cnup3` |
 | 8 | **MultiversX** | https://devnet-wallet.multiversx.com/faucet | create a wallet in-page, then request |
 | 9 | **Radix** | https://stokenet-console.radixdlt.com | connect the Radix wallet; the faucet is an on-chain component |
 
@@ -89,3 +90,30 @@ wallet**.
 
 That is a 100% hit rate. There is no reason to assume the remaining nine are
 cleaner, and each one is free to check.
+
+---
+
+## Corrections found while funding (2026-07-31)
+
+**Tezos Ghostnet is retired.** `faucet.ghostnet.teztnets.xyz` is now a parked
+domain for sale. teztnets.com lists bakingnet / **shadownet** / ushuaianet, and
+`config.js` already targets shadownet — the config was right, the funding doc was
+not. Faucet: `https://faucet.shadownet.teztnets.com/` → "Fund any address".
+
+**Flow: use `/create-account`, not `/fund-account`.** A Flow account does not
+exist until it is created on-chain, so the fund page rejects a public key with
+*"Address must be a 16-character Cadence address"*. The create page takes the
+128-character public key and mints the account with **100,000 testnet FLOW**.
+
+**Algorand's `bank.testnet.algorand.network` is an explorer**, not a dispenser —
+it wants a connected wallet.
+
+## Status
+
+| Chain | State |
+|---|---|
+| **Tezos shadownet** | ✅ **DEPLOYED** — `KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX` |
+| Flow | address generated; needs /create-account + captcha |
+| Cardano | address generated; needs captcha |
+| Solana | address generated; faucet needs GitHub sign-in |
+| Sui, Starknet, Algorand, MultiversX, Radix | need a browser wallet or social login |
