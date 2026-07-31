@@ -643,3 +643,38 @@ carries `https://tezos.xono.ai/tile/` and a `set_metadata_base` entrypoint, so t
 same mistake is recoverable next time.
 
 **Result: 9 chains, 79/79 checks, no partials.**
+
+---
+
+# Cardano and Radix — diagnosed, one fixed (2026-07-31)
+
+**Cardano was funded on the wrong network.** The faucet offers several testnets
+and ours went to **Preview**; `config.js` targeted **preprod**. The tx hash simply
+does not exist on preprod, and an address with no UTXOs is indistinguishable from
+one that was never funded — which is why this looked like "the faucet failed".
+
+Added `cardano-preview` (`preview.koios.rest`), and the funded address confirms
+against it: **10,000 tADA, 1 UTXO**. Cardano still has no *contract* to deploy —
+it is UTXO, so the validator (`136221254c…`) is referenced by a spending
+transaction rather than living at an address — but the funds are now on the
+network the config points at.
+
+**Radix's wasm now builds.** The Radix Engine host functions (`object_call`,
+`buffer_consume`, `sys_panic` …) are wasm **imports**, and `rust-lld` rejects them
+as undefined symbols without `--allow-undefined`. Plain
+`cargo build --target wasm32-unknown-unknown` with
+`RUSTFLAGS="-C link-arg=--allow-undefined"` produces a **579,736-byte wasm**.
+
+What still blocks deployment is the package definition (`.rpd`), which only
+`scrypto build` produces — and **scrypto strips RUSTFLAGS**. Three routes were
+tried and all fail with the identical undefined-symbol wall, none reaching its
+linker line:
+
+- `scrypto build -e RUSTFLAGS="-C link-arg=--allow-undefined"`
+- `scrypto build --custom-option="--config" --custom-option="target.wasm32-unknown-unknown.rustflags=[…]"`
+- `.cargo/config.toml` with `[target.wasm32-unknown-unknown] rustflags`
+
+Pinning rustc 1.81 (pre-1.82 extern-block change) does not help either: scrypto
+cannot parse that toolchain's target info, and the dependency tree needs a newer
+manifest format than 1.81 accepts. **This needs an upstream Scrypto fix**, or a
+wasm runtime to execute the schema export and emit the `.rpd` by hand.

@@ -546,6 +546,16 @@ const CHAIN_DEFS = {
     blockTime: 20, confirmations: 1, color: '#0033ad', logo: '💠',
     grant: 'Cardano Project Catalyst / CAP',
   },
+  // Cardano runs several testnets and the faucet lets you pick. Ours funded
+  // PREVIEW, not preprod — the tx hash simply does not exist on preprod, and
+  // an address with no UTXOs looks identical to one that was never funded.
+  'cardano-preview': {
+    id: 'cardano-preview', name: 'Cardano Preview', shortName: 'ADA', family: 'cardano',
+    rpcUrl: 'https://preview.koios.rest/api/v1',
+    explorerUrl: 'https://preview.cardanoscan.io', explorerTxPath: '/transaction/',
+    nativeCurrency: { name: 'Cardano', symbol: 'ADA', decimals: 6 },
+    blockTime: 20, confirmations: 1, color: '#0033ad', logo: '💠', testnet: true,
+  },
   'cardano-preprod': {
     id: 'cardano-preprod', name: 'Cardano Preprod', shortName: 'ADA', family: 'cardano',
     rpcUrl: 'https://preprod.koios.rest/api/v1',
