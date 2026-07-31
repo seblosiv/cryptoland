@@ -18,10 +18,33 @@ const CSTATUS = existsSync('deploy/apex/contracts-status.json')
   ? JSON.parse(readFileSync('deploy/apex/contracts-status.json', 'utf8'))
   : { verified: 'not yet run', contracts: [] }
 
-const T = ['polygon','avalanche','base','arbitrum','ronin','bnb','optimism','scroll','celo',
-  'moonbeam','beam','oasys','skale','hedera','injective','solana','ton','aptos','sui','starknet',
-  'cardano','near','stellar','algorand','multiversx','radix','tezos']
+// Derived, never hand-listed. This was a hardcoded array of 27 keys and went
+// stale the moment Mantle, Taiko, Rootstock, Flare and Flow were added — the
+// same failure the contracts table had. Build targets are every mainnet chain
+// except two deliberate exclusions:
+//   ethereum      — a generic EVM target with no named grant programme
+//   skale-europa  — the SKALE build targets the Nebula gaming hub instead
+const NOT_A_BUILD_TARGET = new Set(['ethereum', 'skale-europa'])
+const T = MAINNET_CHAINS.map(c => c.key).filter(k => !NOT_A_BUILD_TARGET.has(k))
 const by = Object.fromEntries(MAINNET_CHAINS.map(c => [c.key, c]))
+
+/**
+ * Is the subdomain actually serving? `live` used to be the literal 'YES' for
+ * every row, so the moment five chains were configured but not deployed the page
+ * confidently listed five sites that do not resolve. A status board that reports
+ * a value it never measured is worse than one that omits it.
+ */
+const LIVE = new Map()
+await Promise.all(T.map(async (k) => {
+  try {
+    const r = await fetch(`https://${k}.xono.ai/`, {
+      method: 'HEAD', redirect: 'follow', signal: AbortSignal.timeout(10000),
+    })
+    LIVE.set(k, r.ok ? 'YES' : `HTTP ${r.status}`)
+  } catch {
+    LIVE.set(k, 'NOT DEPLOYED')
+  }
+}))
 const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))
 
 // Deployment cost measured 2026-07-29 with live gas x live token price at ~3.2M gas.
@@ -55,7 +78,7 @@ const rows = T.map(k => {
     opener:  checks.opener ? 'YES' : 'NO',
     ready:   `${pct}%`,
     url: `https://${k}.xono.ai`,
-    live: 'YES',
+    live: LIVE.get(k) ?? 'unknown',
     contract: contract || '',
     deployed: contract ? 'YES' : 'NO',
     asset: p.onboarding?.nativeTerm ?? '',

@@ -30,6 +30,7 @@ CHAINS=(
   beam oasys skale hedera injective
   solana ton aptos sui starknet cardano near stellar algorand multiversx
   radix tezos
+  mantle taiko rootstock flare flow
 )
 
 for arg in "$@"; do [[ "$arg" == "--seed" ]] && SEED=1; done

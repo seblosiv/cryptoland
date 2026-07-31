@@ -22,6 +22,13 @@
  * Aptos testnets.
  */
 
+// The treasury holds real FLOW, so the contract needs the FungibleToken
+// interface. Addresses are resolved per network from flow.json — mainnet
+// 0xf233dcee88fe0abe, testnet 0x9a0766d93b6608b7. `flow cadence` caught this
+// import missing entirely on the first check, which is why the CLI is now part
+// of scripts/verify-contracts.sh.
+import "FungibleToken"
+
 access(all) contract CryptoLandTile {
 
     // ── Cross-chain constants ───────────────────────────────────────────────

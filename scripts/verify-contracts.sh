@@ -80,6 +80,9 @@ run "Stellar"    "Soroban/Rust"  contracts/stellar                      "cargo t
 run "MultiversX" "Rust/ESDT"     contracts/multiversx                   "cargo test --quiet"                                      '[0-9]+ passed'   "tests"
 run "Radix"      "Scrypto"       contracts/radix                        "cargo test --quiet"                                      '[0-9]+ passed'   "tests"
 run "TON"        "FunC (TEP-62)" contracts/ton                          "node --test test/tile.test.mjs"                          'pass [0-9]+'     "tests on a real TVM"
+# Flow ships no compiler in the toolchains above — `flow` is the Flow CLI, which
+# is a separate install. Absent means SKIPPED, never passing.
+run "Flow"       "Cadence"       contracts/flow                         "flow cadence lint CryptoLandTile.cdc"                    'Lint passed'     "(deps via flow deps install)"
 run "Tezos"      "CameLIGO"      contracts/tezos                        "ligo run test test_cryptoland.mligo"                     'ok'              "tests"
 
 printf '{"verified":"%s","contracts":[%s]}\n' \

@@ -44,11 +44,18 @@ CHAIN_FAMILY = {
     "scroll": "evm", "celo": "evm", "moonbeam": "evm", "beam": "evm",
     "oasys": "evm", "skale": "evm", "skale-europa": "evm", "hedera": "evm",
     "injective": "evm",
+    # Added 2026-07-31 with the four EVM grant chains. This map is hand-kept and
+    # therefore drifts: --seed silently produced EMPTY databases for all five new
+    # chains because the script exits on an unknown key and deploy-chain.sh did
+    # not surface it. If you add a chain to config.js, add it here too.
+    "mantle": "evm", "taiko": "evm", "rootstock": "evm", "flare": "evm",
     # non-EVM
     "solana": "solana", "ton": "ton", "aptos": "aptos", "sui": "sui",
     "starknet": "starknet", "cardano": "cardano", "near": "near",
     "stellar": "stellar", "algorand": "algorand", "multiversx": "multiversx",
     "radix": "radix", "tezos": "tezos",
+    # Flow addresses are 8 bytes — "0x" + 16 hex chars, shorter than EVM's 20.
+    "flow": "flow",
 }
 
 B58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -87,6 +94,10 @@ def make_address(rng, family, i):
         return "account_rdx12" + "".join(rng.choice(BECH) for _ in range(52))
     if family == "tezos":
         return "tz1" + "".join(rng.choice(B58) for _ in range(33))
+    if family == "flow":
+        # Flow accounts are 8 bytes, not 20 — noticeably shorter than an EVM
+        # address, which is the giveaway that a seeded address is chain-correct.
+        return "0x" + _hex(rng, 16)
     return "0x" + _hex(rng, 40)
 
 
