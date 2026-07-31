@@ -278,13 +278,6 @@ export const BLOCKED_DEPLOYMENTS = [
     reason: '`mxpy faucet request` EXISTS and logs the request, but nothing ever arrives — silently rate-limited. Wallet generated (erd1z2c55…) and ready.' },
   { chain: 'Starknet', network: 'sepolia',
     reason: 'Faucet gates on GitHub login. Alternative: the official Consensys MetaMask Snap (@consensys/starknet-snap, 47K installs) gives a Starknet account inside existing MetaMask — note our adapter expects ArgentX/Braavos, so the Snap funds but would not connect to the app.' },
-  {
-    chain: 'Sui',
-    network: 'testnet',
-    reason:
-      'Faucet returns "Too Many Requests" from three separate IPs (laptop, two servers) — ' +
-      'the throttle is service-side, not per-IP. Retry later; nothing about the contract is at fault.',
-  },
 ];
 
 export const deploymentTally = () => ({
