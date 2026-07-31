@@ -156,23 +156,26 @@ export const DEPLOYMENTS = [
     family: 'tezos',
     lang: 'CameLIGO',
     date: '2026-07-31',
-    contract: 'KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX',
-    deployTx: 'onxmMXXjSEaeys3B3BALHsMrFzh26GRaBiTrUwJbS5CsEGasE7d',
-    explorer: 'https://shadownet.tzkt.io/KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX',
+    contract: 'KT1EYZ4RAHPQSExdfmGWeGmX2b1gzXPip2v2',
+    deployTx: 'oom7XTE7YUCp7tq1C14SPPziycqzwV7BDNWFuuGUCSVq9jqtC8q',
+    explorer: 'https://shadownet.tzkt.io/KT1EYZ4RAHPQSExdfmGWeGmX2b1gzXPip2v2',
     wasmBytes: 7221,
     note:
       'Originated with Taquito rather than octez-client, which is installed on neither machine. ' +
       'Two gotchas: Ghostnet is RETIRED (its faucet domain is parked and for sale) so this is ' +
       'shadownet, which config.js already targeted; and @taquito/utils renamed b58cencode → ' +
-      'b58Encode and prefix → PrefixV2, so every snippet on the web fails.',
+      'b58Encode and prefix → PrefixV2, so every snippet on the web fails. REDEPLOYED 2026-07-31 ' +
+      '(was KT1JR46Qv…) to carry tezos.xono.ai rather than the apex, and to add set_metadata_base — ' +
+      'the first deployment had no setter, so its wrong URI was permanent.',
     checks: [
       { name: 'originates on-chain',      result: 'PASS', detail: 'KT1JR46… confirmed at 1 block' },
       { name: 'fee defaults to 7%',       result: 'PASS', detail: 'market_fee_bps = 700 read from contract storage' },
       { name: 'sales start closed',       result: 'PASS', detail: 'tile_price = 0 until the admin opens them' },
       { name: 'treasury starts empty',    result: 'PASS', detail: 'treasury = 0' },
       { name: 'admin and payout separate',result: 'PASS', detail: 'administrator and treasury_receiver are distinct fields, both set' },
-      { name: 'metadata base is ours',    result: 'PASS', detail: 'https://xono.ai/tile/ — not a domain we do not own' },
-      { name: 'full entrypoint surface',  result: 'PASS', detail: 'claim_tile, set_tile_price, set_market_fee_bps, set_treasury_receiver, withdraw, transfer' },
+      { name: 'metadata base is per-chain',result: 'PASS', detail: 'https://tezos.xono.ai/tile/ — the chain\'s own subdomain, not the apex' },
+      { name: 'base URI is CHANGEABLE',   result: 'PASS', detail: 'set_metadata_base entrypoint live — the first deployment baked the URI in permanently' },
+      { name: 'full entrypoint surface',  result: 'PASS', detail: 'claim_tile, set_tile_price, set_market_fee_bps, set_treasury_receiver, set_metadata_base, withdraw, transfer' },
     ],
   },
   {
@@ -211,20 +214,22 @@ export const DEPLOYMENTS = [
     family: 'solana',
     lang: 'Anchor / Rust',
     date: '2026-07-31',
-    contract: '7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi',
-    deployTx: '5DGMpGh8SQK9ax8AFktcG6XTt4DgPTGdt57SPGqPm57xGfqbQwVrGAaRvtwd53nqqWjEFJqfgZRdz6Ty6JHcUMK1',
-    explorer: 'https://explorer.solana.com/address/7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi?cluster=devnet',
+    contract: 'H98Wsb38Cy4twaNmD84i7ekDQXwAwPz9wye6LV341pBc',
+    deployTx: '4gY39dZJbFTfTWMvfNzNxDNW7SmSn4L1csaVmz2Kn6u5ckyLbiEHWuNZFtCdKJbUm4inGujwesaSmgAt573VCaKP',
+    explorer: 'https://explorer.solana.com/address/H98Wsb38Cy4twaNmD84i7ekDQXwAwPz9wye6LV341pBc?cluster=devnet',
     wasmBytes: 245192,
     note:
-      'PARTIAL. The program is on devnet but the deployed BINARY carries the placeholder ' +
-      'declare_id! "CLND1111…", not its real address. Anchor compares declare_id! against the ' +
-      'executing program on every instruction, so all of them would fail with ' +
-      'DeclaredProgramIdMismatch. The source is fixed and rebuilt; the redeploy needs ~1.8 SOL of ' +
-      'buffer and devnet airdrop is returning "Internal error" from three separate IPs.',
+      'FIXED. The first deployment (7MRdUfDa…) carried the placeholder declare_id! "CLND1111…", so ' +
+      'Anchor would have aborted EVERY instruction with DeclaredProgramIdMismatch — it deploys ' +
+      'happily and then works for nothing. devnet airdrop was returning "Internal error" from three ' +
+      'IPs, so the redeploy was funded by CLOSING the broken program and reclaiming its 1.71 SOL of ' +
+      'rent. A closed program id cannot be reused, so a new keypair was generated, declare_id! set ' +
+      'to THAT address before building, and deployed to it.',
     checks: [
-      { name: 'builds a deployable .so',   result: 'PASS', detail: '245,192 bytes via cargo-build-sbf' },
-      { name: 'deploys to devnet',         result: 'PASS', detail: 'program id 7MRdUfDa…, owner BPFLoaderUpgradeable' },
-      { name: 'declare_id matches address',result: 'FAIL', detail: 'deployed binary says CLND1111… — every instruction would abort. Fixed in source, redeploy blocked on airdrop.' },
+      { name: 'builds a deployable .so',   result: 'PASS', detail: '245,496 bytes via cargo-build-sbf' },
+      { name: 'deploys to devnet',         result: 'PASS', detail: 'program id H98Wsb38…, owner BPFLoaderUpgradeable' },
+      { name: 'declare_id matches address',result: 'PASS', detail: 'source declare_id! == deployed program id' },
+      { name: 'instructions actually run',  result: 'PASS', detail: 'a bogus discriminator returns AnchorError 101 InstructionFallbackNotFound, NOT 4100 DeclaredProgramIdMismatch — the id check passes' },
     ],
   },
   {

@@ -3,10 +3,11 @@
         (or (mutez %set_tile_price)
             (or (nat %set_market_fee_bps)
                 (or (address %set_treasury_receiver)
-                    (or (unit %withdraw)
-                        (list %transfer
-                           (pair (address %from_)
-                                 (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))))))) ;
+                    (or (string %set_metadata_base)
+                        (or (unit %withdraw)
+                            (list %transfer
+                               (pair (address %from_)
+                                     (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))))))))) ;
   storage
     (pair (address %administrator)
           (pair (big_map %ledger nat address)
@@ -107,79 +108,81 @@
                    { IF_LEFT
                        { DUP 2 ; DIG 3 ; SWAP ; EXEC ; DROP ; UPDATE 13 ; NIL operation }
                        { IF_LEFT
-                           { DROP ;
-                             DUP ;
-                             DIG 2 ;
-                             SWAP ;
-                             EXEC ;
-                             DROP ;
-                             PUSH mutez 0 ;
-                             DUP 2 ;
-                             GET 11 ;
-                             COMPARE ;
-                             GT ;
-                             IF {} { PUSH string "NOTHING_TO_WITHDRAW" ; FAILWITH } ;
-                             DUP ;
-                             GET 13 ;
-                             CONTRACT unit ;
-                             IF_NONE { PUSH string "BAD_RECEIVER" ; FAILWITH } {} ;
-                             DUP 2 ;
-                             GET 11 ;
-                             UNIT ;
-                             TRANSFER_TOKENS ;
-                             SWAP ;
-                             PUSH mutez 0 ;
-                             UPDATE 11 ;
-                             NIL operation ;
-                             DIG 2 ;
-                             CONS }
-                           { DIG 2 ;
-                             DROP ;
-                             ITER { SWAP ;
-                                    DUP 2 ;
-                                    CDR ;
-                                    ITER { SWAP ;
-                                           DUP ;
-                                           GET 3 ;
-                                           DUP 3 ;
-                                           GET 3 ;
-                                           GET ;
-                                           IF_NONE { PUSH string "FA2_TOKEN_UNDEFINED" ; FAILWITH } {} ;
-                                           DUP 4 ;
-                                           CAR ;
-                                           COMPARE ;
-                                           EQ ;
-                                           IF {} { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
-                                           PUSH string "FA2_NOT_OPERATOR" ;
-                                           DUP 4 ;
-                                           CAR ;
-                                           SENDER ;
-                                           COMPARE ;
-                                           EQ ;
-                                           IF { DROP } { FAILWITH } ;
-                                           PUSH nat 0 ;
-                                           DUP 3 ;
-                                           GET 4 ;
-                                           COMPARE ;
-                                           EQ ;
-                                           IF { SWAP ; DROP }
-                                              { PUSH nat 1 ;
-                                                DUP 3 ;
-                                                GET 4 ;
-                                                COMPARE ;
-                                                EQ ;
-                                                IF {} { PUSH string "FA2_INSUFFICIENT_BALANCE" ; FAILWITH } ;
-                                                DUP ;
-                                                GET 3 ;
-                                                DUP 3 ;
-                                                CAR ;
-                                                SOME ;
-                                                DIG 3 ;
-                                                GET 3 ;
-                                                UPDATE ;
-                                                UPDATE 3 } } ;
-                                    SWAP ;
-                                    DROP } ;
-                             NIL operation } } } } } ;
+                           { DUP 2 ; DIG 3 ; SWAP ; EXEC ; DROP ; UPDATE 14 ; NIL operation }
+                           { IF_LEFT
+                               { DROP ;
+                                 DUP ;
+                                 DIG 2 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 PUSH mutez 0 ;
+                                 DUP 2 ;
+                                 GET 11 ;
+                                 COMPARE ;
+                                 GT ;
+                                 IF {} { PUSH string "NOTHING_TO_WITHDRAW" ; FAILWITH } ;
+                                 DUP ;
+                                 GET 13 ;
+                                 CONTRACT unit ;
+                                 IF_NONE { PUSH string "BAD_RECEIVER" ; FAILWITH } {} ;
+                                 DUP 2 ;
+                                 GET 11 ;
+                                 UNIT ;
+                                 TRANSFER_TOKENS ;
+                                 SWAP ;
+                                 PUSH mutez 0 ;
+                                 UPDATE 11 ;
+                                 NIL operation ;
+                                 DIG 2 ;
+                                 CONS }
+                               { DIG 2 ;
+                                 DROP ;
+                                 ITER { SWAP ;
+                                        DUP 2 ;
+                                        CDR ;
+                                        ITER { SWAP ;
+                                               DUP ;
+                                               GET 3 ;
+                                               DUP 3 ;
+                                               GET 3 ;
+                                               GET ;
+                                               IF_NONE { PUSH string "FA2_TOKEN_UNDEFINED" ; FAILWITH } {} ;
+                                               DUP 4 ;
+                                               CAR ;
+                                               COMPARE ;
+                                               EQ ;
+                                               IF {} { PUSH string "FA2_NOT_OWNER" ; FAILWITH } ;
+                                               PUSH string "FA2_NOT_OPERATOR" ;
+                                               DUP 4 ;
+                                               CAR ;
+                                               SENDER ;
+                                               COMPARE ;
+                                               EQ ;
+                                               IF { DROP } { FAILWITH } ;
+                                               PUSH nat 0 ;
+                                               DUP 3 ;
+                                               GET 4 ;
+                                               COMPARE ;
+                                               EQ ;
+                                               IF { SWAP ; DROP }
+                                                  { PUSH nat 1 ;
+                                                    DUP 3 ;
+                                                    GET 4 ;
+                                                    COMPARE ;
+                                                    EQ ;
+                                                    IF {} { PUSH string "FA2_INSUFFICIENT_BALANCE" ; FAILWITH } ;
+                                                    DUP ;
+                                                    GET 3 ;
+                                                    DUP 3 ;
+                                                    CAR ;
+                                                    SOME ;
+                                                    DIG 3 ;
+                                                    GET 3 ;
+                                                    UPDATE ;
+                                                    UPDATE 3 } } ;
+                                        SWAP ;
+                                        DROP } ;
+                                 NIL operation } } } } } } ;
          PAIR } }
 

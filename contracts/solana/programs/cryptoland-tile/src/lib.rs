@@ -15,7 +15,7 @@ use anchor_lang::prelude::*;
 // against the executing program on EVERY instruction, so all of them would have
 // failed with DeclaredProgramIdMismatch. A deploy-only defect: nothing in
 // `cargo test` or a build touches this.
-declare_id!("7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi");
+declare_id!("H98Wsb38Cy4twaNmD84i7ekDQXwAwPz9wye6LV341pBc");
 
 pub const GRID_MAX: u64 = 16383;
 pub const COORD_SHIFT: u64 = 15;

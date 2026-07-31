@@ -615,3 +615,31 @@ told it to, not that it works.
 | **Algorand** | `algokit dispenser` requires OAuth login |
 | **MultiversX** | `mxpy faucet request` logs the request but nothing arrives — silently rate-limited |
 | **Starknet** | GitHub login, or the Consensys MetaMask Snap |
+
+---
+
+# Both partials closed — 79/79 on-chain (2026-07-31)
+
+**Solana** was deployed but non-functional: the binary carried the placeholder
+`declare_id!("CLND1111…")` rather than its own address, and Anchor compares that
+against the executing program on **every** instruction. It deployed happily and
+would have failed every call with `DeclaredProgramIdMismatch`.
+
+devnet's airdrop was returning `Internal error` from three separate IPs, so the
+redeploy was funded by **closing the broken program and reclaiming its 1.71 SOL of
+rent**. A closed program id cannot be reused, so a fresh keypair was generated,
+`declare_id!` set to *that* address **before** building, then deployed to it.
+
+Now `H98Wsb38Cy4twaNmD84i7ekDQXwAwPz9wye6LV341pBc`, and proven rather than assumed:
+sending a deliberately bogus 8-byte discriminator returns
+`AnchorError 101 InstructionFallbackNotFound` — Anchor rejecting an unknown
+method, which means **the program-id check passed**. The old deployment would have
+returned `4100 DeclaredProgramIdMismatch` instead.
+
+**Tezos** was redeployed to `KT1EYZ4RAHPQSExdfmGWeGmX2b1gzXPip2v2`. The first
+deployment (`KT1JR46Qv…`) baked in `https://xono.ai/tile/` — the apex rather than
+the chain's own subdomain — and had **no setter**, so that was permanent. It now
+carries `https://tezos.xono.ai/tile/` and a `set_metadata_base` entrypoint, so the
+same mistake is recoverable next time.
+
+**Result: 9 chains, 79/79 checks, no partials.**
