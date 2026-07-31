@@ -66,6 +66,7 @@ module cryptoland::cryptoland_tile {
     }
 
     /// (tx << 15) | ty — identical to every other chain.
+    #[view]
     public fun token_id_from_key(tx: u64, ty: u64): u64 {
         assert!(tx <= GRID_MAX, E_OUT_OF_RANGE);
         assert!(ty <= GRID_MAX, E_OUT_OF_RANGE);

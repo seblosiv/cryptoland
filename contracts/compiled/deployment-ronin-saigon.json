@@ -1,0 +1,12 @@
+{
+  "network": "ronin-saigon",
+  "chainId": 202601,
+  "address": "0xe45404C32961569879c2b2b6FF8d42585332c5C4",
+  "deployer": "0xb971bDeDb142b22481e7Fb71eA4D9fFe28C3a6DD",
+  "deployedAt": "2026-07-31T07:37:59.752Z",
+  "constructorArgs": [
+    "CryptoLand Tiles",
+    "CLND",
+    "https://xono.ai/metadata/ronin-saigon/"
+  ]
+}

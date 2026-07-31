@@ -117,6 +117,25 @@ for (const c of MAINNET_CHAINS) {
   }
 }
 
+// A reachable RPC is not necessarily the RIGHT chain. Ronin renumbered Saigon
+// from 2021 to 202601 and nothing caught it — the endpoint answered fine, it was
+// simply a different network than the config claimed. switchChain would then ask
+// the wallet for a chain that does not exist.
+const chainIdMismatches = []
+await Promise.all(MAINNET_CHAINS.filter(c => c.family === 'evm').map(async (c) => {
+  const want = Number(c.id ?? c.chainId)
+  if (!want) return
+  try {
+    const r = await fetch(c.rpcUrl, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] }),
+      signal: AbortSignal.timeout(20000),
+    }).then((x) => x.json())
+    const got = r?.result ? parseInt(r.result, 16) : null
+    if (got !== null && got !== want) chainIdMismatches.push({ key: c.key, want, got })
+  } catch { /* reachability is reported separately below */ }
+}))
+
 const results = await Promise.all(
   targets.map(async (t) => ({ ...t, ...(await probe(t.family, t.url)) }))
 )
@@ -163,3 +182,11 @@ if (dark.length) {
   process.exit(1)
 }
 console.log('\nEvery mainnet chain has at least one browser-usable endpoint.')
+
+if (chainIdMismatches.length) {
+  console.log('\nCHAIN ID MISMATCH — the RPC answers, but it is a different network:')
+  for (const m of chainIdMismatches) {
+    console.log(`   ${m.key}: config says ${m.want}, chain reports ${m.got}`)
+  }
+  process.exitCode = 1
+}

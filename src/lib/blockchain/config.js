@@ -151,7 +151,11 @@ const CHAIN_DEFS = {
     grant: 'Ronin Ecosystem Grants / Forge ($10M)',
   },
   'ronin-saigon': {
-    id: 2021, name: 'Ronin Saigon', shortName: 'RON', family: 'evm',
+    // 202601, not 2021 — Ronin renumbered Saigon. Verified against eth_chainId
+    // while deploying there. A stale chainId makes switchChain ask the wallet
+    // for a network that does not exist, and nothing else catches it: the RPC
+    // answers perfectly well, it is simply a different chain than we claim.
+    id: 202601, name: 'Ronin Saigon', shortName: 'RON', family: 'evm',
     rpcUrl: 'https://saigon-testnet.roninchain.com/rpc',
     explorerUrl: 'https://saigon-app.roninchain.com',
     nativeCurrency: { name: 'Ronin', symbol: 'RON', decimals: 18 },

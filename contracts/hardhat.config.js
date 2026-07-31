@@ -33,6 +33,13 @@ module.exports = {
       chainId:  9372,
       accounts: [PK],
     },
+    // chainId 202601, NOT 2021 — Ronin renumbered Saigon and our config still
+    // had the old value. Verified against eth_chainId before deploying.
+    'ronin-saigon': {
+      url:      'https://saigon-testnet.roninchain.com/rpc',
+      chainId:  202601,
+      accounts: [PK],
+    },
     'polygon-amoy': {
       url:      'https://rpc-amoy.polygon.technology',
       chainId:  80002,

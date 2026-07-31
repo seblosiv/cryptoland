@@ -96,6 +96,60 @@ export const DEPLOYMENTS = [
       { name: 'tokenId — bounds',        result: 'PASS', detail: 'token_id(16384,0) errors' },
     ],
   },
+  {
+    chain: 'Aptos',
+    network: 'testnet',
+    family: 'aptos',
+    lang: 'Move',
+    date: '2026-07-31',
+    contract: '0xd2e9cd1e9d7345b82732eee6f877e3c360fd2cd4489c3faacaea168d7e865330',
+    deployTx: '0x69fb35febddbf409c65dcae64e6bfde2dd53140c8b731ed05c41f7dc04f4fe71',
+    explorer: 'https://explorer.aptoslabs.com/account/0xd2e9cd1e9d7345b82732eee6f877e3c360fd2cd4489c3faacaea168d7e865330?network=testnet',
+    wasmBytes: 4885,
+    note:
+      'Faucet needed one human visit (browser-issued bearer token). Deploying exposed that ' +
+      'token_id_from_key was not marked #[view], so no off-chain caller could query it — ' +
+      'every other chain exposes its encoding. Fixed and republished.',
+    checks: [
+      { name: 'publishes and initialises', result: 'PASS', detail: 'vm_status "Executed successfully"; init(base_uri) executed' },
+      { name: 'tokenId — origin',          result: 'PASS', detail: 'token_id_from_key(0,0) = 0' },
+      { name: 'tokenId — x step',          result: 'PASS', detail: 'token_id_from_key(1,0) = 32768' },
+      { name: 'tokenId — far corner',      result: 'PASS', detail: 'token_id_from_key(16383,16383) = 536854527' },
+      { name: 'tokenId — bounds',          result: 'PASS', detail: 'token_id_from_key(16384,0) → Move abort' },
+      { name: 'sales start closed',        result: 'PASS', detail: 'tile_price 0; claim_tile aborts E_CLAIMING_DISABLED' },
+      { name: 'owner can open sales',      result: 'PASS', detail: 'set_tile_price(50000000) persisted' },
+      { name: 'buyer pays real APT',       result: 'PASS', detail: 'claim_tile(100,200) succeeded; treasury 50000000 octas — the F5 fix (real Coin<AptosCoin>, not a counter) working on-chain' },
+      { name: 'ownership recorded',        result: 'PASS', detail: 'tile_owner(100,200) returns the buyer' },
+      { name: 'no double-claim',           result: 'PASS', detail: 'second claim → Move abort E_ALREADY_CLAIMED' },
+      { name: 'withdraw drains treasury',  result: 'PASS', detail: 'treasury 50000000 → 0' },
+    ],
+  },
+  {
+    chain: 'EVM — Ronin Saigon',
+    network: 'testnet',
+    family: 'evm',
+    lang: 'Solidity',
+    date: '2026-07-31',
+    contract: '0xe45404C32961569879c2b2b6FF8d42585332c5C4',
+    deployTx: 'see explorer',
+    explorer: 'https://saigon-explorer.roninchain.com/address/0xe45404C32961569879c2b2b6FF8d42585332c5C4',
+    wasmBytes: 0,
+    note:
+      'Second EVM chain, confirming the grid-bounds fix is in the deployed bytecode and not ' +
+      'just in the Oasys build. Deploying here also caught that config.js had Saigon as ' +
+      'chainId 2021 — Ronin renumbered it to 202601, and a stale chainId makes switchChain ' +
+      'ask the wallet for a network that does not exist.',
+    checks: [
+      { name: 'chainId matches config',    result: 'PASS', detail: '202601 (config said 2021 until this deployment)' },
+      { name: 'fee defaults to 7%',        result: 'PASS', detail: 'marketFeeBps = 700' },
+      { name: 'tokenId — far corner',      result: 'PASS', detail: 'tokenIdFromKey(16383,16383) = 536854527' },
+      { name: 'collision path closed',     result: 'PASS', detail: 'tokenIdFromKey(0,32768) reverts' },
+      { name: 'off-grid ids rejected',     result: 'PASS', detail: 'isValidTokenId(2^200) = false' },
+      { name: 'buyer pays for a tile',     result: 'PASS', detail: 'claimTile(100,200) → treasury 0.1 RON' },
+      { name: 'payout honours receiver',   result: 'PASS', detail: 'cold wallet gained exactly 0.1 RON' },
+      { name: 'treasury zeroes',           result: 'PASS', detail: '0.0 after withdraw' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */
@@ -107,7 +161,7 @@ export const DEPLOYMENTS = [
 export const BLOCKED_DEPLOYMENTS = [
   { chain: 'Solana', network: 'devnet',
     reason: 'airdrop returns "rate limit reached" from three IPs and the RPC requestAirdrop returns Internal error — devnet faucet is globally degraded, not IP-throttled.' },
-  { chain: '13 other EVM testnets', network: 'various',
+  { chain: '12 other EVM testnets', network: 'various',
     reason: 'Every other EVM faucet gates on a captcha (Injective, Moonbase, BNB, Fuji), a wallet/social login (Beam, Hedera, Fuji), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin: rotate an Axie). Oasys was the only one automatable — and since all 17 EVM chains share one bytecode, one deployment covers the contract logic for all of them.' },
   { chain: 'TON', network: 'testnet',
     reason: 'faucet is a Telegram bot (@testgiver_ton_bot) — needs a Telegram account.' },
@@ -119,14 +173,6 @@ export const BLOCKED_DEPLOYMENTS = [
     reason:
       'Faucet returns "Too Many Requests" from three separate IPs (laptop, two servers) — ' +
       'the throttle is service-side, not per-IP. Retry later; nothing about the contract is at fault.',
-  },
-  {
-    chain: 'Aptos',
-    network: 'testnet',
-    reason:
-      'Faucet now requires a bearer token issued through a web flow ' +
-      '("Either the Authorization header is missing or it is not in the form of \'Bearer <token>\'"). ' +
-      'Needs a human to visit aptos.dev/network/faucet once.',
   },
 ];
 
