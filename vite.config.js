@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 /**
  * Inject per-chain <title> and OG/Twitter meta into index.html at build time.
@@ -14,9 +14,58 @@ import { readFileSync } from 'node:fs'
  * Reads the chain's display name + tagline straight out of the source files so
  * there is no second copy of the copy to keep in sync.
  */
+/**
+ * Resolve the target chain. VITE_CHAIN arrives two ways and BOTH must work:
+ * exported in the environment, or written into .env.production by
+ * scripts/build-chain.sh. Vite loads .env.production into `import.meta.env`,
+ * never `process.env`.
+ *
+ * Shared by transformIndexHtml and writeBundle because Rollup does not carry
+ * `this` between hooks — stashing the chain on it produced a manifest saying
+ * polygon-amoy for every build, which is the same class of bug that once made
+ * all 27 bundles claim "CryptoLand on Polygon Amoy" in their link previews.
+ */
+function resolveChain() {
+  let chain = process.env.VITE_CHAIN
+  if (!chain) {
+    try {
+      chain = /^VITE_CHAIN\s*=\s*(.+)$/m.exec(readFileSync('.env.production', 'utf8'))?.[1]?.trim()
+    } catch { /* no .env.production */ }
+  }
+  return chain || 'polygon-amoy'
+}
+
 function chainMeta() {
   return {
     name: 'cryptoland-chain-meta',
+
+    /**
+     * public/tonconnect-manifest.json is copied verbatim by Vite, and it was
+     * hardcoded to https://cryptoland.game — a domain we DO NOT OWN — with
+     * terms/privacy links at /terms and /privacy when the files are actually
+     * terms.html and privacy.html. TON Connect refuses a manifest whose `url`
+     * does not match the app's origin, so TON wallet connect was broken on
+     * every build, and the legal links 404'd even on the right domain.
+     *
+     * Rewritten here per chain, so each subdomain ships a manifest naming
+     * itself.
+     */
+    writeBundle(options) {
+      const chain = resolveChain()
+      const domain = process.env.CRYPTOLAND_DOMAIN || 'xono.ai'
+      const origin = `https://${chain}.${domain}`
+      const out = `${options.dir}/tonconnect-manifest.json`
+      try {
+        writeFileSync(out, JSON.stringify({
+          url: origin,
+          name: 'CryptoLand',
+          iconUrl: `${origin}/icon-180.png`,
+          termsOfUseUrl: `${origin}/terms.html`,
+          privacyPolicyUrl: `${origin}/privacy.html`,
+        }, null, 2) + '\n')
+      } catch { /* no dist yet — nothing to rewrite */ }
+    },
+
     transformIndexHtml(html) {
       // VITE_CHAIN can arrive two ways and BOTH must work:
       //   - exported in the environment (`VITE_CHAIN=ton npx vite build`)

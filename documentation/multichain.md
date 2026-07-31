@@ -870,3 +870,26 @@ Two Cadence-specific notes:
 
 `check-rpcs.mjs` needed a `flow` probe path: the Access API is REST and returns
 **400 on a bare root**, so it is probed at `/v1/blocks?height=sealed`.
+
+## TON Connect manifest — generated per chain, not shipped static (2026-07-31)
+
+`public/tonconnect-manifest.json` was a static file pointing at
+**`https://cryptoland.game` — a domain we do not own** — with legal links at
+`/terms` and `/privacy` when the files are `terms.html` and `privacy.html`.
+
+Two consequences, both silent:
+
+- **TON Connect refuses a manifest whose `url` does not match the app's origin**,
+  so wallet connect was broken on the TON build — the one chain where a Telegram
+  Mini App is the whole distribution strategy.
+- The terms and privacy links 404'd even on the correct domain.
+
+The `cryptoland-chain-meta` plugin now emits it in `writeBundle`, so every
+subdomain ships a manifest naming itself. Verified across all 32 builds.
+
+Worth noting how the first attempt failed: the chain was stashed on `this` in
+`transformIndexHtml` and read back in `writeBundle`, but **Rollup does not carry
+`this` between hooks**, so every manifest said `polygon-amoy`. That is the same
+class of bug the plugin already documents for the HTML path, where reading
+`process.env` alone made all 27 bundles claim "CryptoLand on Polygon Amoy". Both
+now go through one `resolveChain()`.
