@@ -25,6 +25,8 @@ Design rules:
     main.py exposes (we import it from there indirectly via a passed function).
   - Pure synchronous logic where possible, async only for DB I/O.
 """
+from __future__ import annotations
+
 import os
 
 # The host printed on share cards. Each backend serves exactly ONE chain, so this
@@ -34,8 +36,6 @@ import os
 SITE_HOST = os.environ.get("CRYPTOLAND_SITE_HOST") or (
     f"{os.environ.get('CRYPTOLAND_CHAIN', 'polygon')}.xono.ai"
 )
-
-from __future__ import annotations
 
 import asyncio
 import hashlib

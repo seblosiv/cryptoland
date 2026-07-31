@@ -289,3 +289,34 @@ cd contracts/solana && cargo-build-sbf && solana program deploy target/deploy/cr
 - **Flow**: `init()` cannot take a resource parameter.
 - **Tezos**: Ghostnet is retired; use shadownet. `@taquito/utils` renamed
   `b58cencode` → `b58Encode` and `prefix` → `PrefixV2`.
+
+## Domain audit — prove it, do not assert it
+
+```bash
+CRYPTOLAND_PROD_HOST=root@<ip> ./scripts/audit-domain.sh
+```
+
+Checks **seven layers** and exits non-zero if any still names a domain we do not
+own: source (ignoring comments), served JS bundles, live server code, per-chain
+env, TLS subjects, TON Connect manifests, and on-chain contract metadata.
+
+It exists because "it's fixed" was said three times and was wrong twice — once
+because only the frontends had been redeployed while the server still ran the old
+`price_events.py`, and once because a deployment's recorded `constructorArgs`
+disagreed with what was actually on-chain.
+
+### What it caught on the first run
+
+**`SERVER_URL` was unset on all 32 backends**, so it fell back to its
+`http://127.0.0.1:8000` default and the NOWPayments IPN callback was built as
+`http://127.0.0.1:8000/np/ipn`. NOWPayments could never have reached it, so
+**every crypto payment would have stayed unconfirmed forever** — silently, with
+no error anywhere. Now `https://<chain>.xono.ai` on every chain.
+
+Three env vars are load-bearing per chain and the audit checks all three:
+
+| Var | Without it |
+|---|---|
+| `SERVER_URL` | IPN callback unreachable — payments never confirm |
+| `CRYPTOLAND_SITE_HOST` | share cards print the wrong chain's host |
+| `CRYPTOLAND_CHAIN` | `viral.py` defaults to `polygon` on every chain |
