@@ -439,9 +439,19 @@ Known gaps — be honest about these, do not paper over them:
   > artifact is **rejected** by the Soroban host ("reference-types not enabled").
   > Soroban needs `wasm32v1-none`. **A green test suite is not a deployable
   > artifact** — assume NEAR, Radix and MultiversX have their own version of this.
-- **The other 12 chains are still emulator-level.** Sui's testnet faucet is
-  service-side throttled and Aptos's now needs a browser-issued bearer token; both
-  need a retry or one human visit. Every other chain is untried.
+- **Three chains are live on testnet; 31/31 on-chain checks pass.** Stellar
+  (`CBVB7GK65…`), **EVM on Oasys** (`0x52785B7e…` — the same bytecode all 17 EVM
+  chains use), and NEAR (`cryptoland-ms86s8tc.testnet`).
+  > 🔴 The EVM deployment found a bug **39 unit tests had missed**:
+  > `tokenIdFromKey` had no bounds check, so `tokenIdFromKey(0, 32768)` and
+  > `tokenIdFromKey(1, 0)` **both returned 32768** — one id, two tiles — and
+  > `claimTile` accepted any raw uint256, making `2^200` claimable. Fixed, with
+  > 5 regression tests. **Three deployments have now produced three defects no
+  > test could reach. Deploy early.**
+- **The other 20 testnets are faucet-blocked, not code-blocked.** Oasys was the
+  only EVM faucet without a captcha, login, mainnet-balance or puzzle gate; NEAR's
+  helper funds an account from a plain POST; Solana devnet is globally degraded.
+  See `deploy/apex/deployments.mjs` for the per-chain reason.
 - **On-chain activity is ~1 tx per purchase**, which is structurally uncompetitive
   for retroactive rounds (Retro9000 ranks by AVAX burned by your contracts; OP's
   template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).

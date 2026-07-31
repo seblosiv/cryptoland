@@ -26,6 +26,13 @@ module.exports = {
 
   networks: {
     // ── EVM Testnets ──────────────────────────────────────────────────────
+    // The one EVM testnet whose faucet has neither captcha nor wallet login,
+    // which makes it the only one that can be funded unattended.
+    'oasys-testnet': {
+      url:      'https://rpc.testnet.oasys.games',
+      chainId:  9372,
+      accounts: [PK],
+    },
     'polygon-amoy': {
       url:      'https://rpc-amoy.polygon.technology',
       chainId:  80002,

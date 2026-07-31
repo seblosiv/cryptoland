@@ -85,3 +85,6 @@ contracts/*/node_modules/
 contracts/*/.aptos/
 contracts/*/.stellar/
 **/.aptos/
+
+# Throwaway TESTNET keys. Still keys — never commit.
+contracts/.testnet/

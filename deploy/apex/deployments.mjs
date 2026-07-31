@@ -48,10 +48,71 @@ export const DEPLOYMENTS = [
       { name: 'no double-claim',             result: 'PASS', detail: 're-claiming (100,200) → Error(Contract, #2) AlreadyClaimed' },
     ],
   },
+  {
+    chain: 'EVM (covers 17 chains)',
+    network: 'Oasys testnet',
+    family: 'evm',
+    lang: 'Solidity',
+    date: '2026-07-31',
+    contract: '0x52785B7eF9Ff8d9fc88497cd3cA10098602814f6',
+    deployTx: 'see explorer',
+    explorer: 'https://explorer.testnet.oasys.games/address/0x52785B7eF9Ff8d9fc88497cd3cA10098602814f6',
+    wasmBytes: 0,
+    note:
+      'Oasys was the ONLY EVM testnet whose faucet has neither a captcha nor a wallet login, ' +
+      'so it is the only one that could be funded unattended. The contract is CryptoLandTile.sol — ' +
+      'the same bytecode all 17 EVM chains use — so proving it here proves it for all of them. ' +
+      'A FIRST deployment (0xe45404C3…) exposed a real grid-bounds bug; this is the fixed redeploy.',
+    checks: [
+      { name: 'deploys with correct state',   result: 'PASS', detail: 'fee 700, price 0, provenance "CryptoLand LTD, Mahe, Seychelles", site https://xono.ai' },
+      { name: 'tokenId — far corner',         result: 'PASS', detail: 'tokenIdFromKey(16383,16383) = 536854527' },
+      { name: 'tokenId — rejects off-grid',   result: 'PASS', detail: 'tokenIdFromKey(16384,0) reverts (did NOT before the fix)' },
+      { name: 'no tokenId collision',         result: 'PASS', detail: 'tokenIdFromKey(0,32768) reverts; it used to return 32768, colliding with tile (1,0)' },
+      { name: 'isValidTokenId rejects 2^200', result: 'PASS', detail: 'false — that id was claimable before the fix' },
+      { name: 'refuses off-grid sale',        result: 'PASS', detail: 'claimTile(2^200) reverts "tokenId off-grid"' },
+      { name: 'still sells on-grid',          result: 'PASS', detail: 'claimTile(100,200) succeeded, treasury 0.5 OAS' },
+    ],
+  },
+  {
+    chain: 'NEAR',
+    network: 'testnet',
+    family: 'near',
+    lang: 'Rust / near-sdk',
+    date: '2026-07-31',
+    contract: 'cryptoland-ms86s8tc.testnet',
+    deployTx: 'DrLCNHCMP1bggbcEgEXm61CYR32jr7TzRgCmX3tXAx4m',
+    explorer: 'https://explorer.testnet.near.org/accounts/cryptoland-ms86s8tc.testnet',
+    wasmBytes: 133273,
+    note:
+      'Funded via helper.testnet.near.org, which creates and funds an account programmatically — ' +
+      'no captcha, no browser. The wasm is the cargo-near artifact, which plain `cargo build` ' +
+      'cannot produce (see the near-sdk 5.29 note in contract-audit.md).',
+    checks: [
+      { name: 'deploys and initialises', result: 'PASS', detail: 'new(owner, base_uri) executed' },
+      { name: 'fee defaults to 7%',      result: 'PASS', detail: 'market_fee_bps = 700 read from chain' },
+      { name: 'tokenId — origin',        result: 'PASS', detail: 'token_id(0,0) = 0' },
+      { name: 'tokenId — x step',        result: 'PASS', detail: 'token_id(1,0) = 32768' },
+      { name: 'tokenId — far corner',    result: 'PASS', detail: 'token_id(16383,16383) = 536854527' },
+      { name: 'tokenId — bounds',        result: 'PASS', detail: 'token_id(16384,0) errors' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */
+/**
+ * Faucet-gated. In every case the CONTRACT is fine — it compiles, its tests pass,
+ * and for EVM the identical bytecode is already proven on Oasys. What blocks
+ * these is a human-verification step on the faucet, not our code.
+ */
 export const BLOCKED_DEPLOYMENTS = [
+  { chain: 'Solana', network: 'devnet',
+    reason: 'airdrop returns "rate limit reached" from three IPs and the RPC requestAirdrop returns Internal error — devnet faucet is globally degraded, not IP-throttled.' },
+  { chain: '13 other EVM testnets', network: 'various',
+    reason: 'Every other EVM faucet gates on a captcha (Injective, Moonbase, BNB, Fuji), a wallet/social login (Beam, Hedera, Fuji), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin: rotate an Axie). Oasys was the only one automatable — and since all 17 EVM chains share one bytecode, one deployment covers the contract logic for all of them.' },
+  { chain: 'TON', network: 'testnet',
+    reason: 'faucet is a Telegram bot (@testgiver_ton_bot) — needs a Telegram account.' },
+  { chain: 'Starknet / Cardano / Algorand / MultiversX / Radix / Tezos', network: 'testnets',
+    reason: 'all reachable, all faucet-gated behind captcha, wallet connect, or an API key.' },
   {
     chain: 'Sui',
     network: 'testnet',

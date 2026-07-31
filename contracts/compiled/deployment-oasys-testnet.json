@@ -1,0 +1,12 @@
+{
+  "network": "oasys-testnet",
+  "chainId": 9372,
+  "address": "0x52785B7eF9Ff8d9fc88497cd3cA10098602814f6",
+  "deployer": "0xb971bDeDb142b22481e7Fb71eA4D9fFe28C3a6DD",
+  "deployedAt": "2026-07-31T00:07:39.103Z",
+  "constructorArgs": [
+    "CryptoLand Tiles",
+    "CLND",
+    "https://xono.ai/metadata/oasys-testnet/"
+  ]
+}

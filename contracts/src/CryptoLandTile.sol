@@ -123,6 +123,11 @@ contract CryptoLandTile is IERC721Metadata {
     // RESALE: the project takes a cut of peer-to-peer sales; the seller gets the rest.
     uint256 public marketFeeBps  = 700;   // 7% of resale price
     uint256 public constant MAX_FEE_BPS = 1000;  // hard ceiling: 10%, cannot be exceeded
+
+    /// Z14 grid: 16384 x 16384. Highest valid coordinate on either axis.
+    uint256 public constant GRID_MAX = 16383;
+    /// tokenIdFromKey(16383, 16383) — the largest tokenId the grid can produce.
+    uint256 public constant MAX_TOKEN_ID = 536854527;
     // Everything withdrawable by the owner: primary sales + resale fees.
     uint256 public treasury;
     /// Where withdrawals land. Defaults to `owner`, but can point at a COLD wallet
@@ -245,7 +250,17 @@ contract CryptoLandTile is IERC721Metadata {
      * Matches tileTokenId() in src/lib/blockchain/adapters/evm.js
      */
     function tokenIdFromKey(uint256 tx_, uint256 ty_) public pure returns (uint256) {
+        // The bound is LOAD-BEARING, not defensive. Without it the OR carries:
+        // tokenIdFromKey(0, 32768) and tokenIdFromKey(1, 0) both returned 32768,
+        // so two different tiles shared one id. Confirmed on-chain before the fix.
+        require(tx_ <= GRID_MAX, "tx out of range");
+        require(ty_ <= GRID_MAX, "ty out of range");
         return (tx_ << 15) | ty_;
+    }
+
+    /// True only for ids the grid can actually produce.
+    function isValidTokenId(uint256 tokenId) public pure returns (bool) {
+        return tokenId <= MAX_TOKEN_ID && (tokenId & 0x7FFF) <= GRID_MAX;
     }
 
     /**
@@ -266,6 +281,10 @@ contract CryptoLandTile is IERC721Metadata {
     ) external payable whenNotPaused nonReentrant {
         require(tilePriceWei > 0, "On-chain claiming disabled");
         require(msg.value >= tilePriceWei, "Insufficient payment");
+        // Without this a buyer could claim any uint256 — a "tile" nowhere on the
+        // map, unreachable by the game and unsellable. Verified claimable
+        // on-chain before the fix.
+        require(isValidTokenId(tokenId), "tokenId off-grid");
         require(!minted[tokenId], "Already minted");
         require(bytes(tileKey).length > 0, "Empty tileKey");
 
@@ -305,6 +324,7 @@ contract CryptoLandTile is IERC721Metadata {
         string calldata country
     ) external payable onlyOwnerOrMinter whenNotPaused {
         require(to != address(0), "Zero address");
+        require(isValidTokenId(tokenId), "tokenId off-grid");
         require(!minted[tokenId], "Already minted");
         require(bytes(tileKey).length > 0, "Empty tileKey");
 

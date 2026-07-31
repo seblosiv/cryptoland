@@ -342,4 +342,44 @@ describe('CryptoLandTile — hardening', () => {
     await contract.withdraw()                               // must still work
     expect(await contract.treasury()).to.equal(0)
   })
+
+
+  // ── Grid bounds — found by DEPLOYING, not by testing ────────────────────────
+  // On Oasys testnet, before the fix:
+  //   tokenIdFromKey(1, 0)     -> 32768
+  //   tokenIdFromKey(0, 32768) -> 32768   <- same id, two different tiles
+  // and claimTile accepted any uint256, so a buyer could mint a "tile" nowhere
+  // on the 16384x16384 map. The unit tests above missed both because they only
+  // ever passed in-range coordinates.
+  it('rejects coordinates past the grid', async () => {
+    await expect(contract.tokenIdFromKey(16384, 0)).to.be.revertedWith('tx out of range')
+    await expect(contract.tokenIdFromKey(0, 16384)).to.be.revertedWith('ty out of range')
+  })
+
+  it('cannot produce one tokenId for two different tiles', async () => {
+    await expect(contract.tokenIdFromKey(0, 32768)).to.be.reverted
+    expect(await contract.tokenIdFromKey(1, 0)).to.equal(32768n)
+  })
+
+  it('only accepts tokenIds the grid can produce', async () => {
+    expect(await contract.isValidTokenId(536854527n)).to.equal(true)   // far corner
+    expect(await contract.isValidTokenId(536854528n)).to.equal(false)  // one past it
+    expect(await contract.isValidTokenId(2n ** 200n)).to.equal(false)  // was claimable
+    expect(await contract.isValidTokenId(49152n)).to.equal(false)      // ty > GRID_MAX
+  })
+
+  it('refuses to sell a tile that is off the map', async () => {
+    await contract.connect(owner).setTilePrice(ethers.parseEther('1'))
+    await expect(
+      contract.connect(buyer).claimTile(2n ** 200n, '0:0', 'ES', { value: ethers.parseEther('1') }),
+    ).to.be.revertedWith('tokenId off-grid')
+  })
+
+  it('still sells a tile that IS on the map', async () => {
+    await contract.connect(owner).setTilePrice(ethers.parseEther('1'))
+    const id = await contract.tokenIdFromKey(100, 200)
+    await expect(
+      contract.connect(buyer).claimTile(id, '100:200', 'ES', { value: ethers.parseEther('1') }),
+    ).to.not.be.reverted
+  })
 })

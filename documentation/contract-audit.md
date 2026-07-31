@@ -486,3 +486,73 @@ box running 27 backends is a live hazard, not a nuisance.
 `Cannot write: No space left on device`. Anything large on that box must go to a
 disk path, and cargo builds must set `CARGO_TARGET_DIR` away from `/tmp`. This is
 recorded at the top of `verify-on-prod.sh`.
+
+---
+
+# Testnet sweep — 3 chains live, and the EVM contract had a real bug (2026-07-31)
+
+Attempted all 23 remaining testnets. Three deployed; **31/31 on-chain checks pass**.
+
+| Chain | Contract | Checks |
+|---|---|---|
+| Stellar testnet | `CBVB7GK65…` | 18/18 |
+| **EVM — Oasys testnet** | `0x52785B7eF9Ff8d9fc88497cd3cA10098602814f6` | 7/7 |
+| NEAR testnet | `cryptoland-ms86s8tc.testnet` | 6/6 |
+
+The EVM one matters most: it is `CryptoLandTile.sol`, **the same bytecode all 17
+EVM chains use**, so proving it on one chain proves the logic for all of them.
+
+## 🔴 The bug deploying found — and 39 tests had not
+
+`tokenIdFromKey` was `return (tx_ << 15) | ty_;` with **no bounds check**.
+Confirmed on-chain, before the fix:
+
+```
+tokenIdFromKey(1, 0)     -> 32768
+tokenIdFromKey(0, 32768) -> 32768     ← same id, two different tiles
+```
+
+The OR carries once `ty >= 2^15`. Our own conformance suite says *"the bound is
+load-bearing"* — and the EVM contract was the one implementation not enforcing it.
+
+Worse, `claimTile` takes a **raw tokenId** and only checked `!minted[tokenId]`.
+So `2^200` was claimable: a "tile" nowhere on the 16384×16384 map, unreachable by
+the game and unsellable, sold for real money.
+
+Every unit test passed because they only ever supplied in-range coordinates.
+
+**Fixed**: `GRID_MAX`/`MAX_TOKEN_ID` constants, `require` bounds in
+`tokenIdFromKey`, a public `isValidTokenId`, and `require(isValidTokenId(tokenId))`
+in both `claimTile` and `mint`. Five regression tests added (34 → 39), and the fix
+re-verified on-chain: the collision path reverts, off-grid claims revert, on-grid
+sales still work.
+
+Also fixed while there: `deploy.js` was still writing a metadata base URI on
+`api.cryptoland.io`, **a domain we do not own**. It is stored on-chain and is what
+every wallet and marketplace fetches. Now `xono.ai`. (`setBaseURI` is `onlyOwner`,
+so it is recoverable — but only if someone notices.)
+
+## Why the other 20 did not deploy — faucets, not code
+
+- **Oasys was the only EVM testnet automatable at all.** Every other faucet gates
+  on a captcha (Injective, Moonbase, BNB, Fuji), a wallet or social login (Beam,
+  Hedera), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin asks you to
+  rotate an Axie until it stands upright).
+- **NEAR was the easiest of all** — `helper.testnet.near.org` creates *and funds*
+  an account from a plain POST. No captcha, no browser.
+- **Solana devnet is globally degraded**: `airdrop` returns "rate limit reached"
+  from three separate IPs and the raw RPC `requestAirdrop` returns
+  `Internal error`. Not throttling — the faucet is down.
+- **Sui** throttles service-side; **Aptos** now needs a browser-issued bearer token.
+- TON's faucet is a Telegram bot. Starknet, Cardano, Algorand, MultiversX, Radix
+  and Tezos are all reachable and all faucet-gated.
+
+In every blocked case the contract compiles and its tests pass. What blocks them
+is a human-verification step, not our code.
+
+## The pattern worth keeping
+
+Three deployments, three defects that testing could not reach: Soroban rejecting
+the `wasm32-unknown-unknown` artifact, `cargo-near` refusing to build at all, and
+now a tokenId collision in the contract covering 17 chains. **Deploy early — a
+green suite says the code does what you told it to, not that it works.**

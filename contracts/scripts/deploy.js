@@ -22,7 +22,7 @@ async function main() {
     'CryptoLand Tiles',
     'CLND',
     // Metadata base URI is stored ON-CHAIN and is what every marketplace and
-    // wallet will fetch. api.cryptoland.io is a domain we do not own — pointing
+    // wallet will fetch. xono.ai is a domain we do not own — pointing
     // 27 deployments at it would make every tile's metadata permanently
     // unresolvable. Use the live per-chain deployment instead.
     `https://${network}.xono.ai/metadata/`,
@@ -40,7 +40,7 @@ async function main() {
     address,
     deployer:    deployer.address,
     deployedAt:  new Date().toISOString(),
-    constructorArgs: ['CryptoLand Tiles', 'CLND', `https://api.cryptoland.io/metadata/${network}/`],
+    constructorArgs: ['CryptoLand Tiles', 'CLND', `https://xono.ai/metadata/${network}/`],
   }
 
   const dir = path.join(__dirname, '..', 'compiled')
@@ -59,7 +59,7 @@ async function main() {
 
   console.log(`   Saved: contracts/compiled/deployment-${network}.json`)
   console.log(`   .env:  ${envKey}=${address}`)
-  console.log(`\n   Verify: npx hardhat verify --network ${network} ${address} "CryptoLand Tiles" "CLND" "https://api.cryptoland.io/metadata/${network}/"`)
+  console.log(`\n   Verify: npx hardhat verify --network ${network} ${address} "CryptoLand Tiles" "CLND" "https://xono.ai/metadata/${network}/"`)
 }
 
 main().catch(err => { console.error(err); process.exitCode = 1 })
