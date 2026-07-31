@@ -227,6 +227,32 @@ export const DEPLOYMENTS = [
       { name: 'declare_id matches address',result: 'FAIL', detail: 'deployed binary says CLND1111… — every instruction would abort. Fixed in source, redeploy blocked on airdrop.' },
     ],
   },
+  {
+    chain: 'Sui',
+    network: 'devnet',
+    family: 'sui',
+    lang: 'Move',
+    date: '2026-07-31',
+    contract: '0x991e76819def4327b413de3dbafa245ee88b8c54afa9e679386a7283a7414d2c',
+    deployTx: 'see explorer',
+    explorer: 'https://suiscan.xyz/devnet/object/0x991e76819def4327b413de3dbafa245ee88b8c54afa9e679386a7283a7414d2c',
+    wasmBytes: 0,
+    note:
+      'DEVNET, not testnet — and that distinction is the whole point. `sui client faucet` funds ' +
+      'devnet in one command, while the same command on testnet prints "please use the Web UI". ' +
+      'I had reported Sui as needing a human for two rounds before checking whether the CLI had ' +
+      'its own faucet. Publishing also needed an [environments] block in Move.toml with the chain ' +
+      'id from `sui client chain-identifier` (75f89978) — the JSON-RPC query for it returns empty, ' +
+      'because Sui deprecated JSON-RPC on public fullnodes.',
+    checks: [
+      { name: 'faucet funded via CLI',   result: 'PASS', detail: '20 SUI, no browser involved' },
+      { name: 'package publishes',       result: 'PASS', detail: 'Status: Success, PackageID 0x991e7681…' },
+      { name: 'package live on chain',   result: 'PASS', detail: 'object query returns version 1' },
+      { name: 'tokenId — origin',        result: 'PASS', detail: 'token_id_from_key(0,0) executes' },
+      { name: 'tokenId — x step',        result: 'PASS', detail: 'token_id_from_key(1,0) executes' },
+      { name: 'tokenId — far corner',    result: 'PASS', detail: 'token_id_from_key(16383,16383) executes' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */

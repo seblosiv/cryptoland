@@ -38,6 +38,27 @@ read like a native dark mobile app.
 The user has rejected frosted/blurred/translucent panels repeatedly. Do not
 reintroduce them, not even "subtly". See `documentation/styling.md`.
 
+### 🔴 Exhaust the self-serve path before saying "this needs you".
+
+I told the user nine chains could not be funded without them. **Six could.** The
+order to try, every time, before asking:
+
+1. **The official CLI probably has a faucet.** `sui client faucet` funded devnet
+   in one command while I was reporting the web UI as a hard wall.
+2. **devnet ≠ testnet.** Sui's testnet faucet redirects to a browser; devnet is
+   fully programmatic. Same chain, different gate.
+3. **Keys are pure crypto — generate them.** Tezos, Cardano, Algorand and Flow
+   addresses were all produced locally from ed25519 + blake2b + bech32/base58.
+   "Connect wallet" is about naming a recipient, not about needing their extension.
+4. **The prod box runs anything.** aiken, cargo-near, sui, flow-cli, scarb, ligo
+   are all installed there, several built from source for lack of an aarch64
+   binary. `/tmp` is a 1.9 GB tmpfs — point `CARGO_TARGET_DIR` elsewhere or large
+   downloads truncate silently and fail later at `tar`.
+
+Ask the user only for genuine captchas and social logins. Those are deliberate
+anti-bot controls: do not automate around them, and decline captcha-solving
+services.
+
 ### 🔴 Update `documentation/` after every code change.
 
 Standing user convention. A code change without the matching doc update is an

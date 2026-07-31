@@ -7,3 +7,11 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 
 [addresses]
 cryptoland = "0x0"
+
+# Sui's newer CLI requires a named environment before it will publish. Devnet is
+# listed because its faucet is PROGRAMMATIC (`sui client faucet`), while testnet
+# redirects to a web UI — so devnet is the only Sui network we can verify against
+# unattended. The chain id is the devnet genesis digest.
+[environments]
+devnet = "75f89978"
+testnet = "4c78adac"
