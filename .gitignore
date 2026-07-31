@@ -97,3 +97,5 @@ contracts/*/deploy/node_modules/
 # Radix build artifacts — regenerate with cargo + schema.mjs, do not commit
 contracts/radix/deploy/*.wasm
 contracts/radix/deploy/*.rpd
+
+contracts/radix/deploy/definition.manifest

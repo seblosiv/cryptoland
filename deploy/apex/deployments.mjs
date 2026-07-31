@@ -258,6 +258,34 @@ export const DEPLOYMENTS = [
       { name: 'tokenId — far corner',    result: 'PASS', detail: 'token_id_from_key(16383,16383) executes' },
     ],
   },
+  {
+    chain: 'Radix',
+    network: 'stokenet',
+    family: 'radix',
+    lang: 'Scrypto',
+    date: '2026-07-31',
+    contract: 'package_tdx_2_1phc9ng2g6lwjs864uzm7nuty5peze2d8ce0c88npzkw2uqvqhcad3e',
+    deployTx: 'txid_tdx_2_1m6cdasffy6ne6cdgyltcy52xtt5uh5zxpznhuy5c2jk54emnhnpqtl08pk',
+    explorer: 'https://stokenet-dashboard.radixdlt.com/package/package_tdx_2_1phc9ng2g6lwjs864uzm7nuty5peze2d8ce0c88npzkw2uqvqhcad3e',
+    wasmBytes: 233924,
+    note:
+      'Published WITHOUT `scrypto build`, which cannot compile this package at all — it strips the ' +
+      '--allow-undefined the Radix Engine host imports need. Four separate walls, each with a ' +
+      'precise error that named the next one: (1) wasm from plain cargo with that flag in RUSTFLAGS; ' +
+      '(2) the .rpd extracted by executing the wasm\'s own CryptoLandTile_schema export under Node ' +
+      'WebAssembly with the 11 host imports stubbed; (3) the definition inlined as a manifest VALUE ' +
+      'rather than a Blob, and wrapped as PackageDefinition = Tuple(Map<String, BlueprintDefinitionInit>) ' +
+      '— the engine said "expected_field_count: 1, found: 7"; (4) bulk-memory lowered out with ' +
+      'binaryen 131 --llvm-memory-copy-fill-lowering, because LLVM emits 108 memory.copy ops that ' +
+      'Radix Engine rejects and neither -C target-feature nor -Z build-std removes them.',
+    checks: [
+      { name: 'wasm builds',              result: 'PASS', detail: '233,924 bytes after bulk-memory lowering (579,736 before)' },
+      { name: 'package definition built', result: 'PASS', detail: '2,024-byte .rpd from the wasm\'s own schema export, SBOR prefix 0x5c' },
+      { name: 'engine accepts the wasm',  result: 'PASS', detail: 'no InvalidWasm — bulk-memory absent from --print-features' },
+      { name: 'definition type-checks',   result: 'PASS', detail: 'PackageDefinition accepted; earlier attempts failed on Tuple-vs-Array then field count' },
+      { name: 'publishes on-chain',       result: 'PASS', detail: 'CommittedSuccess, 84.01 XRD fee, package_tdx_2_1phc9ng2…' },
+    ],
+  },
 ];
 
 /** Chains where a deployment was attempted but blocked, and precisely why. */
@@ -275,8 +303,6 @@ export const BLOCKED_DEPLOYMENTS = [
     reason: 'Every other EVM faucet gates on a captcha (Injective, Moonbase, BNB, Fuji), a wallet/social login (Beam, Hedera, Fuji), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin: rotate an Axie). Oasys was the only one automatable — and since all 17 EVM chains share one bytecode, one deployment covers the contract logic for all of them.' },
   { chain: 'TON', network: 'testnet',
     reason: 'faucet is a Telegram bot (@testgiver_ton_bot) — needs a Telegram account.' },
-  { chain: 'Radix', network: 'stokenet',
-    reason: 'FUNDED (10,000 XRD, no wallet) and the BUILD IS SOLVED — 579,736-byte wasm from plain `cargo build` with RUSTFLAGS="-C link-arg=--allow-undefined" (the Radix Engine host functions are wasm imports; scrypto build strips that flag, verified against -e, --custom-option --config and .cargo/config.toml). The .rpd package definition was extracted WITHOUT scrypto by executing the wasm\'s own CryptoLandTile_schema export under Node\'s WebAssembly with the 11 host imports stubbed — 2,024 bytes, SBOR prefix 0x5c. A publish transaction reaches the ledger and is REJECTED at type-check: "PackagePublishWasmAdvancedInput.[1|definition], expected_type: Tuple, found: Array" — the definition must be inlined as an SBOR VALUE, not passed as a Blob (only `code` is a blob), and RET\'s ManifestSbor/ScryptoSbor decodeToString rejects the payload in every representation. Remaining work is that one argument encoding.' },
   { chain: 'Algorand', network: 'testnet',
     reason: '`algokit dispenser fund` exists but requires `algokit dispenser login` (OAuth). The classic bank.testnet dispenser is now an explorer wanting a connected wallet.' },
   { chain: 'MultiversX', network: 'devnet',

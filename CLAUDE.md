@@ -487,10 +487,17 @@ Known gaps — be honest about these, do not paper over them:
   > artifact is **rejected** by the Soroban host ("reference-types not enabled").
   > Soroban needs `wasm32v1-none`. **A green test suite is not a deployable
   > artifact** — assume NEAR, Radix and MultiversX have their own version of this.
-- **NINE chains are live on testnet; 76/77 on-chain checks pass.** Stellar,
+- **TEN chains are live on testnet; 84/84 on-chain checks pass.** Stellar,
   EVM on Oasys *and* Ronin Saigon (the same bytecode all 21 EVM chains use), NEAR,
-  Aptos, Tezos shadownet, Flow, Sui devnet, and Solana devnet (⚠️ partial). Full
+  Aptos, Tezos shadownet, Flow, Sui devnet, Solana devnet and Radix stokenet. Full
   table with addresses in `documentation/contract-audit.md`.
+  > **Radix took four walls to publish and none needed an upstream fix.**
+  > `scrypto build` cannot compile the package (it strips `--allow-undefined`), so
+  > the wasm came from plain cargo, the `.rpd` from executing the wasm's own schema
+  > export, the definition had to be inlined as a manifest value wrapped in a
+  > `Map<String, BlueprintDefinitionInit>`, and 108 LLVM-emitted `memory.copy` ops
+  > had to be lowered with binaryen 131 — `-C target-feature` and `-Z build-std`
+  > both failed to remove them.
   > 🔴 **Eight deployments have produced eight defects that tests could not
   > reach.** The EVM one found a bug 39 unit tests had missed:
   > `tokenIdFromKey` had no bounds check, so `tokenIdFromKey(0, 32768)` and

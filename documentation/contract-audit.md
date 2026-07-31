@@ -703,3 +703,45 @@ argument encoding is the remaining work.
 Also worth recording: the first submission was rejected outright because Node's
 `crypto` ships only `blake2b512`, and **truncating it to 32 bytes is a different
 hash** from blake2b-256. RET exports `hash()`, which is the correct one.
+
+---
+
+# Radix published — four walls, each error naming the next (2026-07-31)
+
+`package_tdx_2_1phc9ng2g6lwjs864uzm7nuty5peze2d8ce0c88npzkw2uqvqhcad3e`
+
+I had written this off as needing an upstream Scrypto fix. It did not. It needed
+reading each error properly instead of retrying the same approach.
+
+**`scrypto build` cannot compile this package at all** — it strips the
+`--allow-undefined` that the Radix Engine host imports require, confirmed against
+its own `-e` passthrough, `--custom-option --config`, and `.cargo/config.toml`.
+So every artifact had to come from somewhere else:
+
+| Wall | Error | Fix |
+|---|---|---|
+| 1. wasm won't link | `undefined symbol: object_call` | plain `cargo build` with `RUSTFLAGS="-C link-arg=--allow-undefined"` |
+| 2. no `.rpd` | only scrypto emits it | execute the wasm's own `CryptoLandTile_schema` export under Node `WebAssembly`, 11 host imports stubbed → 2,024 bytes |
+| 3. definition rejected | `expected_type: Tuple, found: Array` | inline as a manifest VALUE, not a `Blob` — only `code` is a blob |
+| 3b. still rejected | `expected_field_count: 1, found: 7` | the schema returns a **BlueprintDefinitionInit**; `PackageDefinition` wraps a `Map<String, …>` of them |
+| 4. wasm rejected | `bulk memory support is not enabled` | binaryen 131 `--llvm-memory-copy-fill-lowering` |
+
+Wall 4 is the interesting one. LLVM emits **108 `memory.copy` and 5 `memory.fill`**
+ops that Radix Engine's validator rejects, and **neither `-C target-feature=-bulk-memory`
+nor `-Z build-std` removes them** — both were tried and the offset merely moved.
+Binaryen 131 lowers them to plain loops, and as a side effect the wasm dropped from
+**579,736 → 233,924 bytes**.
+
+Two traps worth keeping:
+
+- Node's `crypto` ships only `blake2b512`, and **truncating it to 32 bytes is a
+  different hash** from blake2b-256. The first submission was rejected outright for
+  that. RET exports `hash()`.
+- Scrypto SBOR (`0x5c`) and Manifest SBOR (`0x4d`) are the same value with a
+  different payload prefix. Swapping the first byte lets `ManifestSbor.decodeToString`
+  render it as manifest text — and `decodeToString` needs the **enum**
+  (`ManifestSborStringRepresentation.ManifestString`), not a string or an object.
+
+Reproduce with `contracts/radix/deploy/{schema,publish}.mjs`.
+
+**10 chains live, 84/84 on-chain checks.**

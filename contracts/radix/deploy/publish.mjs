@@ -11,7 +11,7 @@
  */
 import {
   PrivateKey, NetworkId, RadixEngineToolkit, TransactionBuilder,
-  generateRandomNonce, hash,
+  generateRandomNonce, hash, ManifestSborStringRepresentation,
 } from '@radixdlt/radix-engine-toolkit';
 import { readFileSync } from 'node:fs';
 
@@ -36,6 +36,22 @@ console.log(`  wasm ${wasm.length}b (${wasmHash.slice(0, 16)}…)  rpd ${rpd.len
 const known = await RadixEngineToolkit.Utils.knownAddresses(NET);
 const pkgPkg = known.packageAddresses.packagePackage;
 
+// The definition is an SBOR VALUE, not bytes: passing it as a Blob is rejected
+// with "expected_type: Tuple, found: Array". Scrypto SBOR (prefix 0x5c) and
+// Manifest SBOR (0x4d) are the same value with a different prefix, so swap it
+// and render the value as manifest text to inline.
+const blueprintInit = await RadixEngineToolkit.ManifestSbor.decodeToString(
+  new Uint8Array([0x4d, ...rpd.slice(1)]), NET,
+  ManifestSborStringRepresentation.ManifestString,
+);
+
+// What the schema export returns is a BlueprintDefinitionInit (7 fields), NOT a
+// PackageDefinition. PackageDefinition is a single field wrapping a
+// Map<String, BlueprintDefinitionInit> — the engine says so exactly:
+// "expected_field_count: 1, found: 7". Wrap it under the blueprint name.
+const BLUEPRINT = 'CryptoLandTile';
+const defManifest = `Tuple(Map<String, Tuple>("${BLUEPRINT}" => ${blueprintInit}))`;
+
 const text = `
 CALL_METHOD Address("${account}") "lock_fee" Decimal("500");
 CALL_FUNCTION
@@ -43,7 +59,7 @@ CALL_FUNCTION
     "Package"
     "publish_wasm_advanced"
     Enum<0u8>()
-    Blob("${rpdHash}")
+    ${defManifest}
     Blob("${wasmHash}")
     Map<String, Tuple>()
     Enum<0u8>()
@@ -53,7 +69,7 @@ CALL_FUNCTION
 const instructions = await RadixEngineToolkit.Instructions.convert(
   { kind: 'String', value: text }, NET, 'Parsed',
 );
-const manifest = { instructions, blobs: [new Uint8Array(rpd), new Uint8Array(wasm)] };
+const manifest = { instructions, blobs: [new Uint8Array(wasm)] };
 
 const status = await fetch(`${GATEWAY}/status/gateway-status`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
