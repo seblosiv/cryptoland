@@ -487,10 +487,12 @@ Known gaps — be honest about these, do not paper over them:
   > artifact is **rejected** by the Soroban host ("reference-types not enabled").
   > Soroban needs `wasm32v1-none`. **A green test suite is not a deployable
   > artifact** — assume NEAR, Radix and MultiversX have their own version of this.
-- **Three chains are live on testnet; 31/31 on-chain checks pass.** Stellar
-  (`CBVB7GK65…`), **EVM on Oasys** (`0x52785B7e…` — the same bytecode all 17 EVM
-  chains use), and NEAR (`cryptoland-ms86s8tc.testnet`).
-  > 🔴 The EVM deployment found a bug **39 unit tests had missed**:
+- **NINE chains are live on testnet; 76/77 on-chain checks pass.** Stellar,
+  EVM on Oasys *and* Ronin Saigon (the same bytecode all 21 EVM chains use), NEAR,
+  Aptos, Tezos shadownet, Flow, Sui devnet, and Solana devnet (⚠️ partial). Full
+  table with addresses in `documentation/contract-audit.md`.
+  > 🔴 **Eight deployments have produced eight defects that tests could not
+  > reach.** The EVM one found a bug 39 unit tests had missed:
   > `tokenIdFromKey` had no bounds check, so `tokenIdFromKey(0, 32768)` and
   > `tokenIdFromKey(1, 0)` **both returned 32768** — one id, two tiles — and
   > `claimTile` accepted any raw uint256, making `2^200` claimable. Fixed, with

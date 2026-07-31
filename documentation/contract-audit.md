@@ -556,3 +556,62 @@ Three deployments, three defects that testing could not reach: Soroban rejecting
 the `wasm32-unknown-unknown` artifact, `cargo-near` refusing to build at all, and
 now a tokenId collision in the contract covering 17 chains. **Deploy early — a
 green suite says the code does what you told it to, not that it works.**
+
+---
+
+# Testnet deployment round 2 — 9 chains live (2026-07-31)
+
+Six chains were funded and deployed **without any human involvement**, after I had
+reported all nine remaining as needing one. The technique matters more than the
+count and is now a critical rule in CLAUDE.md.
+
+## Live
+
+| Chain | Address | Checks |
+|---|---|---|
+| Stellar testnet | `CBVB7GK65CN2KB4NMQ3CGC6LIHFQU7IZ46KWZTUHKAFLO4BT6EBB4FFW` | 18/18 |
+| EVM — Oasys | `0x52785B7eF9Ff8d9fc88497cd3cA10098602814f6` | 7/7 |
+| EVM — Ronin Saigon | `0xe45404C32961569879c2b2b6FF8d42585332c5C4` | 8/8 |
+| NEAR testnet | `cryptoland-ms86s8tc.testnet` | 6/6 |
+| Aptos testnet | `0xd2e9cd1e…865330` | 11/11 |
+| **Tezos shadownet** | `KT1JR46QvFEweVdBntzcw8a1z1yPbwG9g2NX` | 7/7 |
+| **Flow testnet** | `0xc5aef0580ee607ca` | 11/11 |
+| **Sui devnet** | `0x991e76819def…414d2c` | 6/6 |
+| **Solana devnet** | `7MRdUfDaXXcTrg4xHaGsaUa1dvZ7DB4aQJYBukF61iXi` | ⚠️ 2/3 |
+
+**76/77 on-chain checks.** Every chain confirms the same invariant on its own VM:
+`token_id(16383,16383) = 536854527`, out-of-range coordinates rejected, fee
+defaulting to 700 bps, sales closed until an admin opens them.
+
+## Defects only deployment could find — now eight
+
+Each of these passed every unit test:
+
+1. **Soroban rejects the `wasm32-unknown-unknown` artifact** — "reference-types
+   not enabled". Needs `wasm32v1-none`. 27,080 bytes that could not deploy.
+2. **`cargo-near` refused to build NEAR at all** — rustc newer than near-sdk allows.
+3. **EVM tokenId collision** — `(1,0)` and `(0,32768)` both returned 32768, and any
+   `uint256` was claimable as a tile. The contract covering 17 chains.
+4. **Aptos `token_id_from_key` was not `#[view]`** — unreadable by any off-chain caller.
+5. **Ronin Saigon chainId was 2021**; the live chain is **202601**.
+6. **Flow's `init()` took a resource parameter** — Cadence cannot pass a resource
+   as a deployment argument, so `flow project deploy` failed outright. Lints clean.
+7. **Solana's `declare_id!` was the placeholder `CLND1111…`** — Anchor compares it
+   against the executing program on every instruction, so the program deploys
+   happily and then fails **every single call** with `DeclaredProgramIdMismatch`.
+8. **Flow's contract never imported `FungibleToken`** — caught by `flow cadence lint`
+   the first time the CLI was installed.
+
+**Eight deployments, eight defects.** A green suite says the code does what you
+told it to, not that it works.
+
+## Still blocked, with the reason
+
+| Chain | Blocker |
+|---|---|
+| **Solana redeploy** | needs ~1.8 SOL of buffer to push the `declare_id` fix; devnet airdrop returns `Internal error` from three IPs |
+| **Radix** | **funded** (10,000 XRD, no wallet) but `scrypto build` fails: on macOS `blst` will not link for wasm32 under Apple clang; on Linux `rust-lld` rejects Radix Engine host functions as undefined symbols. `--allow-undefined` never reaches the linker because `scrypto build` overrides RUSTFLAGS. Toolchain issue — the contract passes 5 tests. |
+| **Cardano** | funded; UTXO has no contract to install — the validator (`136221254c…`) is referenced by a spending transaction |
+| **Algorand** | `algokit dispenser` requires OAuth login |
+| **MultiversX** | `mxpy faucet request` logs the request but nothing arrives — silently rate-limited |
+| **Starknet** | GitHub login, or the Consensys MetaMask Snap |

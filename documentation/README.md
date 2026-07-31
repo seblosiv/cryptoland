@@ -198,3 +198,16 @@ FastAPI serves `dist/assets/` statically and `dist/index.html` as the SPA catch-
 > host `dist-<chain>/` on a static host (with an SPA rewrite) and point `VITE_API_BASE` at
 > the API origin, or symlink `dist-<chain>/` → `dist/` to serve both from one origin. See
 > [multichain.md → Deployment topology](multichain.md#deployment-topology).
+
+## Contracts & deployment
+
+- **[contract-audit.md](contract-audit.md)** — every audit round, and the record of
+  **eight defects that only deployment could find**. Read before any mainnet spend.
+- **[contract-architecture.md](contract-architecture.md)** — how the 13 contracts
+  are shaped: who owns a tile, the 7% fee, the 10% ceiling, and how money reaches
+  your wallet.
+- **[testnet-funding.md](testnet-funding.md)** — which chains are deployed, how each
+  was funded, and the order to try before asking a human (CLI → devnet → generate
+  the key → Linux box → person).
+- **[deployment.md](deployment.md)** — per-chain deploy commands and the trap each
+  chain sets.

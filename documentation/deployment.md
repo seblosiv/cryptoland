@@ -237,3 +237,55 @@ team is the next step, not more gas.
 we do not own. That string is stored **on-chain** and is what every wallet and
 marketplace fetches, so 27 deployments would have had permanently unresolvable
 metadata. Now `https://<network>.xono.ai/metadata/`, which we control.
+
+---
+
+## Testnet deployment — what actually works (2026-07-31)
+
+Nine chains are live on testnet. The per-chain commands, so nobody re-derives them:
+
+```bash
+# EVM (covers all 21 EVM chains — one bytecode)
+cd contracts && DEPLOY_PK=$(…) npx hardhat run scripts/deploy.js --network oasys-testnet
+
+# Stellar — build for wasm32v1-none, NOT wasm32-unknown-unknown
+cd contracts/stellar && stellar contract build
+stellar contract deploy --wasm target/wasm32v1-none/release/*.wasm --source <id> --network testnet
+
+# NEAR — cargo-near, not cargo build
+cd contracts/near && cargo near deploy build-non-reproducible-wasm <account> \
+  with-init-call new json-args '{"owner":"…","base_uri":"https://xono.ai/tile/"}' \
+  prepaid-gas '100.0 Tgas' attached-deposit '0 NEAR' network-config testnet sign-with-legacy-keychain send
+
+# Aptos — needs the framework cache seeded first (the CLI cannot fetch it)
+cd contracts/aptos && aptos move publish --skip-fetch-latest-git-deps --named-addresses cryptoland=<addr>
+
+# Tezos — via Taquito; octez-client is on neither machine
+cd contracts/tezos/deploy && node originate.mjs      # ligo compiles the Michelson on the server
+
+# Flow — /create-account mints the account; /fund-account needs one that exists
+cd contracts/flow && flow project deploy --network testnet
+
+# Sui — DEVNET (testnet's faucet is browser-only)
+cd contracts/sui && sui client faucet && sui client publish --gas-budget 200000000
+
+# Solana
+cd contracts/solana && cargo-build-sbf && solana program deploy target/deploy/cryptoland_tile.so
+```
+
+### Traps each one has
+
+- **Stellar**: the `wasm32-unknown-unknown` artifact is *rejected* by the host
+  ("reference-types not enabled"). Build for `wasm32v1-none`.
+- **NEAR**: plain `cargo build` cannot produce a deployable artifact; near-sdk 5.29
+  blocks `cargo test` in exchange. Deployability wins.
+- **Aptos**: the CLI's dependency fetch fails with git exit 128 on a cold cache.
+  Seed `~/.move/…aptos-node-v1.9.7` by hand. The rev must be a TAG — `git clone
+  --branch` cannot take a SHA.
+- **Sui**: publishing needs an `[environments]` block in `Move.toml` with the chain
+  id from `sui client chain-identifier` (JSON-RPC returns empty — Sui deprecated it).
+- **Solana**: set `declare_id!` to the real program id BEFORE deploying, or every
+  instruction fails with `DeclaredProgramIdMismatch`.
+- **Flow**: `init()` cannot take a resource parameter.
+- **Tezos**: Ghostnet is retired; use shadownet. `@taquito/utils` renamed
+  `b58cencode` → `b58Encode` and `prefix` → `PrefixV2`.
