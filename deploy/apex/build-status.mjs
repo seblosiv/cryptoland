@@ -261,8 +261,29 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   <br><br>It also caught a real build defect: the <code>wasm32-unknown-unknown</code> artifact is
   <strong>rejected</strong> by the Soroban host ("reference-types not enabled"). The contract had to be
   rebuilt for <code>wasm32v1-none</code>. No amount of unit testing surfaces that.
-  ${BLOCKED_DEPLOYMENTS.length ? `<br><br><strong>Blocked elsewhere:</strong> ` +
-    BLOCKED_DEPLOYMENTS.map(b => `<strong>${esc(b.chain)}</strong> — ${esc(b.reason)}`).join(' ') : ''}</p>
+</p>
+
+  ${BLOCKED_DEPLOYMENTS.length ? `
+  <h3 style="font-size:14px;margin:18px 0 8px">Not yet deployed — and exactly why</h3>
+  <p class="note" style="margin-bottom:10px">In every case the CONTRACT is fine: it compiles and its
+  tests pass. What blocks these is funding, and the reason is recorded so nobody re-derives it.</p>
+  <div class="scroll"><table style="min-width:820px">
+  <thead><tr><th>Chain</th><th>Network</th><th>Blocker</th></tr></thead><tbody>
+  ${BLOCKED_DEPLOYMENTS.map(b => `<tr>
+    <td><strong>${esc(b.chain)}</strong></td>
+    <td>${esc(b.network)}</td>
+    <td style="color:var(--dim)">${esc(b.reason)}</td></tr>`).join('')}
+  </tbody></table></div>
+
+  <p class="note" style="margin-top:12px"><strong>The order that actually works</strong>, learned the
+  hard way after reporting nine chains as human-gated when six were not:
+  <strong>official CLI → devnet (a different network with different gates than testnet) → generate the
+  key from primitives → install the tool on the Linux box → only then ask a person.</strong>
+  <code>sui client faucet</code> funds devnet with no browser while the same command on testnet says
+  "please use the Web UI". Radix has no HTTP faucet at all — its faucet is an on-chain component, and
+  calling it directly with a notarised transaction produced 10,000 XRD with no wallet involved.
+  Captchas and social logins are the genuine exceptions: those are deliberate anti-bot controls and are
+  left to a human.</p>` : ''}
 </div>
 
 <h2>Contracts — 13 implementations, 29 chains</h2>

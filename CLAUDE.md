@@ -50,10 +50,15 @@ order to try, every time, before asking:
 3. **Keys are pure crypto — generate them.** Tezos, Cardano, Algorand and Flow
    addresses were all produced locally from ed25519 + blake2b + bech32/base58.
    "Connect wallet" is about naming a recipient, not about needing their extension.
-4. **The prod box runs anything.** aiken, cargo-near, sui, flow-cli, scarb, ligo
-   are all installed there, several built from source for lack of an aarch64
-   binary. `/tmp` is a 1.9 GB tmpfs — point `CARGO_TARGET_DIR` elsewhere or large
-   downloads truncate silently and fail later at `tar`.
+4. **Try the Linux box FIRST, not last.** aiken, cargo-near, sui, flow-cli,
+   scarb, ligo and the Flow CLI all live there, several built from source for
+   lack of an aarch64 binary. Toolchains that fight macOS often just work on
+   Linux — `blst` (a Scrypto dependency) compiles its C for the host and fails to
+   link for wasm32 under Apple clang, and ligo ships a Linux-only binary at all.
+   Two rules for that box: `/tmp` is a **1.9 GB tmpfs**, so point
+   `CARGO_TARGET_DIR` at a disk path or large downloads truncate silently and
+   fail later at `tar`; and it has **2 cores**, so run long compiles detached
+   with `setsid nohup … &` and poll, rather than blocking on them.
 
 Ask the user only for genuine captchas and social logins. Those are deliberate
 anti-bot controls: do not automate around them, and decline captcha-solving
