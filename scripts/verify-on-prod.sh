@@ -14,8 +14,12 @@
 # after silently truncating downloads.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-HOST=root@91.99.194.54
-KEY=$HOME/.ssh/xono_deploy
+# Not hardcoded: this file is public, and pointing strangers at the box that
+# holds the payment credentials and every chain's database is free reconnaissance
+# they should have to do themselves.
+#   export CRYPTOLAND_PROD_HOST=root@<ip>
+HOST=${CRYPTOLAND_PROD_HOST:?set CRYPTOLAND_PROD_HOST, e.g. root@203.0.113.10}
+KEY=${CRYPTOLAND_PROD_KEY:-$HOME/.ssh/xono_deploy}
 SSH=(ssh -i "$KEY" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes)
 
 echo "→ syncing sources"
