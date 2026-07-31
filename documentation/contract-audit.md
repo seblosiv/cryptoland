@@ -676,5 +676,30 @@ linker line:
 
 Pinning rustc 1.81 (pre-1.82 extern-block change) does not help either: scrypto
 cannot parse that toolchain's target info, and the dependency tree needs a newer
-manifest format than 1.81 accepts. **This needs an upstream Scrypto fix**, or a
-wasm runtime to execute the schema export and emit the `.rpd` by hand.
+manifest format than 1.81 accepts. **Both were then solved without scrypto**, leaving one step:
+
+1. **The wasm.** Plain `cargo build --target wasm32-unknown-unknown` with
+   `RUSTFLAGS="-C link-arg=--allow-undefined"` → **579,736 bytes**.
+2. **The `.rpd`.** Not magic — it is the SBOR blob returned by the wasm's own
+   `CryptoLandTile_schema` export. Instantiating the wasm under Node's
+   `WebAssembly` with the 11 Radix Engine host imports stubbed (the schema export
+   returns static data and calls none of them) and reading the returned
+   `(ptr,len)` gives **2,024 bytes with SBOR prefix `0x5c`**. See
+   `contracts/radix/deploy/schema.mjs`.
+
+A publish transaction now reaches the ledger and is rejected at type-check:
+
+```
+PackagePublishWasmAdvancedInput.[1|definition]
+cause: { expected_type: Tuple, found: Array }
+```
+
+The definition must be **inlined as an SBOR value**, not passed as a `Blob` —
+only `code` is a blob. RET's `ManifestSbor.decodeToString` and
+`ScryptoSbor.decodeToString` both reject the payload in every representation
+(`ManifestString`, `ProgrammaticJson`, `ModelJson`, `NaturalJson`), so that one
+argument encoding is the remaining work.
+
+Also worth recording: the first submission was rejected outright because Node's
+`crypto` ships only `blake2b512`, and **truncating it to 32 bytes is a different
+hash** from blake2b-256. RET exports `hash()`, which is the correct one.
