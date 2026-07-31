@@ -1,3 +1,4 @@
+import { SITE_HOST } from '../lib/chainProfile.js'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useViralStore } from '../store/viralStore'
 import { useAuthStore } from '../store/authStore'
@@ -67,7 +68,7 @@ export default function LandDropModal() {
 
   const onShare = useCallback(async () => {
     if (!lastResult) return
-    const text = `🎁 CryptoLand Daily Drop\n${lastResult.share_grid}\nI claimed ${lastResult.country} (${lastResult.rarity}) on ${lastResult.date_utc || state?.date_utc}\nhttps://cryptoland.io`
+    const text = `🎁 CryptoLand Daily Drop\n${lastResult.share_grid}\nI claimed ${lastResult.country} (${lastResult.rarity}) on ${lastResult.date_utc || state?.date_utc}\nhttps://${SITE_HOST}`
     try {
       if (navigator.share) {
         await navigator.share({ text })

@@ -5,7 +5,7 @@
  *   npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
  *   npx hardhat compile
  *   npx hardhat run scripts/deploy.js --network polygon-amoy
- *   npx hardhat verify --network polygon-amoy 0xCONTRACT_ADDRESS "CryptoLand Tiles" "CLND" "https://api.cryptoland.io/metadata/polygon-amoy/"
+ *   npx hardhat verify --network polygon-amoy 0xCONTRACT_ADDRESS "CryptoLand Tiles" "CLND" "https://polygon-amoy.xono.ai/metadata/"
  *
  * Set env vars before running:
  *   DEPLOY_PK=0xYourPrivateKey

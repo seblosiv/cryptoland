@@ -151,7 +151,7 @@ npm install --save-dev hardhat @nomicfoundation/hardhat-toolbox
 export DEPLOY_PK=0xYourPrivateKey
 export POLYGONSCAN_API_KEY=YourKey
 npx hardhat run contracts/scripts/deploy.js --network polygon-amoy
-npx hardhat verify --network polygon-amoy 0xCONTRACT "CryptoLand Tiles" "CLND" "https://api.cryptoland.io/metadata/polygon-amoy/"
+npx hardhat verify --network polygon-amoy 0xCONTRACT "CryptoLand Tiles" "CLND" "https://polygon-amoy.xono.ai/metadata/"
 ```
 
 ### Mainnet deploy (Polygon)

@@ -9,6 +9,7 @@
  *
  * Used in PaymentModal (post-purchase) and PurchasePanel (owned tile).
  */
+import { SITE_HOST } from '../lib/chainProfile.js'
 import { useRef, useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { shortAddr } from '../lib/addr'
@@ -157,7 +158,7 @@ function useCanvas(block, shareUrl) {
     ctx.font = '500 9px monospace'
     ctx.fillStyle = 'rgba(255,255,255,0.18)'
     ctx.letterSpacing = '1px'
-    ctx.fillText('cryptoland.io', 36, 392)
+    ctx.fillText(SITE_HOST, 36, 392)
 
     ctx.font = '500 9px monospace'
     ctx.fillStyle = 'rgba(255,255,255,0.12)'
@@ -407,7 +408,7 @@ export function MiniCertificate({ block, shareUrl }) {
     ctx.font = '500 7px monospace'
     ctx.fillStyle = 'rgba(255,255,255,0.15)'
     ctx.letterSpacing = '0.8px'
-    ctx.fillText('cryptoland.io', 22, 260)
+    ctx.fillText(SITE_HOST, 22, 260)
     ctx.fillStyle = 'rgba(255,255,255,0.08)'
     ctx.fillText(shareUrl.slice(0, 52) + (shareUrl.length > 52 ? '…' : ''), 22, 274)
 

@@ -21,6 +21,7 @@ pub trait ICryptoLandTile<TState> {
     // Admin: price, fee, payout target, withdrawal.
     fn set_tile_price(ref self: TState, price: u256);
     fn set_market_fee_bps(ref self: TState, bps: u16);
+    fn set_base_uri(ref self: TState, uri: felt252);
     fn set_treasury_receiver(ref self: TState, to: starknet::ContractAddress);
     fn withdraw(ref self: TState);
     fn tile_price(self: @TState) -> u256;
@@ -185,6 +186,12 @@ pub mod CryptoLandTile {
         }
 
         /// Point payouts at a cold wallet WITHOUT handing over admin rights.
+        /// Metadata base URI. Every marketplace and wallet fetches this forever, and it points at the CHAIN'S OWN subdomain (e.g. https://tezos.xono.ai/tile/), not the apex — each chain has its own build and its own database. It is settable because it was NOT: the EVM contract has had setBaseURI since day one while these twelve baked it in at init, so a wrong URL at deploy time was permanent. A live deployment already carries the wrong value for exactly that reason.
+        fn set_base_uri(ref self: ContractState, uri: felt252) {
+            assert(starknet::get_caller_address() == self.owner.read(), 'not owner');
+            self.base_uri.write(uri);
+        }
+
         fn set_treasury_receiver(ref self: ContractState, to: ContractAddress) {
             assert(starknet::get_caller_address() == self.owner.read(), 'not owner');
             let zero: ContractAddress = 0.try_into().unwrap();

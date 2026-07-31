@@ -272,7 +272,7 @@ def wiki_multiplier(views):
 # ── Fetch helpers ──────────────────────────────────────────────────────────────
 
 HEADERS = {
-    "User-Agent": "CryptoLand/1.0 (blockchain-land-registry; contact@cryptoland.io)",
+    "User-Agent": "CryptoLand/1.0 (blockchain-land-registry; contact@xono.ai)",
     "Accept": "application/json",
 }
 

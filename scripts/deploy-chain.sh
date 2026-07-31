@@ -19,8 +19,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-DOMAIN="${CRYPTOLAND_DOMAIN:-cryptoland.game}"
-API_HOST="${CRYPTOLAND_API_HOST:-}"          # e.g. api.cryptoland.game (optional)
+DOMAIN="${CRYPTOLAND_DOMAIN:-xono.ai}"
+API_HOST="${CRYPTOLAND_API_HOST:-}"          # e.g. api.xono.ai (optional)
 OUT="deploy/out"
 SEED=0
 USERS="${CRYPTOLAND_SEED_USERS:-120}"

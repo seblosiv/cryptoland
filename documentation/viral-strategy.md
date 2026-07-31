@@ -60,7 +60,7 @@ Every 24h, every owner gets a generated **"Empire Card"** — a single PNG/SVG w
 Each tile already has a generated narrative (we just rebuilt this). Wrap it into a **printable, shareable, frame-worthy deed** with:
 - Country flag, tile coords, owner handle, mint date
 - The auto-generated regional story
-- A QR code → public certificate URL on cryptoland.io/c/{tileKey}
+- A QR code → public certificate URL on xono.ai/c/{tileKey}
 - A "What this place would mean to a stranger" line generated from coordinates
 
 **Why viral**: People print these. People frame them. People gift them. "I bought my dad his hometown for his birthday" is a TikTok genre waiting to happen.
@@ -135,7 +135,7 @@ Each owner can opt to make their broker's reports public, building a follower ba
 ### #9 — `Trophy Cabinet` — public empire viewer page
 **V:8 N:7 B:3 D:8**
 
-Public, SEO-indexed page at `cryptoland.io/u/{handle}` showing:
+Public, SEO-indexed page at `xono.ai/u/{handle}` showing:
 - Mini-globe with all owned tiles glowing
 - Country medals 🥇🥈🥉
 - Total volume, tile count, longest streak, top trades

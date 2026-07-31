@@ -25,6 +25,16 @@ Design rules:
     main.py exposes (we import it from there indirectly via a passed function).
   - Pure synchronous logic where possible, async only for DB I/O.
 """
+import os
+
+# The host printed on share cards. Each backend serves exactly ONE chain, so this
+# is that chain's subdomain — a Ronin share card pointing at polygon.xono.ai
+# would send the viewer to a different world with a different database. These
+# cards previously printed "cryptoland.io", a domain nobody owns.
+SITE_HOST = os.environ.get("CRYPTOLAND_SITE_HOST") or (
+    f"{os.environ.get('CRYPTOLAND_CHAIN', 'polygon')}.xono.ai"
+)
+
 from __future__ import annotations
 
 import asyncio
@@ -988,7 +998,7 @@ def _render_og_svg(tile_key: str, block: Optional[dict], post: Optional[dict]) -
   <!-- Bottom CTA -->
   <g font-family="Inter, system-ui, sans-serif">
     <text x="60" y="570" font-size="20" fill="#9ca3af">Claim the tile next to this one →</text>
-    <text x="60" y="600" font-size="14" fill="#666">cryptoland.io/t/{_esc(tile_key)}</text>
+    <text x="60" y="600" font-size="14" fill="#666">{SITE_HOST}/t/{_esc(tile_key)}</text>
   </g>
 </svg>"""
 

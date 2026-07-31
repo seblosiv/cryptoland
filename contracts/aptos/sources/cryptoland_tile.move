@@ -124,6 +124,15 @@ module cryptoland::cryptoland_tile {
     }
 
     /// Point payouts at a cold wallet without handing over admin rights.
+    /// Metadata base URI. Every marketplace and wallet fetches this forever, and it points at the CHAIN'S OWN subdomain (e.g. https://tezos.xono.ai/tile/), not the apex — each chain has its own build and its own database. It is settable because it was NOT: the EVM contract has had setBaseURI since day one while these twelve baked it in at init, so a wrong URL at deploy time was permanent. A live deployment already carries the wrong value for exactly that reason.
+    public entry fun set_base_uri(
+        admin: &signer, registry_addr: address, base_uri: String
+    ) acquires Registry {
+        let reg = borrow_global_mut<Registry>(registry_addr);
+        assert!(signer::address_of(admin) == reg.owner, E_NOT_OWNER);
+        reg.base_uri = base_uri;
+    }
+
     public entry fun set_treasury_receiver(
         admin: &signer, registry_addr: address, to: address
     ) acquires Registry {

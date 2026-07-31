@@ -30,7 +30,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
 const run = promisify(execFile)
-const ORIGIN = 'https://check.cryptoland.game'
+const ORIGIN = 'https://polygon.xono.ai'
 
 // Per-family probe: how to ask that chain for its head.
 const POST = {

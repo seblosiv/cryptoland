@@ -12,6 +12,7 @@
  * See documentation/viral-strategy.md § LandShare Daily Card
  */
 
+import { SITE_HOST } from '../lib/chainProfile.js'
 import { forwardRef, useMemo, useRef, useState } from 'react'
 import { useShareStore } from '../store/shareStore'
 
@@ -178,7 +179,7 @@ const CardSVG = forwardRef(function CardSVG({ card }, ref) {
       {/* Footer URL */}
       <text x={W/2} y={H - 18} textAnchor="middle" fill="#475569"
             fontFamily="ui-monospace, monospace" fontSize="14" letterSpacing="2">
-        cryptoland.io/u/{card.username}
+        {SITE_HOST}/u/{card.username}
       </text>
     </svg>
   )

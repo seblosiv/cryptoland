@@ -96,6 +96,12 @@ impl Contract {
     }
 
     /// Point payouts at a cold wallet without handing over admin rights.
+    /// Metadata base URI. Every marketplace and wallet fetches this forever, and it points at the CHAIN'S OWN subdomain (e.g. https://tezos.xono.ai/tile/), not the apex — each chain has its own build and its own database. It is settable because it was NOT: the EVM contract has had setBaseURI since day one while these twelve baked it in at init, so a wrong URL at deploy time was permanent. A live deployment already carries the wrong value for exactly that reason.
+    pub fn set_base_uri(&mut self, base_uri: String) {
+        self.assert_owner();
+        self.base_uri = base_uri;
+    }
+
     pub fn set_treasury_receiver(&mut self, to: AccountId) {
         self.assert_owner();
         self.treasury_receiver = to;

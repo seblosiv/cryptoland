@@ -16,7 +16,7 @@ There are no signups, API keys, or third-party platforms — the entire system r
 
 A visitor arrives at:
 ```
-https://cryptoland.io/?ref=LAND-A3F9B2
+https://xono.ai/?ref=LAND-A3F9B2
 ```
 
 The frontend (`affiliateStore.js`) captures the `ref=` parameter and stores it in `localStorage` with the key `cl-ref-code`. It is kept even if the user closes and reopens the browser.

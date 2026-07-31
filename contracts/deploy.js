@@ -1,3 +1,7 @@
+// ⚠️ SUPERSEDED by contracts/scripts/deploy.js, which is what
+// `npx hardhat run scripts/deploy.js` actually executes. This copy sat here
+// pointing at api.cryptoland.io — a domain we do not own — long after the
+// live script was fixed, which is exactly how a stale duplicate does damage.
 /**
  * CryptoLandTile Deploy Script
  * =============================
@@ -130,7 +134,7 @@ async function deploy() {
   const constructorArgs = encodeConstructor(
     'CryptoLand Tiles',
     'CLND',
-    `https://api.cryptoland.io/metadata/${chainArg}/`
+    `https://${chainArg}.${process.env.CRYPTOLAND_DOMAIN || 'xono.ai'}/metadata/`
   )
   const deployData = bytecode + constructorArgs
 

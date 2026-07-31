@@ -4,7 +4,7 @@
  * THE problem this solves: we deploy ~28 chain-native builds from one codebase.
  * The plumbing (adapters, config) is already per-chain, but a Polygon build and
  * an Algorand build still *looked* identical apart from a logo swap. A grant
- * reviewer opening algorand.cryptoland.game should feel it was built for
+ * reviewer opening algorand.xono.ai should feel it was built for
  * Algorand — not see a generic multichain app with their logo bolted on.
  *
  * The fix is a single declarative profile per chain. Everything ecosystem-specific
@@ -268,6 +268,24 @@ export function applyProfileTheme() {
 const ACCENT_RGB = hexToRgb(PROFILE.accent)
 
 /** The brand accent, for fills. */
+/**
+ * The host this build is served from, for anything RENDERED to a user — share
+ * cards, tile certificates, empire pages.
+ *
+ * It must be the chain's OWN subdomain: a Ronin tile certificate saying
+ * "polygon.xono.ai" sends the holder to a different world with a different
+ * database. Derived from the active chain, with a runtime override from
+ * location.host so a preview or a custom domain shows itself rather than a
+ * guess.
+ *
+ * These surfaces previously printed a bare "cryptoland.io" — a domain nobody
+ * owns — onto every certificate a user could download or share.
+ */
+export const SITE_HOST =
+  (typeof location !== 'undefined' && location.host && !/^localhost|^127\./.test(location.host))
+    ? location.host
+    : `${ACTIVE_CHAIN_KEY}.xono.ai`
+
 export const ACCENT_HEX = PROFILE.accent
 
 /** The accent lightened to ≥4.5:1 on --s1 — for anything read against the map. */

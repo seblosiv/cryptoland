@@ -198,7 +198,7 @@ the moment `VITE_CONTRACT_<CHAIN>` is set. The EVM adapter follows the same
 
 The plumbing was already per-chain — adapters, RPCs, contract addresses — but a
 Polygon build and an Algorand build still *looked* identical apart from a logo
-swap. A grant reviewer opening `algorand.cryptoland.game` should feel the app was
+swap. A grant reviewer opening `algorand.xono.ai` should feel the app was
 built for Algorand, not see a generic multichain app with their logo bolted on.
 
 Forking the UI per chain would fix the perception and destroy the codebase. The fix
@@ -679,9 +679,9 @@ Each build gets its own subdomain, named after its `VITE_CHAIN` key:
 
 | Subdomain | Build command | Served directory |
 |---|---|---|
-| `algorand.cryptoland.game` | `npm run build:chain algorand` | `dist-algorand/` |
-| `ton.cryptoland.game` | `npm run build:chain ton` | `dist-ton/` |
-| `base.cryptoland.game` | `npm run build:chain base` | `dist-base/` |
+| `algorand.xono.ai` | `npm run build:chain algorand` | `dist-algorand/` |
+| `ton.xono.ai` | `npm run build:chain ton` | `dist-ton/` |
+| `base.xono.ai` | `npm run build:chain base` | `dist-base/` |
 | … one per chain in `scripts/build-chain.sh` | `npm run build:all-chains` | `dist-<chain>/` |
 
 `dist-<chain>/` is a plain static bundle — any static host works, with the usual
@@ -874,7 +874,7 @@ Two Cadence-specific notes:
 ## TON Connect manifest — generated per chain, not shipped static (2026-07-31)
 
 `public/tonconnect-manifest.json` was a static file pointing at
-**`https://cryptoland.game` — a domain we do not own** — with legal links at
+**`https://xono.ai` — a domain we do not own** — with legal links at
 `/terms` and `/privacy` when the files are `terms.html` and `privacy.html`.
 
 Two consequences, both silent:
@@ -893,3 +893,41 @@ Worth noting how the first attempt failed: the chain was stashed on `this` in
 class of bug the plugin already documents for the HTML path, where reading
 `process.env` alone made all 27 bundles claim "CryptoLand on Polygon Amoy". Both
 now go through one `resolveChain()`.
+
+## Every user-facing URL points at the chain's OWN subdomain (2026-07-31)
+
+A sweep for hardcoded domains found the project still naming two it does not own,
+in places that reach users and marketplaces rather than just docs:
+
+| Where | Was | Now |
+|---|---|---|
+| `tonconnect-manifest.json` | `cryptoland.game` | generated per chain in `writeBundle` |
+| Tile certificate (canvas, downloadable) | `cryptoland.io` | `SITE_HOST` |
+| Empire card (SVG) | `cryptoland.io/u/…` | `SITE_HOST/u/…` |
+| Daily-drop share text | `https://cryptoland.io` | `https://${SITE_HOST}` |
+| Server share card (`viral.py`) | `cryptoland.io/t/…` | `SITE_HOST/t/…` from env |
+| `contracts/deploy.js` | `api.cryptoland.io` | per-chain subdomain |
+| `price_events.py` User-Agent | `contact@cryptoland.io` | `contact@xono.ai` |
+| `check-rpcs.mjs` probe Origin | `check.cryptoland.game` | `polygon.xono.ai` |
+
+**`SITE_HOST` (src/lib/chainProfile.js) is the single derivation.** It resolves to
+the active chain's own subdomain, with a runtime override from `location.host` so
+a preview or custom domain shows itself. The chain's subdomain matters rather than
+the apex: **a Ronin tile certificate saying `polygon.xono.ai` sends its holder to a
+different world with a different database.**
+
+Server-side, `viral.py` reads `CRYPTOLAND_SITE_HOST` / `CRYPTOLAND_CHAIN` from the
+per-chain env, since each backend serves exactly one chain. Both are now set on all
+32 deployments.
+
+### Contract metadata follows the same rule
+
+`scripts/deploy.js` passes `https://<chain>.xono.ai/metadata/` — a tile's metadata
+lives where that chain's build lives. It previously pointed at `api.cryptoland.io`,
+which would have made every tile's metadata permanently unresolvable across all 21
+EVM deployments.
+
+**Four non-EVM contracts gained a base-URI setter** (Tezos, NEAR, Aptos, Starknet).
+The EVM contract has had `setBaseURI` since day one, but those twelve baked the URI
+in at init, so a wrong URL at deploy time was permanent — and the live Tezos
+deployment carries the apex rather than `tezos.xono.ai` for exactly that reason.

@@ -5,6 +5,15 @@
  */
 
 const hre = require('hardhat')
+
+/**
+ * Where this chain's tile metadata lives. Each chain has its own subdomain and
+ * its own database, so its NFTs point at its own deployment rather than a shared
+ * apex. Testnet keys keep their suffix (`ronin-saigon`) because that is the
+ * subdomain the testnet build would be served from.
+ */
+const metadataBase = (network) =>
+  `https://${network}.${process.env.CRYPTOLAND_DOMAIN || 'xono.ai'}/metadata/`
 const fs  = require('fs')
 const path = require('path')
 
@@ -22,10 +31,14 @@ async function main() {
     'CryptoLand Tiles',
     'CLND',
     // Metadata base URI is stored ON-CHAIN and is what every marketplace and
-    // wallet will fetch. xono.ai is a domain we do not own — pointing
-    // 27 deployments at it would make every tile's metadata permanently
-    // unresolvable. Use the live per-chain deployment instead.
-    `https://${network}.xono.ai/metadata/`,
+    // wallet fetches forever. It previously pointed at api.cryptoland.io — a
+    // domain we do not own — which would have made every tile's metadata
+    // permanently unresolvable across all 21 EVM deployments.
+    //
+    // It resolves to the chain's OWN subdomain, not the apex: a Ronin tile's
+    // metadata lives where the Ronin build lives. `setBaseURI` is onlyOwner, so
+    // this is recoverable — but only if somebody notices.
+    metadataBase(network),
   )
 
   await contract.waitForDeployment()
@@ -40,7 +53,8 @@ async function main() {
     address,
     deployer:    deployer.address,
     deployedAt:  new Date().toISOString(),
-    constructorArgs: ['CryptoLand Tiles', 'CLND', `https://xono.ai/metadata/${network}/`],
+    // Must match what was actually passed above, or `hardhat verify` fails.
+    constructorArgs: ['CryptoLand Tiles', 'CLND', metadataBase(network)],
   }
 
   const dir = path.join(__dirname, '..', 'compiled')
@@ -59,7 +73,7 @@ async function main() {
 
   console.log(`   Saved: contracts/compiled/deployment-${network}.json`)
   console.log(`   .env:  ${envKey}=${address}`)
-  console.log(`\n   Verify: npx hardhat verify --network ${network} ${address} "CryptoLand Tiles" "CLND" "https://xono.ai/metadata/${network}/"`)
+  console.log(`\n   Verify: npx hardhat verify --network ${network} ${address} "CryptoLand Tiles" "CLND" "${metadataBase(network)}"`)
 }
 
 main().catch(err => { console.error(err); process.exitCode = 1 })

@@ -37,7 +37,7 @@ Environment knobs:
 
 | Var | Default | Meaning |
 |---|---|---|
-| `CRYPTOLAND_DOMAIN` | `cryptoland.game` | apex domain for the subdomains, e.g. `CRYPTOLAND_DOMAIN=xono.ai` → `algorand.xono.ai` |
+| `CRYPTOLAND_DOMAIN` | `xono.ai` | apex domain for the subdomains, e.g. `CRYPTOLAND_DOMAIN=xono.ai` → `algorand.xono.ai` |
 | `CRYPTOLAND_API_HOST` | *(unset)* | if set, builds point `VITE_API_BASE` at this host |
 | `CRYPTOLAND_SEED_USERS` | `120` | owners generated per chain |
 | `CRYPTOLAND_STATUS_HASH` | *(unset)* | bcrypt hash for `/status` basic auth. Generate with `caddy hash-password`. Never store the plaintext. |
@@ -67,7 +67,7 @@ One generated block per chain, then certificates:
 
 ```bash
 cp deploy/out/nginx/algorand.conf /etc/nginx/sites-enabled/
-certbot --nginx -d algorand.cryptoland.game
+certbot --nginx -d algorand.xono.ai
 nginx -s reload
 ```
 
@@ -173,9 +173,9 @@ This matters because grant reviewers share the subdomain link — without it all
 builds unfurl with the same generic preview.
 
 ```
-algorand.cryptoland.game → "CryptoLand on Algorand — Own the World"
-skale.cryptoland.game    → "CryptoLand on SKALE Nebula Gaming Hub — …"
-ton.cryptoland.game      → "CryptoLand on TON — Own the World"
+algorand.xono.ai → "CryptoLand on Algorand — Own the World"
+skale.xono.ai    → "CryptoLand on SKALE Nebula Gaming Hub — …"
+ton.xono.ai      → "CryptoLand on TON — Own the World"
 ```
 
 ---
@@ -233,7 +233,7 @@ team is the next step, not more gas.
 
 ### Metadata base URI — fixed before first deploy
 
-`scripts/deploy.js` passed `https://api.cryptoland.io/metadata/<network>/` — a domain
+`scripts/deploy.js` passed `https://<network>.xono.ai/metadata/` — a domain
 we do not own. That string is stored **on-chain** and is what every wallet and
 marketplace fetches, so 27 deployments would have had permanently unresolvable
 metadata. Now `https://<network>.xono.ai/metadata/`, which we control.

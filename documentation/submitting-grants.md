@@ -65,10 +65,10 @@ and [§7](grants.md#7-on-chain-impact--the-gap-that-matters-most).
 ### 1.3 A hosted domain with per-chain subdomains
 
 The deployment model is **one subdomain per chain**, named after the `VITE_CHAIN` key
-(`base.cryptoland.game`, `ronin.cryptoland.game`, …) — see
+(`base.xono.ai`, `ronin.xono.ai`, …) — see
 [multichain.md → Deployment topology](multichain.md#deployment-topology). You need:
 
-- the apex domain, with **wildcard DNS** (`*.cryptoland.game`) so a new chain is a build,
+- the apex domain, with **wildcard DNS** (`*.xono.ai`) so a new chain is a build,
   not a DNS ticket;
 - **HTTPS on every subdomain** — TON's `tonconnect-manifest.json` must be fetchable over
   HTTPS cross-origin and unauthenticated, and most wallet SDKs refuse non-secure origins;
@@ -117,7 +117,7 @@ building — it is compiled in. Leave it empty only if the API is same-origin.
 npm run build:all-chains          # every chain in the script's list
 ```
 
-### Step 3 — Deploy `dist-base/` to `base.cryptoland.game`
+### Step 3 — Deploy `dist-base/` to `base.xono.ai`
 
 `dist-<chain>/` is a plain static bundle. Any static host works, with the SPA rewrite.
 
@@ -162,7 +162,7 @@ new purchase anchors on-chain. **No code change** — see
 ### Step 5 — Pull the numbers
 
 ```bash
-curl 'https://base.cryptoland.game/metrics/grant?days=30'
+curl 'https://base.xono.ai/metrics/grant?days=30'
 ```
 
 `GET /metrics/grant` (`server/main.py`) is read-only, aggregate-only (no PII), and
@@ -186,8 +186,8 @@ applications, and a saved baseline is the only way to do that.
 
 Fill the form using §5 below. Always include:
 
-- the **live chain-native URL** (`https://base.cryptoland.game`);
-- the **reviewer page**, `https://base.cryptoland.game/ecosystem` — see below;
+- the **live chain-native URL** (`https://base.xono.ai`);
+- the **reviewer page**, `https://base.xono.ai/ecosystem` — see below;
 - the **numbers from step 5**, as numbers, with the window stated;
 - the **public repo URL** (§1.1);
 - the **deployed + verified contract address**, if step 4 was done.
@@ -389,7 +389,7 @@ the row.
 
 | Program | Chain | Status | Applied | Amount | Next action |
 |---|---|---|---|---|---|
-| #5 Base Builder Grants | `base` | Not started | — | ~$25K | Build + deploy `base.cryptoland.game` |
+| #5 Base Builder Grants | `base` | Not started | — | ~$25K | Build + deploy `base.xono.ai` |
 | #7 SKALE Indie Game Accelerator | `skale` | Not started | — | ~$100K | Build `skale` (Nebula hub); note zero-gas UX |
 | #9 Scroll Community Grants (micro) | `scroll` | Not started | — | ~$50K | Apply to microgrant tier first |
 | #8 Tezos Ecosystem Bounty | `tezos` | Not started | — | ~$30K | Find a matching open bounty |
@@ -401,9 +401,9 @@ the row.
 
 | Program | Chain | Status | Applied | Amount | Next action |
 |---|---|---|---|---|---|
-| #11 Ronin Ecosystem Grants | `ronin` | Not started | — | ~$300K | Build + deploy `ronin.cryptoland.game` |
+| #11 Ronin Ecosystem Grants | `ronin` | Not started | — | ~$300K | Build + deploy `ronin.xono.ai` |
 | #14 Ronin Forge | `ronin` | Not started | — | ~$300K | Same deployment as #11 — apply after it |
-| #12 Beam Foundation | `beam` | Not started | — | ~$250K | Build + deploy `beam.cryptoland.game` |
+| #12 Beam Foundation | `beam` | Not started | — | ~$250K | Build + deploy `beam.xono.ai` |
 | #30 Oasys Gaming grants | `oasys` | Not started | — | ~$200K | Build + deploy; consider JP-market framing |
 | #31 Arbitrum Gaming Catalyst (GCP) | `arbitrum` | Not started | — | ~$150K | Draft milestone tranches for Questbook |
 

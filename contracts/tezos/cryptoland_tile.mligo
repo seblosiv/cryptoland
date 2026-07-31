@@ -34,6 +34,7 @@ type parameter =
   | Set_tile_price of tez
   | Set_market_fee_bps of nat
   | Set_treasury_receiver of address
+  | Set_metadata_base of string
   | Withdraw
   | Transfer of transfer_item list
 
@@ -83,6 +84,11 @@ let set_treasury_receiver (addr, s : address * storage) : return =
   ([] : operation list), { s with treasury_receiver = addr }
 
 (* Entire treasury to the receiver. Zeroed BEFORE the operation is emitted. *)
+(* Metadata base URI. Every marketplace and wallet fetches this forever, and it points at the CHAIN'S OWN subdomain (e.g. https://tezos.xono.ai/tile/), not the apex — each chain has its own build and its own database. It is settable because it was NOT: the EVM contract has had setBaseURI since day one while these twelve baked it in at init, so a wrong URL at deploy time was permanent. A live deployment already carries the wrong value for exactly that reason. *)
+let set_metadata_base (uri, s : string * storage) : return =
+  let () = require_admin s in
+  ([] : operation list), { s with metadata_base = uri }
+
 let withdraw (s : storage) : return =
   let () = require_admin s in
   let () = assert_with_error (s.treasury > 0mutez) "NOTHING_TO_WITHDRAW" in
@@ -117,5 +123,6 @@ let main (action : parameter) (s : storage) : return =
   | Set_tile_price price     -> set_tile_price (price, s)
   | Set_market_fee_bps bps   -> set_market_fee_bps (bps, s)
   | Set_treasury_receiver a  -> set_treasury_receiver (a, s)
+  | Set_metadata_base uri    -> set_metadata_base (uri, s)
   | Withdraw                 -> withdraw s
   | Transfer batch           -> transfer (batch, s)
