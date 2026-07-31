@@ -25,8 +25,8 @@ CHAINS=(
   beam oasys skale hedera injective
   # non-EVM
   solana ton aptos sui starknet cardano near stellar algorand multiversx
-  radix tezos
-)
+  radix tezos \
+  mantle taiko rootstock flare)
 
 build_one() {
   local chain="$1"

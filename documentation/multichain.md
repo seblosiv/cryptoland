@@ -798,3 +798,36 @@ active on top of it.
   contract, and the SIWE wallet-auth flow.
 - [architecture.md](architecture.md) — overall system architecture.
 - [backend.md](backend.md) — the `blocks.chain` column and server endpoints.
+
+## Four chains added for grant reach — 2026-07-31
+
+Cross-referencing the 45 actionable programmes against configured chains found five
+we could not apply to for lack of a chain. Four were EVM:
+
+| Chain | id | Programme | Why it is nearly free |
+|---|---|---|---|
+| Mantle | 5000 | #55 Mantle Grants (rolling) | `adapters/evm.js` already covers it |
+| Taiko | 167000 | #56 Taiko Grants | same |
+| Rootstock | 30 | #57 Rootstock Grants | same — and the only build pitched on **Bitcoin** |
+| Flare | 14 | #58 Flare Grants | same |
+
+**The whole integration is a `CHAINS` entry, an `env/` template, a profile and a
+build target.** No adapter, no contract, and no new tests — the parameterised
+suites picked them up automatically (335 → 351 assertions).
+
+Two things worth recording:
+
+- **Every id and RPC was verified against a live `eth_chainId`** with an `Origin`
+  header before committing, so both the chain identity and CORS are confirmed. This
+  is the check that later caught Ronin renumbering Saigon.
+- **Flare's brand red `#e62058` is unreadable either way** — 4.30 against our
+  near-black ink, 4.46 against white, so a CTA label vanishes on both. `theme.test.js`
+  failed the build, which is exactly its job. The accent is `#d81b52` (5.00 on white),
+  still recognisably Flare.
+
+`rootstock` and `flare` have **no browser-usable fallback RPC** — publicnode serves
+both but sends no `Access-Control-Allow-Origin`, so their primaries are load-bearing.
+
+The fifth missing chain is **Flow** (#60, NFT-native, the chain NBA Top Shot runs
+on). It is *not* free: Cadence needs its own adapter and contract, so it is a real
+integration rather than a config entry.

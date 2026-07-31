@@ -200,6 +200,56 @@ const CHAIN_DEFS = {
     blockTime: 2, confirmations: 2, color: '#ff0420', logo: '🔴', testnet: true,
   },
 
+  // ── Added 2026-07-31 to reach four grant programmes we had no chain for.
+  //    All four are EVM, so adapters/evm.js covers them and there is no new code
+  //    — a CHAINS entry and an env template is the whole integration. Every id
+  //    and RPC below was verified against a live eth_chainId with an Origin
+  //    header, so CORS is confirmed too.
+  mantle: {
+    id: 5000, name: 'Mantle', shortName: 'MNT', family: 'evm',
+    rpcUrl: 'https://rpc.mantle.xyz', rpcUrlFallback: 'https://mantle-rpc.publicnode.com',
+    explorerUrl: 'https://explorer.mantle.xyz',
+    nativeCurrency: { name: 'Mantle', symbol: 'MNT', decimals: 18 },
+    blockTime: 2, confirmations: 3, color: '#65b3ae', logo: '🔷',
+    grant: 'Mantle Grants (rolling)',
+  },
+
+  taiko: {
+    id: 167000, name: 'Taiko', shortName: 'ETH', family: 'evm',
+    rpcUrl: 'https://rpc.mainnet.taiko.xyz', rpcUrlFallback: 'https://taiko-rpc.publicnode.com',
+    explorerUrl: 'https://taikoscan.io',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    blockTime: 12, confirmations: 3, color: '#e81899', logo: '🥁',
+    grant: 'Taiko Grants',
+  },
+
+  // Bitcoin-secured EVM sidechain: merge-mined by Bitcoin miners, gas paid in
+  // RBTC. The only chain here where the pitch is "Bitcoin", not "Ethereum".
+  rootstock: {
+    id: 30, name: 'Rootstock', shortName: 'RBTC', family: 'evm',
+    // publicnode's rootstock endpoint sends no CORS header, so there is no
+    // browser-usable fallback — the primary is load-bearing here.
+    rpcUrl: 'https://public-node.rsk.co',
+    explorerUrl: 'https://explorer.rootstock.io',
+    nativeCurrency: { name: 'Smart Bitcoin', symbol: 'RBTC', decimals: 18 },
+    blockTime: 30, confirmations: 2, color: '#ff9100', logo: '₿',
+    grant: 'Rootstock Grants',
+  },
+
+  flare: {
+    id: 14, name: 'Flare', shortName: 'FLR', family: 'evm',
+    // As with Rootstock, publicnode's Flare endpoint has no CORS header.
+    rpcUrl: 'https://flare-api.flare.network/ext/C/rpc',
+    explorerUrl: 'https://flare-explorer.flare.network',
+    nativeCurrency: { name: 'Flare', symbol: 'FLR', decimals: 18 },
+    // Flare's brand red is #e62058, which sits in a dead zone: 4.30 against our
+    // near-black ink and 4.46 against white, so a CTA label is unreadable EITHER
+    // way. src/test/theme.test.js catches exactly this. #d81b52 is the nearest
+    // shade that clears 4.5 (5.00 on white) and still reads as Flare red.
+    blockTime: 1.8, confirmations: 3, color: '#d81b52', logo: '🔥',
+    grant: 'Flare Grants',
+  },
+
   scroll: {
     id: 534352, name: 'Scroll', shortName: 'ETH', family: 'evm',
     rpcUrl: 'https://rpc.scroll.io', rpcUrlFallback: 'https://scroll-rpc.publicnode.com',

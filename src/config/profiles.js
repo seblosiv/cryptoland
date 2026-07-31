@@ -545,4 +545,60 @@ export const PROFILES = {
       grantAngle: 'Tiles are FA2 tokens and the rules of the map are voted on-chain by players, not set by a studio.',
     },
   },
+
+  // ── Added 2026-07-31 alongside the four EVM chains (config.js). Each one
+  //    targets a specific open grant programme; see deploy/apex/programs.mjs.
+  mantle: {
+    tagline: 'OWN THE WORLD · MODULAR',
+    pitch: 'Mantle separates execution from data availability, so the map settles to Ethereum while the cost of claiming a tile stays a rounding error.',
+    connectLabel: 'Connect MetaMask',
+    hero: { motif: 'mesh', colors: ['#65b3ae', '#2f6f6b'] },
+    onboarding: {
+      why: 'Mantle is a modular L2: execution and data availability are separate layers, which is what keeps a tile purchase cheap while still settling to Ethereum.',
+      nativeTerm: 'an ERC-721 NFT',
+      chainStat: { value: 'MNT', label: 'Gas token' },
+      feeNote: 'Gas is a fraction of a cent, paid in MNT.',
+    },
+  },
+
+  taiko: {
+    tagline: 'OWN THE WORLD · BASED ROLLUP',
+    pitch: 'Taiko is a based rollup: Ethereum L1 proposers sequence its blocks, so no single party decides whose land claim goes through first.',
+    connectLabel: 'Connect MetaMask',
+    hero: { motif: 'rays', colors: ['#e81899', '#8b0e5c'] },
+    onboarding: {
+      why: 'Taiko is a based rollup — Ethereum L1 proposers sequence the blocks, so no single sequencer can reorder or censor whose claim lands first.',
+      nativeTerm: 'an ERC-721 NFT',
+      chainStat: { value: 'Based', label: 'Rollup type' },
+      feeNote: 'Gas is paid in ETH on Taiko, a fraction of L1 cost.',
+    },
+  },
+
+  // The only build whose story is Bitcoin rather than Ethereum.
+  rootstock: {
+    tagline: 'OWN THE WORLD · SECURED BY BITCOIN',
+    pitch: 'Rootstock is merge-mined by Bitcoin miners, so the ledger recording who owns which tile inherits Bitcoin\'s hashpower — and gas is paid in BTC.',
+    connectLabel: 'Connect MetaMask',
+    hero: { motif: 'hex', colors: ['#ff9100', '#a35c00'] },
+    onboarding: {
+      why: 'Rootstock is merge-mined by Bitcoin miners, so the record of who owns which tile is secured by Bitcoin\'s hashpower rather than a separate validator set.',
+      nativeTerm: 'an ERC-721 NFT',
+      chainStat: { value: 'Merge-mined', label: 'Security model' },
+      feeNote: 'Gas is paid in RBTC — Bitcoin, bridged 1:1.',
+    },
+  },
+
+  flare: {
+    tagline: 'OWN THE WORLD · DATA-NATIVE',
+    pitch: 'Flare ships oracles and state connectors in the protocol itself, so a map that wants real-world data has somewhere native to get it.',
+    connectLabel: 'Connect MetaMask',
+    hero: { motif: 'orbit', colors: ['#d81b52', '#8c1134'] },
+    onboarding: {
+      why: 'Flare builds data feeds and a state connector into the protocol, so a world map that eventually wants real-world signals has a native source rather than a bolted-on oracle.',
+      nativeTerm: 'an ERC-721 NFT',
+      chainStat: { value: 'Native', label: 'Oracle layer' },
+      feeNote: 'Gas is a fraction of a cent, paid in FLR.',
+    },
+  },
+
 }

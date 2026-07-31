@@ -152,11 +152,11 @@ detection").
 
 `scripts/build-chain.sh <chain>` copies `env/.env.<chain>` → `.env.production`, then
 runs `npx vite build --outDir dist-<chain>`. `env/` holds one **blank** template per
-target (they are dotfiles — list them with `ls -A env/`), currently **27**:
+target (they are dotfiles — list them with `ls -A env/`), currently **31**:
 
 ```
 EVM      polygon avalanche base arbitrum ronin bnb optimism scroll celo moonbeam
-         beam oasys skale hedera injective
+         beam oasys skale hedera injective mantle taiko rootstock flare
 non-EVM  solana ton aptos sui starknet cardano near stellar algorand multiversx
          radix tezos
 ```
@@ -289,9 +289,20 @@ allows only `Authorization`, `Content-Type`, `X-Session-ID` headers.
 
 ## 5. Chains — the real numbers
 
-`src/lib/blockchain/config.js` defines **55 chain entries = 29 mainnet + 26 testnet,
-across 13 adapter families**. 31 entries (17 mainnet) are `family: 'evm'` and share the
-single `adapters/evm.js`. Families: `evm`, `solana`, `ton`, `aptos`, `sui`, `starknet`,
+`src/lib/blockchain/config.js` defines **59 chain entries = 33 mainnet + 26 testnet,
+across 13 adapter families**. 35 entries (21 mainnet) are `family: 'evm'` and share the
+single `adapters/evm.js`.
+
+> **Mantle, Taiko, Rootstock and Flare were added 2026-07-31** purely to reach four
+> open grant programmes we had no chain for. Because they are EVM, the entire
+> integration was a `CHAINS` entry, an `env/` template and a build target — no
+> adapter, no contract, no tests beyond the parameterised ones that picked them up
+> automatically (335 → 351). Every id and RPC was verified against a live
+> `eth_chainId` with an Origin header before being committed.
+>
+> They have **no logomark yet** (`src/components/logos/`), so they render the
+> neutral mark in their own accent — which the design system tolerates by
+> construction. Families: `evm`, `solana`, `ton`, `aptos`, `sui`, `starknet`,
 `cardano`, `near`, `stellar`, `algorand`, `multiversx`, `radix`, `tezos`.
 
 Build targets are **27** — every mainnet chain except `ethereum` (a general EVM target
