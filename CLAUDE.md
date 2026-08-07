@@ -116,6 +116,13 @@ npm run build:all-chains        # all 27 chain targets
 ./scripts/deploy-chain.sh <chain> --seed
 ./scripts/deploy-chain.sh all --seed
 
+# What does mainnet deployment cost, and can Binance actually send it there?
+# Live gas x observed deploy gas for EVM; amounts observed on testnet for non-EVM.
+# Regenerates deploy/apex/funding-plan.json, which /status renders.
+node scripts/funding-plan.mjs
+node scripts/funding-plan.mjs --dump-prices px.json   # prices where CoinGecko works
+node scripts/funding-plan.mjs --prices px.json        # totals where the RPCs work
+
 # Pre-flight before a submission round: is every chain's RPC reachable FROM A
 # BROWSER? (checks response + body + Access-Control-Allow-Origin, exits 1 if any
 # chain has no working endpoint). ~50 live calls, deliberately NOT in npm test.
@@ -523,13 +530,29 @@ Known gaps — be honest about these, do not paper over them:
   template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).
   Competing needs recurring gameplay moved on-chain — a product decision, written up
   in `documentation/grants.md` §7. Not a config change.
+- **Mainnet costs $152 for all 34 chains — the blocker is routing, not money.**
+  `node scripts/funding-plan.mjs`. Solana is **85% of the total** (~1.75 SOL of
+  *rent* for the 245KB program, refunded on close — that is how it was measured);
+  everything else combined is ~$23. 23 chains are fundable straight from Binance,
+  6 need Gate.io/KuCoin/HTX/OKX, 3 need a bridge (`taiko` `moonbeam` `rootstock`),
+  2 need nothing (SKALE is gasless — and still blocked, on a *deployer whitelist*,
+  which no amount of funding fixes).
+  > 🔴 **Binance reports `withdrawEnable: true` for RON and MNT on a
+  > `FIAT_MONEY` pseudo-network with no on-chain route.** Trusting that flag is
+  > wrong twice. The same pass matched ETH to Binance's `BSC` network for Taiko —
+  > following it would have sent the funds to BNB Chain and lost them. Verify
+  > against each exchange's own public network-config endpoint, never an article.
 - **Seeded data is demo data.** All 27 chains are seeded so no build looks empty, and
   `/stats` returns 27 genuinely distinct triples — but those owners are generated
   addresses. Say plainly in any application which numbers are seeded and which are
   organic. A reviewer who discovers the difference on their own is a lost grant.
-- **94 ESLint errors + 27 warnings are pre-existing, not regressions**: 58
-  `no-unused-vars`, 18 `no-empty`, plus `react-hooks` warnings. `npm run lint` is not
-  a clean gate — compare counts before/after your change rather than expecting zero.
+- **99 ESLint errors + 27 warnings are pre-existing, not regressions** (measured
+  at HEAD 2026-08-08): 66 `no-unused-vars`, 19 `no-empty`, plus `react-hooks`
+  warnings. `npm run lint` is not a clean gate — compare counts before/after your
+  change rather than expecting zero. **Measure the baseline, don't read it here**
+  (`git stash -u && npm run lint && git stash pop`): this line said 94/58/18 while
+  the tree was actually at 99/66/19, so a change that added nothing looked like it
+  had added five errors.
 - **Public RPCs rot and it is invisible.** `scripts/check-rpcs.mjs` checks response +
   body + CORS across 52 endpoints. It has already caught six Ankr endpoints returning
   HTTP 200 with a JSON-RPC error body, a Cloudflare 521, an NXDOMAIN, Polygon's own

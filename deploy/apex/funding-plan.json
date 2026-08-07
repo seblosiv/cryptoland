@@ -1,0 +1,414 @@
+{
+ "deployGas": "3200000",
+ "generated": "2026-08-08",
+ "note": "gas prices live; non-EVM amounts observed on testnet. Merged across two hosts because no single host can reach every RPC: this laptop cannot resolve Flare or Rootstock, and the prod box is Cloudflare-banned (1005) by Ronin.",
+ "rows": [
+  {
+   "key": "polygon",
+   "family": "evm",
+   "route": {
+    "binance": "MATIC"
+   },
+   "sym": "MATIC",
+   "native": 0.8744795341664,
+   "gwei": 273.274854427,
+   "usd": 0.11032084011229636,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "avalanche",
+   "family": "evm",
+   "route": {
+    "binance": "AVAXC"
+   },
+   "sym": "AVAX",
+   "native": 0.000194505824,
+   "gwei": 0.06078307,
+   "usd": 0.00125261750656,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "base",
+   "family": "evm",
+   "route": {
+    "binance": "BASE"
+   },
+   "sym": "ETH",
+   "native": 1.92e-05,
+   "gwei": 0.006,
+   "usd": 0.036761088,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "ethereum",
+   "family": "evm",
+   "route": {
+    "binance": "ETH"
+   },
+   "sym": "ETH",
+   "native": 0.0002611895296,
+   "gwei": 0.081621728,
+   "usd": 0.5000839209533441,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "arbitrum",
+   "family": "evm",
+   "route": {
+    "binance": "ARBITRUM"
+   },
+   "sym": "ETH",
+   "native": 6.4128e-05,
+   "gwei": 0.02004,
+   "usd": 0.12278203392000002,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "ronin",
+   "family": "evm",
+   "route": {
+    "alt": "Gate.io (RON network)",
+    "why": "Binance lists RON as FIAT_MONEY only \u2014 no on-chain withdrawal"
+   },
+   "sym": "RON",
+   "native": 0.0672,
+   "gwei": 21,
+   "usd": 0.0034212863999999996,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "bnb",
+   "family": "evm",
+   "route": {
+    "binance": "BSC"
+   },
+   "sym": "BNB",
+   "native": 0.00016,
+   "gwei": 0.05,
+   "usd": 0.09477120000000001,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "optimism",
+   "family": "evm",
+   "route": {
+    "binance": "OPTIMISM"
+   },
+   "sym": "ETH",
+   "native": 3.2012096e-06,
+   "gwei": 0.001000378,
+   "usd": 0.006129163948544,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "mantle",
+   "family": "evm",
+   "route": {
+    "alt": "KuCoin or Gate.io (Mantle network)",
+    "why": "Binance lists MNT as FIAT_MONEY only"
+   },
+   "sym": "MNT",
+   "native": 0.16000032,
+   "gwei": 50.0001,
+   "usd": 0.06686157372288,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "taiko",
+   "family": "evm",
+   "route": {
+    "bridge": "withdraw ETH to Ethereum L1, then bridge.taiko.xyz",
+    "why": "Taiko gas is ETH, and no exchange withdraws ETH onto Taiko. The TAIKO token is governance, not gas \u2014 sending it would not pay for a deploy"
+   },
+   "sym": "ETH",
+   "native": 3.2e-05,
+   "gwei": 0.01,
+   "usd": 0.06126848,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "rootstock",
+   "family": "evm",
+   "route": {
+    "bridge": "PowPeg (0.005 BTC minimum peg-in) or a swap service",
+    "why": "RBTC is delisted on Gate and disabled on KuCoin. PowPeg is permissionless but parks ~0.005 BTC, which is recoverable via peg-out"
+   },
+   "sym": "RBTC",
+   "native": 8.340992e-05,
+   "gwei": 0.0260656,
+   "usd": 5.41238629888,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "flare",
+   "family": "evm",
+   "route": {
+    "binance": "FLR"
+   },
+   "sym": "FLR",
+   "native": 2.08,
+   "gwei": 650,
+   "usd": 0.012482911999999999,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "scroll",
+   "family": "evm",
+   "route": {
+    "binance": "SCROLL"
+   },
+   "sym": "ETH",
+   "native": 3.843456e-07,
+   "gwei": 0.000120108,
+   "usd": 0.000735883459584,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "celo",
+   "family": "evm",
+   "route": {
+    "binance": "CELO"
+   },
+   "sym": "CELO",
+   "native": 0.648,
+   "gwei": 202.5,
+   "usd": 0.039341376000000004,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "moonbeam",
+   "family": "evm",
+   "route": {
+    "bridge": "Squid/Wormhole from Base, or a swap service",
+    "why": "every exchange checked (Binance/Gate/KuCoin/Bitget/HTX) offers only WRAPPED GLMR on Base or BSC. Wrapped GLMR cannot pay Moonbeam gas"
+   },
+   "sym": "GLMR",
+   "native": 0.1,
+   "gwei": 31.25,
+   "usd": 0.0008046650000000001,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "beam",
+   "family": "evm",
+   "route": {
+    "alt": "Gate.io (BEAM network)",
+    "why": "Binance BEAM withdrawal is disabled"
+   },
+   "sym": "BEAM",
+   "native": 3.2000000000032,
+   "gwei": 1000.000000001,
+   "usd": 0.00442969600000443,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "oasys",
+   "family": "evm",
+   "route": {
+    "alt": "Gate.io or HTX (OAS network)",
+    "why": "OAS is not listed on Binance at all"
+   },
+   "sym": "OAS",
+   "native": 0.0064000000224,
+   "gwei": 2.000000007,
+   "usd": 2.11584000740544e-06,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "skale",
+   "family": "evm",
+   "route": {
+    "free": "sFUEL faucet",
+    "why": "gasless chain. Deployment is instead gated behind a deployer whitelist \u2014 a request to the SKALE team, not money"
+   },
+   "sym": "sFUEL",
+   "native": 3.2e-07,
+   "gwei": 0.0001,
+   "usd": 0,
+   "why": "gasless chain (sFUEL has no market value)"
+  },
+  {
+   "key": "skale-europa",
+   "family": "evm",
+   "route": {
+    "free": "sFUEL faucet",
+    "why": "gasless chain; same deployer whitelist as Nebula"
+   },
+   "sym": "sFUEL",
+   "native": 3.2e-07,
+   "gwei": 0.0001,
+   "usd": 0,
+   "why": "gasless chain (sFUEL has no market value)"
+  },
+  {
+   "key": "hedera",
+   "family": "evm",
+   "route": {
+    "binance": "HBAR"
+   },
+   "sym": "HBAR",
+   "native": 4,
+   "gwei": 1250,
+   "usd": 0.272368,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "injective",
+   "family": "evm",
+   "route": {
+    "binance": "INJ"
+   },
+   "sym": "INJ",
+   "native": 0.000512,
+   "gwei": 0.16,
+   "usd": 0.00229888,
+   "why": "3200000 gas at live price"
+  },
+  {
+   "key": "flow",
+   "family": "flow",
+   "route": {
+    "binance": "FLOW"
+   },
+   "sym": "FLOW",
+   "native": 2,
+   "usd": 0.05476998,
+   "why": "account storage minimum + deploy"
+  },
+  {
+   "key": "solana",
+   "family": "solana",
+   "route": {
+    "binance": "SOL"
+   },
+   "sym": "SOL",
+   "native": 1.75,
+   "usd": 128.8525,
+   "why": "rent for the 245KB program (1.7077 SOL observed on close) + fees"
+  },
+  {
+   "key": "ton",
+   "family": "ton",
+   "route": {
+    "alt": "OKX or Bybit",
+    "why": "Binance TON withdrawal is disabled; Gate.io has delisted it"
+   },
+   "sym": "TON",
+   "native": 1,
+   "usd": 1.35,
+   "why": "collection deploy + storage"
+  },
+  {
+   "key": "aptos",
+   "family": "aptos",
+   "route": {
+    "binance": "APT"
+   },
+   "sym": "APT",
+   "native": 0.15,
+   "usd": 0.0870084,
+   "why": "publish gas (33,834 units observed)"
+  },
+  {
+   "key": "sui",
+   "family": "sui",
+   "route": {
+    "binance": "SUI"
+   },
+   "sym": "SUI",
+   "native": 0.6,
+   "usd": 0.40362479999999995,
+   "why": "publish + storage-rebate deposit"
+  },
+  {
+   "key": "starknet",
+   "family": "starknet",
+   "route": {
+    "binance": "STARKNET",
+    "note": "withdraw ETH on the STARKNET network; fees payable in ETH"
+   },
+   "sym": "STRK",
+   "native": 20,
+   "usd": 0.4970356,
+   "why": "declare + deploy (the class is large)"
+  },
+  {
+   "key": "cardano",
+   "family": "cardano",
+   "route": {
+    "binance": "ADA"
+   },
+   "sym": "ADA",
+   "native": 25,
+   "usd": 5.03815,
+   "why": "reference-script UTXO min-ADA + fee"
+  },
+  {
+   "key": "near",
+   "family": "near",
+   "route": {
+    "binance": "NEAR"
+   },
+   "sym": "NEAR",
+   "native": 3,
+   "usd": 4.7700000000000005,
+   "why": "storage staking for the 133KB wasm + gas"
+  },
+  {
+   "key": "stellar",
+   "family": "stellar",
+   "route": {
+    "binance": "XLM"
+   },
+   "sym": "XLM",
+   "native": 15,
+   "usd": 2.417565,
+   "why": "contract upload + instance rent"
+  },
+  {
+   "key": "algorand",
+   "family": "algorand",
+   "route": {
+    "binance": "ALGO"
+   },
+   "sym": "ALGO",
+   "native": 1,
+   "usd": 0.088968,
+   "why": "app creation min-balance + fees"
+  },
+  {
+   "key": "multiversx",
+   "family": "multiversx",
+   "route": {
+    "binance": "EGLD"
+   },
+   "sym": "EGLD",
+   "native": 0.5,
+   "usd": 1.34,
+   "why": "deploy gas"
+  },
+  {
+   "key": "radix",
+   "family": "radix",
+   "route": {
+    "alt": "Gate.io or KuCoin (XRD network)",
+    "why": "XRD is not listed on Binance"
+   },
+   "sym": "XRD",
+   "native": 90,
+   "usd": 0.0833652,
+   "why": "84.01 XRD publish fee observed on stokenet"
+  },
+  {
+   "key": "tezos",
+   "family": "tezos",
+   "route": {
+    "binance": "XTZ"
+   },
+   "sym": "XTZ",
+   "native": 1.5,
+   "usd": 0.3017805,
+   "why": "origination burn for 7.7KB + storage"
+  }
+ ]
+}

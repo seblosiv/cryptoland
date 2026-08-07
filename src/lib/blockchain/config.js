@@ -227,9 +227,12 @@ const CHAIN_DEFS = {
   // RBTC. The only chain here where the pitch is "Bitcoin", not "Ethereum".
   rootstock: {
     id: 30, name: 'Rootstock', shortName: 'RBTC', family: 'evm',
-    // publicnode's rootstock endpoint sends no CORS header, so there is no
-    // browser-usable fallback — the primary is load-bearing here.
+    // publicnode's rootstock endpoint sends no CORS header — but drpc's does,
+    // and answers the correct chain id (0x1e), so the primary is no longer
+    // load-bearing on its own. Verified with an Origin header, which is the
+    // only check that distinguishes "works in curl" from "works in a browser".
     rpcUrl: 'https://public-node.rsk.co',
+    rpcUrlFallback: 'https://rootstock.drpc.org',
     explorerUrl: 'https://explorer.rootstock.io',
     nativeCurrency: { name: 'Smart Bitcoin', symbol: 'RBTC', decimals: 18 },
     blockTime: 30, confirmations: 2, color: '#ff9100', logo: '₿',
@@ -238,8 +241,10 @@ const CHAIN_DEFS = {
 
   flare: {
     id: 14, name: 'Flare', shortName: 'FLR', family: 'evm',
-    // As with Rootstock, publicnode's Flare endpoint has no CORS header.
+    // As with Rootstock, publicnode's Flare endpoint has no CORS header — drpc
+    // does send one and reports chain id 0xe, so it serves as the spare.
     rpcUrl: 'https://flare-api.flare.network/ext/C/rpc',
+    rpcUrlFallback: 'https://flare.drpc.org',
     explorerUrl: 'https://flare-explorer.flare.network',
     nativeCurrency: { name: 'Flare', symbol: 'FLR', decimals: 18 },
     // Flare's brand red is #e62058, which sits in a dead zone: 4.30 against our

@@ -240,6 +240,72 @@ metadata. Now `https://<network>.xono.ai/metadata/`, which we control.
 
 ---
 
+## Mainnet funding — what it costs and how to actually send it
+
+```bash
+node scripts/funding-plan.mjs            # the table
+node scripts/funding-plan.mjs --json     # machine-readable
+```
+
+Regenerate `deploy/apex/funding-plan.json` from it; `build-status.mjs` reads that
+file for both the funding table on `/status` and the per-chain "deploy cost"
+column. Neither is hand-maintained any more — the literal that preceded them
+covered ten EVM chains and printed the word `non-EVM` for the other 24, which
+hid the single largest line item in the whole budget.
+
+**All 34 mainnets cost about $152 to deploy; withdraw ~$288 to be safe.**
+
+- **Solana is 85% of it** — ~1.75 SOL of *rent* for the 245 KB program. It is not
+  a fee: closing the program refunds it, which is precisely how the number was
+  measured (1.7077404 SOL came back). Every other chain combined is ~$23.
+- Headroom is **10x on gas-priced chains, 1.3x on rent-priced ones**. Rent is a
+  deterministic function of byte size and cannot spike between funding and
+  deploying, so a flat 10x told you to withdraw 17.5 SOL ($1,288) for a $129 job.
+- EVM costs are live `eth_gasPrice` × the **3.2M gas the contract actually used**
+  on Oasys and Ronin. Non-EVM figures are amounts *observed during the real
+  testnet deployments*, not estimates.
+
+### Getting the money there is the part that bites
+
+Costs are trivial; **routing is not**. Verified against each exchange's own
+public network-config endpoint, never an article:
+
+| | chains | how |
+|---|---|---|
+| Direct from Binance | 23 | pick the network in the withdrawal dialog exactly |
+| Binance has no on-chain route | 6 | `ronin` `mantle` `oasys` `beam` `radix` `ton` → Gate.io / KuCoin / HTX / OKX |
+| Needs a bridge | 3 | `taiko` `moonbeam` `rootstock` |
+| No funding needed | 2 | `skale`, `skale-europa` — gasless |
+
+> 🔴 **Binance reports `withdrawEnable: true` for RON and MNT on a `FIAT_MONEY`
+> pseudo-network that has no on-chain route at all.** A checker that only reads
+> that flag concludes both are withdrawable and is wrong twice. Only treat a
+> network as real if its name is a real network. The same pass caught ETH
+> matching Binance's `BSC` network for Taiko — following that would have sent
+> the funds to BNB Chain and lost them.
+
+The three bridge cases, and why no exchange solves them:
+
+- **Taiko** — gas is ETH, and no exchange withdraws ETH *onto* Taiko. The TAIKO
+  token is governance, not gas; sending it would not pay for a deploy. Withdraw
+  ETH to L1, bridge at `bridge.taiko.xyz`.
+- **Moonbeam** — Binance, Gate, KuCoin, Bitget and HTX were all checked and every
+  one offers only **wrapped GLMR on Base or BSC**, which cannot pay Moonbeam gas.
+  Needs Squid/Wormhole or a swap service.
+- **Rootstock** — RBTC is delisted on Gate and disabled on KuCoin. PowPeg is
+  permissionless but parks a **0.005 BTC minimum** peg-in, recoverable via
+  peg-out. RBTC is pegged 1:1 to BTC, so `bitcoin` is its price feed —
+  `rootstock-infrastructure-framework` is RIF, a different token entirely.
+
+**SKALE needs no money and is still blocked**: the chain is gasless, but contract
+deployment sits behind a deployer whitelist. That is a request to the SKALE team.
+
+No single host can price this alone — this laptop cannot resolve Flare's or
+Rootstock's RPC, and the prod box is Cloudflare-banned (`error 1005`) by Ronin
+and hard rate-limited by CoinGecko. Hence `--dump-prices` / `--prices`, which
+splits price fetching from RPC probing and accumulates into the cache across
+runs instead of overwriting it.
+
 ## Testnet deployment — what actually works (2026-07-31)
 
 Nine chains are live on testnet. The per-chain commands, so nobody re-derives them:
