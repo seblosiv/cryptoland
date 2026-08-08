@@ -276,6 +276,47 @@ hid the single largest line item in the whole budget.
   on Oasys and Ronin. Non-EVM figures are amounts *observed during the real
   testnet deployments*, not estimates.
 
+
+### Solana program size — every lever, measured
+
+Rent is `(bytes + 173) x 6960` lamports, so **program size is the price**. Each of
+these was measured, not reasoned about, because the obvious-sounding ones are the
+dead ends:
+
+| lever | result |
+|---|---|
+| `opt-level="z"` + `strip` + `panic="abort"` | **245,496 -> 207,488 B, ~$19. Applied.** |
+| Strip harder | Nothing left. No `.symtab`, no debug sections; `.text` is 79% of the file. |
+| Delete log/error strings | 168 bytes total, and zero `msg!` calls. Not a lever. |
+| `anchor-lang` feature flags | `default = []` already — there is nothing to turn off. |
+| Older Anchor | 0.29 is 3,344 B smaller (~$1.71) and two versions behind on security fixes. No. |
+| `--max-len` 2x reclaim | **Does not apply.** `solana program deploy` allocates the exact program length by default; the 2x is opt-*in*. Our account measured 245,237 B against a 245,496 B binary — already tight. |
+| Drop Anchor for native | **~$67**, and not recommended — see below. |
+
+The decisive measurement is what an **empty** program costs:
+
+| | bytes | rent |
+|---|---|---|
+| Empty Anchor program (does nothing) | 152,528 | **$78.25** |
+| Empty native `solana-program` | 22,240 | $11.49 |
+| Ours (Anchor) | 207,488 | $106.42 |
+| — of which our own 306 lines | 54,960 | — |
+
+So **73% of the binary is framework**, and roughly $78 of the rent hosts Anchor
+rather than our logic. A native rewrite lands around 77,200 B / $39.65.
+
+**We are not doing that rewrite.** Anchor's discriminators and account-ownership
+checks are the security layer; hand-rolling them in a program that moves money is
+exactly where Solana contracts get drained. Trading that for $67 of *refundable*
+capital is a bad trade, and it would invalidate the devnet verification and the 6
+passing tests.
+
+Which is the point that dissolves the question: **the rent comes back.** `solana
+program close` refunds it in full — 1.7077404 SOL was reclaimed doing exactly
+that. Solana's irreversible cost is ~$0.01 of transaction fees. The $110 is
+capital that must be *available*, never capital that is *spent*, so optimising it
+further buys a smaller deposit, not a smaller bill.
+
 ### Getting the money there is the part that bites
 
 Costs are trivial; **routing is not**. Verified against each exchange's own
