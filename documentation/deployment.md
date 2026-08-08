@@ -253,11 +253,22 @@ column. Neither is hand-maintained any more — the literal that preceded them
 covered ten EVM chains and printed the word `non-EVM` for the other 24, which
 hid the single largest line item in the whole budget.
 
-**All 34 mainnets cost about $152 to deploy; withdraw ~$288 to be safe.**
+**All 34 mainnets cost about $134 to deploy; withdraw ~$255 to be safe.**
 
-- **Solana is 85% of it** — ~1.75 SOL of *rent* for the 245 KB program. It is not
-  a fee: closing the program refunds it, which is precisely how the number was
-  measured (1.7077404 SOL came back). Every other chain combined is ~$23.
+- **Solana is 83% of it, and it is a REFUNDABLE DEPOSIT, not a fee** — ~1.45 SOL
+  of *rent* for the program account. `solana program close` returns it, which is
+  precisely how the number was measured: 1.7077404 SOL came back. The
+  irreversible part of a Solana deploy is the transaction fees, ~0.01 SOL. Every
+  other chain combined is ~$23, so **the real spend for all 34 chains is ~$23.**
+- Rent is a pure function of allocated bytes, so **program size is the cost**.
+  Adding `opt-level = "z"`, `strip` and `panic = "abort"` to the release profile
+  took the binary 245,496 B → 207,488 B — 15.5%, ~0.26 SOL — with no change to
+  program logic and all 6 tests still passing. `overflow-checks` stays **on**:
+  disabling it saves a further 6,544 B (~$3) on a contract that does arithmetic
+  on token amounts and tile ids, which is not a trade worth making.
+- The deploy allocates exactly the program size (rent implied 245,237 B against a
+  245,496 B binary), so there is **no 2x `--max-len` over-allocation** to reclaim
+  — that common Solana saving does not apply here.
 - Headroom is **10x on gas-priced chains, 1.3x on rent-priced ones**. Rent is a
   deterministic function of byte size and cannot spike between funding and
   deploying, so a flat 10x told you to withdraw 17.5 SOL ($1,288) for a $129 job.

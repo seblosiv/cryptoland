@@ -10,9 +10,9 @@
     "binance": "MATIC"
    },
    "sym": "MATIC",
-   "native": 0.8744795341664,
-   "gwei": 273.274854427,
-   "usd": 0.11032084011229636,
+   "native": 0.8649698452192,
+   "gwei": 270.303076631,
+   "usd": 0.10912113579347338,
    "why": "3200000 gas at live price"
   },
   {
@@ -22,9 +22,9 @@
     "binance": "AVAXC"
    },
    "sym": "AVAX",
-   "native": 0.000194505824,
-   "gwei": 0.06078307,
-   "usd": 0.00125261750656,
+   "native": 0.0001756045056,
+   "gwei": 0.054876408,
+   "usd": 0.0011308930160640002,
    "why": "3200000 gas at live price"
   },
   {
@@ -46,9 +46,9 @@
     "binance": "ETH"
    },
    "sym": "ETH",
-   "native": 0.0002611895296,
-   "gwei": 0.081621728,
-   "usd": 0.5000839209533441,
+   "native": 0.0002147868928,
+   "gwei": 0.067120904,
+   "usd": 0.41123957643059206,
    "why": "3200000 gas at live price"
   },
   {
@@ -58,9 +58,9 @@
     "binance": "ARBITRUM"
    },
    "sym": "ETH",
-   "native": 6.4128e-05,
-   "gwei": 0.02004,
-   "usd": 0.12278203392000002,
+   "native": 6.4e-05,
+   "gwei": 0.02,
+   "usd": 0.12253696,
    "why": "3200000 gas at live price"
   },
   {
@@ -95,9 +95,9 @@
     "binance": "OPTIMISM"
    },
    "sym": "ETH",
-   "native": 3.2012096e-06,
-   "gwei": 0.001000378,
-   "usd": 0.006129163948544,
+   "native": 3.2011616e-06,
+   "gwei": 0.001000363,
+   "usd": 0.006129072045824,
    "why": "3200000 gas at live price"
   },
   {
@@ -247,9 +247,9 @@
     "binance": "HBAR"
    },
    "sym": "HBAR",
-   "native": 4,
-   "gwei": 1250,
-   "usd": 0.272368,
+   "native": 3.936,
+   "gwei": 1230,
+   "usd": 0.268010112,
    "why": "3200000 gas at live price"
   },
   {
@@ -282,9 +282,9 @@
     "binance": "SOL"
    },
    "sym": "SOL",
-   "native": 1.75,
-   "usd": 128.8525,
-   "why": "rent for the 245KB program (1.7077 SOL observed on close) + fees"
+   "native": 1.5,
+   "usd": 110.445,
+   "why": "REFUNDABLE rent for the 207KB program (~1.45 SOL) + fees; reclaimed via `solana program close`"
   },
   {
    "key": "ton",

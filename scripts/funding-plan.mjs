@@ -47,7 +47,14 @@ const headroomFor = (key, family) =>
 
 // ── non-EVM: amounts observed during the real testnet deployments ────────────
 const NON_EVM = {
-  solana:     { amt: 1.75, sym: 'SOL',  cg: 'solana',           why: 'rent for the 245KB program (1.7077 SOL observed on close) + fees' },
+  // REFUNDABLE, and the only "cost" here that is not a fee: this is rent for the
+  // program account. `solana program close` returns it — which is exactly how it
+  // was measured (1.7077404 SOL came back from the 245KB build). The irreversible
+  // part of a Solana deploy is the tx fees, ~0.01 SOL.
+  // Size-optimising the build took the program 245,496 B -> 207,488 B, so the
+  // deposit fell 1.71 -> 1.45 SOL. Rent is deterministic in byte count, hence the
+  // small headroom.
+  solana:     { amt: 1.5,  sym: 'SOL',  cg: 'solana',           why: 'REFUNDABLE rent for the 207KB program (~1.45 SOL) + fees; reclaimed via `solana program close`' },
   radix:      { amt: 90,   sym: 'XRD',  cg: 'radix',            why: '84.01 XRD publish fee observed on stokenet' },
   near:       { amt: 3,    sym: 'NEAR', cg: 'near',             why: 'storage staking for the 133KB wasm + gas' },
   cardano:    { amt: 25,   sym: 'ADA',  cg: 'cardano',          why: 'reference-script UTXO min-ADA + fee' },

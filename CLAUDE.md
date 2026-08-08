@@ -530,10 +530,13 @@ Known gaps — be honest about these, do not paper over them:
   template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).
   Competing needs recurring gameplay moved on-chain — a product decision, written up
   in `documentation/grants.md` §7. Not a config change.
-- **Mainnet costs $152 for all 34 chains — the blocker is routing, not money.**
-  `node scripts/funding-plan.mjs`. Solana is **85% of the total** (~1.75 SOL of
-  *rent* for the 245KB program, refunded on close — that is how it was measured);
-  everything else combined is ~$23. 23 chains are fundable straight from Binance,
+- **Mainnet costs $134 for all 34 chains — and ~$111 of that is a REFUNDABLE
+  DEPOSIT, so the real spend is ~$23.** `node scripts/funding-plan.mjs`. Solana is
+  83% of the total: rent for the program account, returned by `solana program
+  close` — that is how it was measured (1.7077404 SOL came back). Rent is a pure
+  function of program bytes, so `opt-level="z"` + `strip` + `panic="abort"` cut it
+  15.5% (245,496 B → 207,488 B) for free. Keep `overflow-checks` on; it costs 6.5KB
+  (~$3) and the contract does arithmetic on money. 23 chains are fundable straight from Binance,
   6 need Gate.io/KuCoin/HTX/OKX, 3 need a bridge (`taiko` `moonbeam` `rootstock`),
   2 need nothing (SKALE is gasless — and still blocked, on a *deployer whitelist*,
   which no amount of funding fixes).
