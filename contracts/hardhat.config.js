@@ -79,7 +79,9 @@ module.exports = {
       accounts: [PK],
     },
     ethereum: {
-      url:      'https://eth.llamarpc.com',
+      // Was eth.llamarpc.com, which answers Cloudflare 521 — a deploy against it
+      // fails at send time, after the wallet is already funded.
+      url:      'https://ethereum-rpc.publicnode.com',
       chainId:  1,
       accounts: [PK],
     },
@@ -125,6 +127,64 @@ module.exports = {
     skale: {
       url:      'https://mainnet.skalenodes.com/v1/green-giddy-denebola',
       chainId:  1482601649,
+      accounts: [PK],
+    },
+    'skale-europa': {
+      url:      'https://mainnet.skalenodes.com/v1/elated-tan-skat',
+      chainId:  2046399126,
+      accounts: [PK],
+    },
+
+    // ── Added 2026-08-09. Every remaining EVM mainnet, so "deploy everywhere"
+    //    is not gated on editing this file at the moment the funds land. Ten
+    //    chains were missing, three of them (hedera/flare/injective) in the
+    //    same tier we were about to fund. Every url below was verified with a
+    //    live eth_chainId against the value config.js declares — a reachable
+    //    RPC on the WRONG network is the failure mode that renumbered Ronin
+    //    Saigon out from under us.
+    hedera: {
+      url:      'https://mainnet.hashio.io/api',
+      chainId:  295,
+      accounts: [PK],
+    },
+    flare: {
+      url:      'https://flare-api.flare.network/ext/C/rpc',
+      chainId:  14,
+      accounts: [PK],
+    },
+    injective: {
+      url:      'https://sentry.evm-rpc.injective.network/',
+      chainId:  1776,
+      accounts: [PK],
+    },
+    mantle: {
+      url:      'https://rpc.mantle.xyz',
+      chainId:  5000,
+      accounts: [PK],
+    },
+    taiko: {
+      url:      'https://rpc.mainnet.taiko.xyz',
+      chainId:  167000,
+      accounts: [PK],
+    },
+    rootstock: {
+      url:      'https://public-node.rsk.co',
+      chainId:  30,
+      accounts: [PK],
+    },
+    moonbeam: {
+      url:      'https://rpc.api.moonbeam.network',
+      chainId:  1284,
+      accounts: [PK],
+    },
+    beam: {
+      url:      'https://build.onbeam.com/rpc',
+      chainId:  4337,
+      accounts: [PK],
+    },
+    oasys: {
+      url:      'https://rpc.mainnet.oasys.games',
+      chainId:  248,
       accounts: [PK],
     },
 

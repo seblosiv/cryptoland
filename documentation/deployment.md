@@ -242,6 +242,44 @@ metadata. Now `https://<network>.xono.ai/metadata/`, which we control.
 
 ## Mainnet funding — what it costs and how to actually send it
 
+### Before funding: the deploy path must exist for the chain you are funding
+
+`contracts/hardhat.config.js` had **11 of the 21 EVM mainnets**. Three of the
+missing ten — `hedera`, `flare`, `injective` — were in the very tier we were
+about to send money to, so the funds would have landed in a wallet with no way
+to spend them until the config was edited. All ten are now configured, and every
+url was checked with a live `eth_chainId` against the value `config.js` declares.
+
+`ethereum` also still pointed at `eth.llamarpc.com`, which answers Cloudflare
+521. That fails at *send* time — after the wallet is funded.
+
+```bash
+cd contracts
+npx hardhat run scripts/check-funding.js --network polygon
+```
+
+Reports, for all 21 EVM mainnets: balance, what a deploy costs at the **current**
+gas price, and whether the balance actually covers it. That last column is the
+point — a non-zero balance is not a fundable deploy, and finding that out the
+other way means a failed transaction after the money has moved. It re-checks
+`eth_chainId` per network too, because a reachable RPC on the wrong chain is a
+real failure mode here.
+
+Two quirks it works around: `getFeeData()` routes through per-chain oracles that
+break independently of the node (Polygon's gas station 500s while the RPC is
+fine), so it falls back to plain `eth_gasPrice`; and ethers v6 `staticNetwork`
+with no network still attempts detection and fails, so the chainId is passed
+explicitly.
+
+**SKALE and SKALE Europa already hold sFUEL and report READY TO DEPLOY.**
+Simulating the deployment against real chain state does not revert — but it
+returns exactly 50,000,000 gas, which is the block limit rather than a converged
+estimate, so it is suggestive, not proof that the deployer whitelist is gone.
+Being gasless, actually sending it costs nothing, which makes SKALE the free
+place to prove the whole pipeline before any funded chain is touched.
+
+
+
 ```bash
 node scripts/funding-plan.mjs            # the table
 node scripts/funding-plan.mjs --json     # machine-readable
