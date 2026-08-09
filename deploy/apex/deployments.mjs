@@ -18,13 +18,13 @@ export const DEPLOYMENTS = [
   // yields the same one. Convenient, and worth stating so nobody reads it as a
   // copy-paste error in the table.
   {
-    chain: 'EVM x16', network: 'MAINNET', family: 'evm', lang: 'Solidity',
+    chain: 'EVM x17', network: 'MAINNET', family: 'evm', lang: 'Solidity',
     date: '2026-08-09',
     contract: '0x89C6bcfb0aCC152F98599261dc2A72a996c3763F',
     explorer: 'https://etherscan.io/address/0x89C6bcfb0aCC152F98599261dc2A72a996c3763F',
     note:
       'ethereum, base, scroll, arbitrum, optimism, polygon, bnb, celo, avalanche, ' +
-      'injective, flow (EVM 747), flare, mantle, ronin, hedera, rootstock. Verified per ' +
+      'injective, flow (EVM 747), flare, mantle, ronin, hedera, rootstock, beam. Verified per ' +
       'chain by reading bytecode, owner, treasuryReceiver and MAX_TOKEN_ID back off each ' +
       'network. Six of these could not be bought from Binance at all and were funded ' +
       'without it: Flow (Binance addresses only Cadence accounts, but Flow EVM 747 uses ' +
@@ -36,11 +36,13 @@ export const DEPLOYMENTS = [
       'Polygon and BNB, chains already deployed and doing nothing with it. Hedera was the ' +
       'one that needed a human: its account is a network-assigned record, so no exchange or ' +
       'bridge could reach it; one HashPack transfer to the EVM alias auto-created account ' +
-      '0.0.10802784 under the key we already held.',
+      '0.0.10802784 under the key we already held. Beam came last, and only because ' +
+      'GasZip covers 194 chains against LI.FI\'s 69 and Symbiosis\' 65 — it was the only ' +
+      'route to Beam that exists, and it retired the third of the five "needs Gate.io" labels.',
     checks: [
-      { name: 'bytecode present on all 16', result: 'PASS', detail: '12,890 bytes on every chain' },
+      { name: 'bytecode present on all 17', result: 'PASS', detail: '12,890 bytes on every chain' },
       { name: 'owner is the retained key',  result: 'PASS', detail: '0xD10178e0…, required by Retro9000 / OP Atlas' },
-      { name: 'revenue routed off the hot key', result: 'PASS', detail: 'treasuryReceiver = 0xB8156B85… on all 16' },
+      { name: 'revenue routed off the hot key', result: 'PASS', detail: 'treasuryReceiver = 0xB8156B85… on all 17' },
       { name: 'fee within the hard cap',    result: 'PASS', detail: 'marketFeeBps 700, ceiling 1000' },
       { name: 'tokenId bounds fix live',    result: 'PASS', detail: 'MAX_TOKEN_ID 536854527 — the collision fix is what shipped' },
       { name: 'sales start closed',         result: 'PASS', detail: 'tilePrice reverts until setTilePrice' },
