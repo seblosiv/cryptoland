@@ -1,0 +1,12 @@
+{
+  "network": "ronin",
+  "chainId": 2020,
+  "address": "0x89C6bcfb0aCC152F98599261dc2A72a996c3763F",
+  "deployer": "0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58",
+  "deployedAt": "2026-08-09T20:23:51.659Z",
+  "constructorArgs": [
+    "CryptoLand Tiles",
+    "CLND",
+    "https://ronin.xono.ai/metadata/"
+  ]
+}
