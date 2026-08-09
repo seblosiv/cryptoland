@@ -1,0 +1,236 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.97.1",
+            "commitHash": "8bab26f4f68e0e26f0bb7960be334d5b520ea452",
+            "commitDate": "2026-07-14",
+            "channel": "Stable",
+            "short": "rustc 1.97.1 (8bab26f4f 2026-07-14)"
+        },
+        "contractCrate": {
+            "name": "cryptoland-tile",
+            "version": "0.1.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.54.6"
+        }
+    },
+    "name": "CryptoLandTile",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "upgradeConstructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "docs": [
+                "(tx << 15) | ty — identical to every other chain."
+            ],
+            "name": "tokenIdFromKey",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "tx",
+                    "type": "u64"
+                },
+                {
+                    "name": "ty",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "keyFromTokenId",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                },
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "mintTile",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "to",
+                    "type": "Address"
+                },
+                {
+                    "name": "tx",
+                    "type": "u64"
+                },
+                {
+                    "name": "ty",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "docs": [
+                "PRIMARY SALE: 100% of the payment becomes treasury."
+            ],
+            "name": "claimTile",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "tx",
+                    "type": "u64"
+                },
+                {
+                    "name": "ty",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "setTilePrice",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "price",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setMarketFeeBps",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "bps",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Point payouts at a cold wallet without handing over admin rights."
+            ],
+            "name": "setTreasuryReceiver",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "to",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "Entire treasury to the receiver. Zeroed before the transfer."
+            ],
+            "name": "withdraw",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "tilePrice",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "marketFeeBps",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "treasury",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "treasuryReceiver",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "tileOwner",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "totalMinted",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {}
+}

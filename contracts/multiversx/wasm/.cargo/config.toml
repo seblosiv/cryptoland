@@ -1,0 +1,6 @@
+# The VM supplies mBufferGetByteSlice, signalError, managedCaller and friends at
+# runtime, so they are undefined at link time by design. Without --allow-undefined
+# rust-lld refuses the artifact. Radix needed the identical flag for the identical
+# reason, and in both cases the vendor build tool is what normally supplies it.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]

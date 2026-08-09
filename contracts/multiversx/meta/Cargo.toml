@@ -1,0 +1,15 @@
+# Required by the MultiversX toolchain: `sc-meta all build` invokes THIS crate,
+# which knows the contract's ABI and emits the wasm + .abi.json. Without it the
+# contract compiles and unit-tests happily but produces no deployable artifact —
+# which is exactly the gap that "it passes cargo test" hides.
+[package]
+name = "cryptoland-tile-meta"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies.cryptoland-tile]
+path = ".."
+
+[dependencies.multiversx-sc-meta-lib]
+version = "0.54.6"
