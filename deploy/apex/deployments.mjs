@@ -12,6 +12,86 @@
  */
 
 export const DEPLOYMENTS = [
+  // ── MAINNET, 2026-08-09 ──────────────────────────────────────────────────
+  // Twelve EVM chains share one address because the deployer's nonce was 0 on
+  // each: CREATE derives the address from (sender, nonce), so a fresh chain
+  // yields the same one. Convenient, and worth stating so nobody reads it as a
+  // copy-paste error in the table.
+  {
+    chain: 'EVM x12', network: 'MAINNET', family: 'evm', lang: 'Solidity',
+    date: '2026-08-09',
+    contract: '0x89C6bcfb0aCC152F98599261dc2A72a996c3763F',
+    explorer: 'https://etherscan.io/address/0x89C6bcfb0aCC152F98599261dc2A72a996c3763F',
+    note:
+      'ethereum, base, scroll, arbitrum, optimism, polygon, bnb, celo, avalanche, ' +
+      'injective, flow (EVM 747), flare. Flow and Flare were funded by bridging leftover ' +
+      'Base gas through LI.FI — Binance cannot address Flow EVM and lists FLR with ' +
+      'trading:false, so neither was purchasable. Verified per chain by reading bytecode, ' +
+      'owner, treasuryReceiver and MAX_TOKEN_ID back off each network.',
+    checks: [
+      { name: 'bytecode present on all 12', result: 'PASS', detail: '12,890 bytes on every chain' },
+      { name: 'owner is the retained key',  result: 'PASS', detail: '0xD10178e0…, required by Retro9000 / OP Atlas' },
+      { name: 'revenue routed off the hot key', result: 'PASS', detail: 'treasuryReceiver = 0xB8156B85… on all 12' },
+      { name: 'fee within the hard cap',    result: 'PASS', detail: 'marketFeeBps 700, ceiling 1000' },
+      { name: 'tokenId bounds fix live',    result: 'PASS', detail: 'MAX_TOKEN_ID 536854527 — the collision fix is what shipped' },
+      { name: 'sales start closed',         result: 'PASS', detail: 'tilePrice reverts until setTilePrice' },
+    ],
+  },
+  {
+    chain: 'Stellar', network: 'MAINNET', family: 'stellar', lang: 'Soroban / Rust',
+    date: '2026-08-09',
+    contract: 'CA67UUE4NO7EIBYQBBBFIEYCGIDV5XBNH5D6ZKEL7ELOGWPKDPW46Y6M',
+    explorer: 'https://stellar.expert/explorer/public/contract/CA67UUE4NO7EIBYQBBBFIEYCGIDV5XBNH5D6ZKEL7ELOGWPKDPW46Y6M',
+    wasmBytes: 10069,
+    note:
+      'Submission timed out mid-init and looked like a failure; reading state back showed ' +
+      'market_fee_bps=700, which only init() writes. A timeout describes the connection, ' +
+      'not the chain.',
+    checks: [
+      { name: 'init landed',        result: 'PASS', detail: 'market_fee_bps=700, tile_price=0, treasury=0' },
+      { name: 'tokenId canonical',  result: 'PASS', detail: 'token_id(16383,16383) = 536854527, identical to the EVM contract' },
+    ],
+  },
+  {
+    chain: 'Aptos', network: 'MAINNET', family: 'aptos', lang: 'Move', date: '2026-08-09',
+    contract: '0xd2e9cd1e9d7345b82732eee6f877e3c360fd2cd4489c3faacaea168d7e865330',
+    deployTx: '0x4e304d3259fa83a69b80058271cf1ea040a2f20af9899b5455dece9d6b54a7e9',
+    explorer: 'https://explorer.aptoslabs.com/account/0xd2e9cd1e9d7345b82732eee6f877e3c360fd2cd4489c3faacaea168d7e865330?network=mainnet',
+    note: 'gas_used 35,442. Balance had to be read from the fungible-asset endpoint — the legacy CoinStore resource 404s and reads as "unfunded".',
+    checks: [{ name: 'module published', result: 'PASS', detail: 'cryptoland_tile, 14 exposed functions' }],
+  },
+  {
+    chain: 'Sui', network: 'MAINNET', family: 'sui', lang: 'Move', date: '2026-08-09',
+    contract: '0x017a7fd61ffa59467138376dbe559481563971de221eda70515086fe17888396',
+    deployTx: 'BKGo3LSkaGTf6JueoqPtRTUFu6m21Kn95LnTJGF1fDnR',
+    explorer: 'https://suiscan.xyz/mainnet/object/0x017a7fd61ffa59467138376dbe559481563971de221eda70515086fe17888396',
+    note: 'Package id had to come from `sui client tx-block` — public fullnode JSON-RPC is deprecated and returns -32601.',
+    checks: [{ name: 'package published', result: 'PASS', detail: 'module `tile`, object exists on mainnet' }],
+  },
+  {
+    chain: 'NEAR', network: 'MAINNET', family: 'near', lang: 'Rust / near-sdk', date: '2026-08-09',
+    contract: '9bfa83465426d6a03ba7f67f8be906a37ecf4816f58bb110aab295fe0cf1b5cb',
+    deployTx: '271XmbdAU4MvFuKC7wBUwXGCur4WiXcDW8fqrGLBfkcv',
+    explorer: 'https://nearblocks.io/address/9bfa83465426d6a03ba7f67f8be906a37ecf4816f58bb110aab295fe0cf1b5cb',
+    wasmBytes: 135555,
+    note:
+      'Deployed to an IMPLICIT account — the hex of the ed25519 public key. A named ' +
+      '.near account needs a creation transaction and so cannot receive from an exchange; ' +
+      'an implicit one exists by construction and can.',
+    checks: [
+      { name: 'code on chain',  result: 'PASS', detail: '135,555 bytes' },
+      { name: 'initialised',    result: 'PASS', detail: 'new(owner, base_uri) succeeded' },
+    ],
+  },
+  {
+    chain: 'Tezos', network: 'MAINNET', family: 'tezos', lang: 'CameLIGO', date: '2026-08-09',
+    contract: 'KT1G2bxH7FM4DWETRod2jGYyT6wiGWB2tyJ5',
+    deployTx: 'opJvS8njTffyMYVLknUTFzkD5sJDpGRXYSdZ8Xij7kaBTbfK8CP',
+    explorer: 'https://tzkt.io/KT1G2bxH7FM4DWETRod2jGYyT6wiGWB2tyJ5',
+    note: 'Originated via Taquito against rpc.tzkt.io — ecadinfra was unreachable.',
+    checks: [{ name: 'contract originated', result: 'PASS', detail: 'exists on mainnet, storage seeded with owner + 700 bps' }],
+  },
+
   {
     chain: 'Stellar',
     network: 'testnet',

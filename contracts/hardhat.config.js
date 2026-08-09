@@ -147,6 +147,17 @@ module.exports = {
       chainId:  295,
       accounts: [PK],
     },
+    // Flow EVM (747). Flow's Cadence side assigns 8-byte account addresses,
+    // which cannot be derived from a key and therefore cannot be funded from an
+    // exchange. Flow EVM uses ordinary key-derived 0x addresses, so the same
+    // retained deployer works here and the chain stops being wallet-gated.
+    // Named `flow` so metadataBase() resolves to https://flow.xono.ai/metadata/.
+    flow: {
+      url:      'https://mainnet.evm.nodes.onflow.org',
+      chainId:  747,
+      accounts: [PK],
+    },
+
     flare: {
       url:      'https://flare-api.flare.network/ext/C/rpc',
       chainId:  14,

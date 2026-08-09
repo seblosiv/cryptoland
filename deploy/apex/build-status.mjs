@@ -285,8 +285,8 @@ font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
     <table style="min-width:520px;margin-bottom:8px"><tbody>
       <tr><td style="width:150px;color:var(--dim)">Contract</td>
           <td><a href="${esc(d.explorer)}" target="_blank" rel="noopener"><code>${esc(d.contract)}</code></a></td></tr>
-      <tr><td style="color:var(--dim)">Deploy tx</td><td><code>${esc(d.deployTx)}</code></td></tr>
-      <tr><td style="color:var(--dim)">Wasm size</td><td>${d.wasmBytes.toLocaleString()} bytes</td></tr>
+      ${d.deployTx ? `<tr><td style="color:var(--dim)">Deploy tx</td><td><code>${esc(d.deployTx)}</code></td></tr>` : ''}
+      ${d.wasmBytes ? `<tr><td style="color:var(--dim)">Wasm size</td><td>${d.wasmBytes.toLocaleString()} bytes</td></tr>` : ''}
     </tbody></table>
     <p class="note" style="margin-bottom:10px">${esc(d.note)}</p>
     <div class="scroll"><table style="min-width:760px">
