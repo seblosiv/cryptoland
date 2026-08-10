@@ -5,9 +5,6 @@ edition = "2024_07"
 
 [dependencies]
 starknet = "2.11.4"
-openzeppelin_token = "1.0.0"
-openzeppelin_introspection = "1.0.0"
-openzeppelin_access = "1.0.0"
 
 # Required for #[test] — without it scarb rejects the attribute outright.
 [dev-dependencies]

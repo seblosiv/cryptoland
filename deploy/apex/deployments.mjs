@@ -12,6 +12,41 @@
  */
 
 export const DEPLOYMENTS = [
+  {
+    chain: 'TON', network: 'MAINNET', family: 'ton', lang: 'FunC (TEP-62)', date: '2026-08-10',
+    contract: 'EQDLIm_mggUROZ5Q2rmZ1cWW4jKGIR9RXtjnxOpAC75mfvbV',
+    explorer: 'https://tonviewer.com/EQDLIm_mggUROZ5Q2rmZ1cWW4jKGIR9RXtjnxOpAC75mfvbV',
+    note:
+      'On TON an address IS hash(code, initial data), so there is no deploy step ' +
+      'distinct from a transfer — the first message carrying stateInit creates the ' +
+      'contract. Funded through ChangeNOW because Binance has TON withdrawals ' +
+      'disabled and Gate.io delisted it; ChangeNOW lists native TON under the ' +
+      'display name "GRAM (ex Ton/TonCoin)", which is easy to mistake for a ' +
+      'different asset. The first two attempts died on a 429 from toncenter\'s ' +
+      'keyless API, which the SDK surfaces as an opaque wasm abort from the FunC ' +
+      'compiler bundle rather than an HTTP error.',
+    checks: [
+      { name: 'contract active', result: 'PASS', detail: 'state=active, code and data both present' },
+      { name: 'storage seeded',  result: 'PASS', detail: 'owner + receiver set, fee 700, price 0 (sales closed)' },
+    ],
+  },
+  {
+    chain: 'Cardano', network: 'MAINNET', family: 'cardano', lang: 'Aiken / PlutusV3', date: '2026-08-10',
+    contract: 'addr1wyfkygf9fj2pxfcv2slduek93eeevnhzsg8dssr02tr9z8qq9ycqk',
+    deployTx: '04f987ad3c43f89ff1d533251c471dac2416db7346d18dbb04ac64ecb8141100',
+    explorer: 'https://cardanoscan.io/address/addr1wyfkygf9fj2pxfcv2slduek93eeevnhzsg8dssr02tr9z8qq9ycqk',
+    note:
+      'Cardano has no deploy instruction. A validator address is derived from its ' +
+      'script hash, so it exists the moment the script compiles — but nothing is ' +
+      'on-chain until a transaction puts it there. Published as a REFERENCE SCRIPT, ' +
+      'which later transactions point at instead of re-embedding the script. Koios ' +
+      'works with no API key, avoiding Blockfrost. The stored secret is a raw 32-byte ' +
+      'hex seed while Lucid wants a CIP-5 bech32 ed25519_sk.',
+    checks: [
+      { name: 'reference script on-chain', result: 'PASS', detail: 'block 13788628, 2.155 ADA locked, fee 0.179 ADA' },
+      { name: 'hash matches the build',    result: 'PASS', detail: '136221254c9413270c543ede66c58e73964ee2820ed8406f52c6511c, plutusV3, 281 bytes' },
+    ],
+  },
   // ── MAINNET, 2026-08-09 ──────────────────────────────────────────────────
   // Twelve EVM chains share one address because the deployer's nonce was 0 on
   // each: CREATE derives the address from (sender, nonce), so a fresh chain
