@@ -15,8 +15,13 @@ import {
 } from '@radixdlt/radix-engine-toolkit';
 import { readFileSync } from 'node:fs';
 
-const GATEWAY = 'https://stokenet.radixdlt.com';
-const NET = NetworkId.Stokenet;
+const GATEWAY = 'https://mainnet.radixdlt.com';
+// Mainnet. Stokenet is kept in the comment because the four workarounds below
+// were discovered there and apply identically: scrypto build cannot compile the
+// package (it strips --allow-undefined), the .rpd comes from executing the
+// wasm's own schema export, the definition must be inlined as a manifest value,
+// and 108 LLVM memory.copy ops had to be lowered with binaryen.
+const NET = NetworkId.Mainnet;
 
 const seed = Buffer.from(JSON.parse(readFileSync('../../.testnet/radix.json', 'utf8')).seed, 'hex');
 const notary = new PrivateKey.Ed25519(new Uint8Array(seed));

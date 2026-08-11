@@ -1,0 +1,23 @@
+[package]
+name = "cryptoland-tile-min"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cryptoland_tile_min"
+
+# No dependencies at all. solana-program would drag in the allocator, panic
+# machinery and AccountInfo deserialisation — 22KB before a line of our logic.
+[dependencies]
+
+# Every byte is rent: (bytes + 173) * 6960 lamports. overflow-checks STAYS ON —
+# this counts tiles and money, and the 6.5KB it costs on the Anchor build was
+# worth it there too.
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+opt-level = "z"
+strip = true
+panic = "abort"

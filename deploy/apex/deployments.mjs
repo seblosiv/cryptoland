@@ -13,6 +13,36 @@
 
 export const DEPLOYMENTS = [
   {
+    chain: 'Solana', network: 'MAINNET', family: 'solana', lang: 'Rust (no_std, raw entrypoint)',
+    date: '2026-08-11',
+    contract: 'Aa5fyUVXnurKVbJgSzv8toDyttC1GZWGNBH5baGe2sb7',
+    deployTx: '5PvKAUYE3rY6PYWRekS9sKSjG6gVFEFca3A7fxH6ANh9dQWJW7ogXPaudmJL8zw9HXDgKqhKQSNB7Peh32ABaDMa',
+    explorer: 'https://solscan.io/account/Aa5fyUVXnurKVbJgSzv8toDyttC1GZWGNBH5baGe2sb7',
+    wasmBytes: 2816,
+    note:
+      'Rent is (bytes + 173) * 6960 lamports, so program size IS the price. The ' +
+      'Anchor build is 207,488 bytes = 1.45 SOL = $109; an EMPTY Anchor program is ' +
+      '152,528 of that, and even an empty program using the standard entrypoint! ' +
+      'macro is 22,240 bytes. Three things dominate and none are our logic: the ' +
+      'macro links a bump allocator and panic handler, msg! pulls in Rust format ' +
+      'machinery, and AccountInfo deserialisation builds a heap Vec. A #![no_std] ' +
+      'raw entrypoint reading the input buffer in place removes all three: 2,816 ' +
+      'bytes, 0.0208 SOL, $1.58 — 84x cheaper. Deliberately ships NO CPI, PDAs or ' +
+      'payment escrow: hand-written account validation is where Solana programs get ' +
+      'drained, so this carries the same surface as the Algorand build. Verified ' +
+      '16/16 on devnet BEFORE mainnet.',
+    checks: [
+      { name: 'program executable',        result: 'PASS', detail: 'owner BPFLoaderUpgradeable, executable=true' },
+      { name: 'tokenId far corner',        result: 'PASS', detail: 'token_id(16383,16383) = 536854527 — a FIFTH VM agreeing' },
+      { name: 'tokenId origin + x-step',   result: 'PASS', detail: '(0,0)=0 and (1,0)=32768' },
+      { name: 'out-of-range REJECTED',     result: 'PASS', detail: '(16384,0) and (0,16384) both refused — the collision guard 39 EVM unit tests missed' },
+      { name: 're-initialize rejected',    result: 'PASS', detail: 'without it anyone could seize ownership' },
+      { name: 'sales start closed',        result: 'PASS', detail: 'claim refused until the owner sets a price' },
+      { name: 'fee ceiling enforced',      result: 'PASS', detail: '1001 bps rejected, 900 accepted' },
+      { name: 'owner gating',              result: 'PASS', detail: 'admin instructions require the stored owner as signer' },
+    ],
+  },
+  {
     chain: 'Starknet', network: 'MAINNET', family: 'starknet', lang: 'Cairo', date: '2026-08-11',
     contract: '0x5d5cb39bf5330a3e4f0965d1d570a0635a2fb3300324fcc395e5840f508e598',
     deployTx: '0x5111f01f80850ffc0d58faf28d005512d132394080ef354773217972e5af0c7',
