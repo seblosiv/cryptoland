@@ -1,11 +1,18 @@
-# CryptoLand
+# CryptoLand by XONO
 
 A geospatial territory game over the real world — a 16,384 × 16,384 tile grid,
 **268,435,456 claimable tiles** of roughly 2.4 km² each. Players buy, customise,
 trade, raid and govern land, with AI Guardian agents defending it while they are
 offline.
 
-It ships as **27 chain-native deployments from one codebase**.
+It ships as **chain-native deployments from one codebase** — currently live on
+**30 mainnets**.
+
+> **On the name.** The product is **CryptoLand**; **XONO** is the company and the
+> domain it ships under. Both appear throughout on purpose: the on-chain NFT
+> collection is `CryptoLand Tiles` / `CLND`, immutably set in each contract's
+> constructor across all 30 deployments, while every site, callback and metadata
+> URI lives on `xono.ai`.
 
 **Live:** [xono.ai](https://xono.ai) · pick any chain, e.g.
 [ton.xono.ai](https://ton.xono.ai) · [cardano.xono.ai](https://cardano.xono.ai) ·

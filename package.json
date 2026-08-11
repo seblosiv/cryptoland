@@ -41,5 +41,6 @@
     "tailwindcss": "^4.2.4",
     "vite": "^8.0.10",
     "vitest": "^3.2.4"
-  }
+  },
+  "description": "CryptoLand by XONO \u2014 a geospatial NFT territory game shipped as chain-native builds from one codebase"
 }

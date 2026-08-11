@@ -64,6 +64,22 @@ Ask the user only for genuine captchas and social logins. Those are deliberate
 anti-bot controls: do not automate around them, and decline captcha-solving
 services.
 
+### 🔴 The product is CryptoLand. The company and domain are XONO.
+
+Decided 2026-08-11, and settled — do not "finish the rebrand".
+
+`xono.ai` owns every site, subdomain, TLS cert, IPN callback and metadata base
+URI. The NFT collection is `CryptoLand Tiles` / `CLND`, and that is **immutable**:
+`_name` and `_symbol` are set in the constructor with no setter, on all 30
+mainnet deployments. Renaming them means redeploying every chain, re-spending
+~$65, and losing `0x89C6bcfb0aCC152F98599261dc2A72a996c3763F` as the shared
+address across 18 EVM chains.
+
+So ~310 files mention CryptoLand **on purpose**. Read it as "CryptoLand by XONO",
+not as an unfinished migration. What *was* migrated — and must stay migrated — is
+the domain: `cryptoland.io`/`.game` must never reappear, which
+`scripts/audit-domain.sh` enforces across 7 layers.
+
 ### 🔴 Update `documentation/` after every code change.
 
 Standing user convention. A code change without the matching doc update is an
