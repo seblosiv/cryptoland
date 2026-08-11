@@ -63,6 +63,9 @@ function defineChain(key, cfg) {
     grant:              cfg.grant ?? null,
     // True when the chain sponsors gas for users (funders reward gasless UX).
     gasless:            cfg.gasless ?? false,
+    // True when the chain has ceased producing blocks. Kept as a field rather
+    // than deleting the entry so the reason survives and nobody re-adds it.
+    halted:             cfg.halted ?? false,
   }
 }
 
@@ -288,7 +291,24 @@ const CHAIN_DEFS = {
     blockTime: 1, confirmations: 2, color: '#fcff52', logo: '🌱', testnet: true,
   },
 
+  // ── HALTED 2026-08-11 ──────────────────────────────────────────────────────
+  // Moonbeam has wound down. Moonbeam Foundation support, in writing: "Moonbeam
+  // and Moonriver have migrated to Base and the chains wound down."
+  //
+  // Verified rather than taken on trust: block 16796699 is static across
+  // repeated samples and its timestamp is ~27.6 hours old; rpc.api.moonbeam.network
+  // and dwellir return nothing, blastapi errors, and only 1rpc still serves the
+  // frozen head. Binance shows GLMR/Moonbeam with BOTH deposit and withdrawal
+  // disabled while GLMR on BSC and Base stay open — the token migrated, the
+  // chain did not survive.
+  //
+  // Kept as a NOTE rather than deleted so nobody re-adds it: the weeks spent
+  // hunting a GLMR route failed because there was no chain to fund, not because
+  // the route was hard to find. Its grant programme is marked DEAD in
+  // deploy/apex/programs.mjs for the same reason.
+
   moonbeam: {
+    halted: true,
     id: 1284, name: 'Moonbeam', shortName: 'GLMR', family: 'evm',
     rpcUrl: 'https://rpc.api.moonbeam.network', rpcUrlFallback: 'https://moonbeam-rpc.publicnode.com',
     explorerUrl: 'https://moonbeam.moonscan.io',

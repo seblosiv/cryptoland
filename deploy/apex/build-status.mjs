@@ -32,7 +32,13 @@ const FUNDING = existsSync('deploy/apex/funding-plan.json')
 //   ethereum      — a generic EVM target with no named grant programme
 //   skale-europa  — the SKALE build targets the Nebula gaming hub instead
 const NOT_A_BUILD_TARGET = new Set(['ethereum', 'skale-europa'])
-const T = MAINNET_CHAINS.map(c => c.key).filter(k => !NOT_A_BUILD_TARGET.has(k))
+// A halted chain is not a target either. Moonbeam wound down on 2026-08-11 —
+// counting it as "awaiting deploy" would make the board report work that can
+// never be done, which is exactly the drift this file exists to prevent.
+const T = MAINNET_CHAINS
+  .filter(c => !c.halted)
+  .map(c => c.key)
+  .filter(k => !NOT_A_BUILD_TARGET.has(k))
 const by = Object.fromEntries(MAINNET_CHAINS.map(c => [c.key, c]))
 
 /**
