@@ -636,3 +636,66 @@ coinfabrik, innmind, peony) and diffing the extracted names against ours surface
 
 **45 of 60 actionable.** Re-run the aggregator diff before each submission round —
 the universe keeps moving, and a fixed list guarantees you miss the additions.
+
+---
+
+## 17. What the application forms actually ARE — headless audit, 2026-08-11
+
+§12 said a headless browser was the right tool and left it there. This is that
+audit run. It matters because the requirement list in §7 came from marketing
+pages, not from the fields a submission demands — and the *shape* of each form
+decides whether automation is even possible.
+
+Playwright (bundled Chromium, headless) against the ten highest-value open
+programmes:
+
+| Programme | Form shape | Automatable? |
+|---|---|---|
+| **Avalanche Retro9000** | wallet-gated, "Apply Now" → round-rules | ✅ **best fit** — signing is a key operation, and we hold the deployer |
+| **Radix Grants** | native `<form>`, 23 fields, no captcha | ✅ fillable |
+| **Cardano Catalyst** | 2 native forms, 11 fields, no captcha | ✅ likely — check account gating |
+| **Celo Prezenti** | native form, apply → `/grants` | ✅ likely |
+| **Stellar SCF** | HubSpot embed, 3 iframes | ⚠️ iframe-scoped, doable |
+| **Superteam Earn** | Notion-embedded | ⚠️ per-listing, not one form |
+| **Tezos Foundation** | **no form at all** — proposal by email | ❌ n/a, write a proposal |
+| **Starknet Grants** | reCAPTCHA + tinyurl → external | ⛔ captcha |
+| **MultiversX Growth** | Typeform + reCAPTCHA | ⛔ captcha |
+| **Aptos Grants** | **Vercel Security Checkpoint** | ⛔ bot-detection wall |
+
+### Playwright vs zendriver
+
+Both drive a real browser. The difference is intent: **zendriver exists to defeat
+bot detection.** That is exactly what stands between us and Aptos (Vercel
+checkpoint), Starknet and MultiversX (reCAPTCHA).
+
+So the tool choice is not a technical question. Those three are protected by
+deliberate anti-automation controls, and the standing rule in CLAUDE.md §0
+applies — captchas and social logins get a human, not a workaround. Using
+zendriver *because* it evades detection would be the same act as buying captcha
+solves, which was already declined once in this project.
+
+**Playwright is sufficient for every programme worth automating**, because the
+ones it cannot reach are the ones we should not be automating anyway.
+
+### The real constraint is not the browser
+
+Four programmes are mechanically fillable. But an auto-submitted application that
+gets a field wrong is worse than none: these are one-shot, human-reviewed, and a
+malformed submission burns the programme for a cycle. Per §3, Catalyst is scored
+1–5 by **non-technical reviewers** — that is a writing problem, not a form-filling
+problem.
+
+The defensible split:
+
+- **Automate the gathering** — `GET /metrics/grant`, contract addresses,
+  deployment evidence, per-chain "why this chain" from `profiles.js`. That is
+  repetitive, verifiable, and wrong answers are catchable.
+- **Automate the wallet signature** — Retro9000 and OP Atlas require the original
+  deployer to sign. That is cryptography, not prose, and we hold the key.
+- **Write the prose per programme.** Never generate-and-submit unattended.
+
+### Blocked regardless of tooling
+
+- **Starknet Seed** — §1: we are disqualified on eligibility, not on the form.
+- **KYC / legal entity** — 20% of programmes; blocks *payout*, not submission.
+- **Community engagement** — 55% cite it; no Discord or X presence exists.
