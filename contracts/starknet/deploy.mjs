@@ -15,7 +15,9 @@
  * checks one against the other. Scarb only emits CASM with `casm = true`, which
  * is why a contract that builds and unit-tests fine can still be undeployable.
  */
-import sn from '/tmp/sn/node_modules/starknet/dist/index.js'
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
+const sn = require('starknet')
 const { RpcProvider, Account, ec, hash, CallData, json } = sn
 import fs from 'node:fs'
 
@@ -48,7 +50,21 @@ if (step === 'account') {
 } else if (step === 'declare') {
   const sierra = json.parse(fs.readFileSync('target/dev/cryptoland_CryptoLandTile.contract_class.json', 'utf8'))
   const casm = json.parse(fs.readFileSync('target/dev/cryptoland_CryptoLandTile.compiled_contract_class.json', 'utf8'))
-  const res = await account.declareIfNot({ contract: sierra, casm })
+  // starknet.js pads the estimate 1.5x, which pushed the requirement past what
+  // is in the account. Estimate, then set resourceBounds at a 1.15x margin so the
+  // declare fits the balance we actually have.
+  const est = await account.estimateDeclareFee({ contract: sierra, casm })
+  // The SDK returns these as BigInts and expects BigInts back — handing it hex
+  // strings throws "Cannot mix BigInt and other types" from inside its own math.
+  const pad = (v, n = 115n) => (BigInt(v) * n) / 100n
+  const rb = est.resourceBounds
+  const bounds = {
+    l1_gas:      { max_amount: pad(rb.l1_gas.max_amount),      max_price_per_unit: rb.l1_gas.max_price_per_unit },
+    l2_gas:      { max_amount: pad(rb.l2_gas.max_amount),      max_price_per_unit: rb.l2_gas.max_price_per_unit },
+    l1_data_gas: { max_amount: pad(rb.l1_data_gas.max_amount), max_price_per_unit: rb.l1_data_gas.max_price_per_unit },
+  }
+  console.log('   est fee   ', Number(est.overall_fee) / 1e18, 'STRK')
+  const res = await account.declareIfNot({ contract: sierra, casm }, { resourceBounds: bounds })
   console.log('   class hash', res.class_hash)
   if (res.transaction_hash) {
     console.log('   tx        ', res.transaction_hash)
@@ -58,10 +74,13 @@ if (step === 'account') {
 } else if (step === 'deploy') {
   const classHash = process.env.CLASS_HASH
   if (!classHash) throw new Error('set CLASS_HASH')
-  // Constructor takes the owner and the metadata base, matching every other chain.
+  // constructor(owner, base_uri: felt252, pay_token). base_uri is a felt252, so
+  // it must fit in 31 characters — "https://starknet.xono.ai/" is 25.
+  const STRK_TOKEN = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'
+  const BASE_URI = sn.shortString.encodeShortString('https://starknet.xono.ai/')
   const res = await account.deployContract({
     classHash,
-    constructorCalldata: CallData.compile([ADDRESS]),
+    constructorCalldata: CallData.compile([ADDRESS, BASE_URI, STRK_TOKEN]),
   })
   console.log('   tx      ', res.transaction_hash)
   await provider.waitForTransaction(res.transaction_hash)

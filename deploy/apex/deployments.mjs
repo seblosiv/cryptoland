@@ -13,6 +13,28 @@
 
 export const DEPLOYMENTS = [
   {
+    chain: 'Starknet', network: 'MAINNET', family: 'starknet', lang: 'Cairo', date: '2026-08-11',
+    contract: '0x5d5cb39bf5330a3e4f0965d1d570a0635a2fb3300324fcc395e5840f508e598',
+    deployTx: '0x5111f01f80850ffc0d58faf28d005512d132394080ef354773217972e5af0c7',
+    explorer: 'https://starkscan.co/contract/0x5d5cb39bf5330a3e4f0965d1d570a0635a2fb3300324fcc395e5840f508e598',
+    note:
+      'Three steps, not one: deploy the ACCOUNT contract (the deployer is itself a ' +
+      'contract), declare the class, then deploy an instance. The address is ' +
+      'counterfactual so it can be funded before it exists. Four things had to be ' +
+      'fixed: Scarb emitted sierra but not casm and a declare needs both; ' +
+      'starknet.js v10 takes an options object where v6 took positional args; the ' +
+      'SDK pads fee estimates 1.5x, which put the declare out of reach until ' +
+      'resourceBounds were set manually at 1.15x (and it wants BigInts back, not ' +
+      'hex strings); and v3 transactions price fees in STRK, so the account sat ' +
+      'with ETH and failed as "exceed balance (0)".',
+    checks: [
+      { name: 'account contract live', result: 'PASS', detail: 'OZ class 0x61dac032…, deployed for 0.06 STRK' },
+      { name: 'class declared',        result: 'PASS', detail: '0x1f9edb05…, 36.03 STRK' },
+      { name: 'instance deployed',     result: 'PASS', detail: 'class hash reads back from the contract address' },
+      { name: 'tokenId canonical',     result: 'PASS', detail: 'token_id_from_key(16383,16383) = 536854527 — matches EVM, Soroban and MultiversX' },
+    ],
+  },
+  {
     chain: 'TON', network: 'MAINNET', family: 'ton', lang: 'FunC (TEP-62)', date: '2026-08-10',
     contract: 'EQDLIm_mggUROZ5Q2rmZ1cWW4jKGIR9RXtjnxOpAC75mfvbV',
     explorer: 'https://tonviewer.com/EQDLIm_mggUROZ5Q2rmZ1cWW4jKGIR9RXtjnxOpAC75mfvbV',
