@@ -52,45 +52,40 @@ function Delta({ value }) {
   )
 }
 
-const MEDALS = ['🥇', '🥈', '🥉']
-
 // ── Country War scoreboard row ────────────────────────────────────────────────
+// A scoreboard, so it is set like one: tabular rank, tabular score, one
+// hairline between rows. Medal emoji read as a mobile-game sticker, and three
+// different yellow washes for the top three read as three different states of
+// alarm — rank is already carried by position and by the numeral.
 function WarRow({ sig, rank }) {
-  const color = '#facc15'
-  const medal = MEDALS[rank] ?? null
-  const isTop3 = rank < 3
-  const gaining = sig.sub && sig.sub.includes('+')
-
+  const lead = rank < 3
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 7,
-      padding: '6px 10px',
-      background: isTop3 ? `rgba(250,204,21,${0.06 - rank * 0.015})` : 'transparent',
-      borderBottom: '1px solid rgba(250,204,21,0.07)',
-      borderLeft: isTop3 ? `2px solid rgba(250,204,21,${0.5 - rank * 0.13})` : '2px solid transparent',
+      display: 'flex', alignItems: 'center', gap: 9,
+      padding: '7px 11px',
+      borderTop: rank === 0 ? 'none' : '1px solid var(--b0)',
     }}>
-      <span style={{ fontSize: isTop3 ? 13 : 10, width: 18, textAlign: 'center', flexShrink: 0, lineHeight: 1 }}>
-        {medal ?? <span style={{ fontSize: 9, color: 'rgba(250,204,21,0.3)', fontFamily: 'var(--mono)' }}>{rank + 1}</span>}
-      </span>
-      <span style={{ fontSize: 14, flexShrink: 0, lineHeight: 1 }}>{sig.icon}</span>
+      <span className="figure" style={{
+        width: 15, flexShrink: 0, fontSize: 9,
+        color: lead ? 'var(--t2)' : 'var(--t4)',
+      }}>{String(rank + 1).padStart(2, '0')}</span>
+      {/* sig.icon is deliberately not rendered. The server sets it to a medal
+          for the top three and to the country's flag for the rest — but
+          sig.text already begins with that same flag, so ranks 4-6 were
+          drawing it twice (visible as a doubled flag on the UK row), and the
+          medal says what the rank numeral already says. */}
       <span style={{
         flex: 1, minWidth: 0,
-        fontSize: isTop3 ? 11 : 10, fontWeight: isTop3 ? 700 : 500,
-        color: isTop3 ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.55)',
+        fontSize: 10.5, fontWeight: lead ? 600 : 500,
+        color: lead ? 'var(--t1)' : 'var(--t2)',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>{sig.text}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-        <span style={{
-          fontSize: 10, fontWeight: 800, fontFamily: 'var(--mono)',
-          color: isTop3 ? '#facc15' : 'rgba(250,204,21,0.4)',
-        }}>{sig.sub}</span>
-        {gaining && (
-          <span style={{
-            fontSize: 8, fontWeight: 900, color: '#4ade80',
-            background: 'rgba(74,222,128,0.12)', borderRadius: 3, padding: '1px 4px',
-          }}>+</span>
-        )}
-      </div>
+      {/* sig.sub already carries its own "+" when a country is gaining, so the
+          separate green badge beside it was saying the same thing twice. */}
+      <span className="figure" style={{
+        fontSize: 10, fontWeight: 600, flexShrink: 0,
+        color: lead ? 'var(--t1)' : 'var(--t3)',
+      }}>{sig.sub}</span>
     </div>
   )
 }
@@ -99,25 +94,26 @@ function WarRow({ sig, rank }) {
 function WarCard({ signals }) {
   if (!signals.length) return null
   return (
+    // Neutral surface with a hairline, and the type's colour reduced to a
+    // single 2px rule down the left edge. The colour still says which kind of
+    // signal this is; it just no longer floods the panel to say it. inset
+    // box-shadow rather than border-left so the row metrics are untouched.
     <div style={{
       borderRadius: 10, overflow: 'hidden',
-      border: '1px solid rgba(250,204,21,0.18)',
-      background: 'rgba(250,204,21,0.04)',
-      marginBottom: 4,
+      border: '1px solid var(--b1)',
+      background: 'var(--s2)',
+      boxShadow: `inset 2px 0 0 ${SIG_COLOR.country_war}`,
+      marginBottom: 6,
     }}>
       <div style={{
-        padding: '7px 10px',
+        padding: '8px 11px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'rgba(250,204,21,0.08)',
-        borderBottom: '1px solid rgba(250,204,21,0.12)',
+        borderBottom: '1px solid var(--b0)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11 }}>⚔️</span>
-          <span style={{ fontSize: 9, fontWeight: 900, color: '#facc15', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Country War
-          </span>
-        </div>
-        <span style={{ fontSize: 8, fontFamily: 'var(--mono)', color: 'rgba(250,204,21,0.5)', fontWeight: 700 }}>LIVE</span>
+        {/* The word "war" is the icon. A crossed-swords emoji beside it is the
+            same statement, in a different and much cheaper voice. */}
+        <span className="label">Country war</span>
+        <span className="label" style={{ color: 'var(--t4)' }}>Live</span>
       </div>
       {signals.map((s, i) => <WarRow key={i} sig={s} rank={i} />)}
     </div>
@@ -133,29 +129,37 @@ function ScarcityAlarm({ sig, onBuyNow }) {
       onClick={onBuyNow}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        padding: '9px 10px',
+        padding: '9px 11px',
         marginBottom: 4,
         borderRadius: 10,
-        background: 'rgba(248,113,113,0.06)',
-        border: '1px solid rgba(248,113,113,0.16)',
+        // Same move as the war card: neutral ground, hairline, and the red
+        // reduced to one rule. Red text on a red wash was the loudest thing
+        // in the panel and it is not the most important thing in it.
+        background: 'var(--s2)',
+        border: '1px solid var(--b1)',
+        // sig.color already encodes the three severity steps the server
+        // assigns (>=15%, >=8%, below), so the rule carries them exactly.
+        boxShadow: `inset 2px 0 0 ${sig.color || SIG_COLOR.scarcity}`,
         cursor: 'pointer',
         transition: 'background 0.15s ease',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.10)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'rgba(248,113,113,0.06)'}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--s3)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--s2)'}
     >
-      <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{sig.icon}</span>
+      {/* sig.icon here is a red/orange/yellow blob chosen from the very same
+          percentage thresholds as sig.color — severity stated twice. The rule
+          keeps it; the blob was the loudest thing in the panel. */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: 11, fontWeight: 600,
-          color: 'rgba(252,165,165,0.95)', lineHeight: 1.35,
+          fontSize: 10.5, fontWeight: 500,
+          color: 'var(--t2)', lineHeight: 1.4,
           overflow: 'hidden', textOverflow: 'ellipsis',
           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
         }}>
           {sig.text}
         </div>
       </div>
-      <span style={{ fontSize: 10, color: 'rgba(248,113,113,0.55)', flexShrink: 0, fontWeight: 700 }}>→</span>
+      <span style={{ fontSize: 10, color: 'var(--t4)', flexShrink: 0 }}>→</span>
     </div>
   )
 }
@@ -167,7 +171,10 @@ function GameCard({ sig, flash }) {
   return (
     <div style={{
       display: 'flex', gap: 9, padding: '7px 0',
-      borderBottom: `1px solid ${color}18`,
+      // Was tinted per signal type, so a run of mixed signals produced a
+      // stack of differently-coloured hairlines. The rule beside each row
+      // already carries the type; the separator does not need to repeat it.
+      borderBottom: '1px solid var(--b0)',
       animation: flash ? 'alert-flash 0.5s ease' : 'none',
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0, width: 20 }}>
@@ -189,7 +196,7 @@ function GameCard({ sig, flash }) {
           </span>
         </div>
         {sig.sub && (
-          <div style={{ fontSize: 8, fontFamily: 'var(--mono)', color: `${color}99`, lineHeight: 1.4, fontWeight: 700 }}>
+          <div className="figure" style={{ fontSize: 8.5, color: 'var(--t3)', lineHeight: 1.4, fontWeight: 600 }}>
             {sig.sub}
           </div>
         )}
@@ -382,11 +389,9 @@ export default function MarketSidebar() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <LiveDot active={isLive} />
-          <span style={{ fontSize: 9, fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.14em' }}>
-            Signal Feed
-          </span>
+          <span className="label">Signal feed</span>
           {totalGameSignals > 0 && (
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.18)', fontFamily: 'var(--mono)' }}>
+            <span className="figure" style={{ fontSize: 8.5, color: 'var(--t4)' }}>
               {totalGameSignals + totalMarketAlerts} events
             </span>
           )}

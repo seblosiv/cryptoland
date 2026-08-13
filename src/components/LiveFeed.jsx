@@ -22,13 +22,13 @@ const TYPE_COLORS = {
 
 // Pill label for each signal type shown on hover / as prefix
 const TYPE_LABEL = {
-  country_war:  '⚔️ WAR',
-  scarcity:     '🔴 SCARCITY',
-  milestone:    '🎉 MILESTONE',
-  price_surge:  '📈 SURGE',
-  streak:       '🔥 STREAK',
-  affiliate:    '🤝 AFFILIATE',
-  purchase:     '🌍 PURCHASE',
+  country_war:  'War',
+  scarcity:     'Scarcity',
+  milestone:    'Milestone',
+  price_surge:  'Surge',
+  streak:       'Streak',
+  affiliate:    'Affiliate',
+  purchase:     'Purchase',
 }
 
 async function fetchSignals() {
@@ -146,16 +146,11 @@ function SignalChip({ sig }) {
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 18px', fontSize: 11 }}>
         {/* War label prefix — shown once per group via icon === '🥇' */}
         {sig.icon === '🥇' && (
-          <span style={{
-            fontSize: 9, fontWeight: 700, color: '#facc15',
-            background: 'rgba(250,204,21,0.12)', border: '1px solid rgba(250,204,21,0.25)',
-            padding: '1px 5px', borderRadius: 3, letterSpacing: '0.06em',
-            marginRight: 2,
-          }}>
-            ⚔️ COUNTRY WAR
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginRight: 3 }}>
+            <i style={{ width: 5, height: 5, background: '#facc15', flexShrink: 0 }} />
+            <span className="label">Country war</span>
           </span>
         )}
-        <span style={{ fontSize: 12 }}>{sig.icon}</span>
         <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{sig.text}</span>
         <span style={{ color: 'var(--b1)', padding: '0 4px' }}>·</span>
       </span>
@@ -164,21 +159,13 @@ function SignalChip({ sig }) {
 
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 14px', fontSize: 11 }}>
-      {/* Type pill */}
-      <span style={{
-        fontSize: 9, fontWeight: 700,
-        color: accentColor,
-        background: `${accentColor}18`,
-        border: `1px solid ${accentColor}30`,
-        padding: '1px 5px', borderRadius: 3,
-        letterSpacing: '0.05em',
-        flexShrink: 0,
-      }}>
-        {TYPE_LABEL[sig.type] || sig.type.toUpperCase()}
+      {/* Type mark + label. sig.icon is not drawn: the label already names the
+          kind, and for scarcity the icon is a blob picked from the very same
+          thresholds as the colour. */}
+      <i style={{ width: 5, height: 5, background: accentColor, flexShrink: 0 }} />
+      <span className="label" style={{ flexShrink: 0 }}>
+        {TYPE_LABEL[sig.type] || sig.type}
       </span>
-
-      {/* Icon */}
-      <span style={{ fontSize: 12 }}>{sig.icon}</span>
 
       {/* Main text */}
       <span style={{ color: 'var(--t2)', fontWeight: 500 }}>{sig.text}</span>

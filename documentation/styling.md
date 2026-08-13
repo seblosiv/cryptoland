@@ -169,6 +169,60 @@ length that reads as instant; the live dot, tickers and spinner stop.
 > label, across the chains with the longest `chainStat.label` (radix, sui, near,
 > flow, rootstock). A 1px spill is invisible in a screenshot and still wrong.
 
+### The signal feed: colour as a rule, not a wash
+
+The feed was the loudest surface in the app — yellow-washed war rows, a
+red-washed card per scarcity alert, seven saturated hues from `SIG_COLOR` in a
+260px column, and weights up to 900. The fix is one rule: **a signal's colour
+appears as a 2px rule, never as a fill.** Cards are `--s2` with a `--b1`
+hairline and `box-shadow: inset 2px 0 0 <type colour>` — inset rather than
+`border-left` so row metrics are untouched. Separators are `--b0`, not tinted
+per type, so a mixed run no longer stacks differently-coloured hairlines.
+
+**Emoji were removed only where they duplicated something already on screen**,
+never where they carried information:
+
+| Removed | Because |
+|---|---|
+| 🥇🥈🥉 in the war rows | the rank is already set as a tabular numeral (`01`, `02`) |
+| `sig.icon` in the war rows | `sig.text` already starts with the country's flag — for ranks 4-6 the server sets `icon` to that same flag, so it drew **twice** (a visibly doubled flag on the UK row) |
+| 🔴🟠⚠️ on scarcity cards | the server picks that blob from the same percentage thresholds as `sig.color`, which is now the rule — severity was stated twice |
+| the green `+` badge in war rows | `sig.sub` already contains the `+` |
+| the emoji inside every `TYPE_LABEL` | `"🔴 SCARCITY"` sat beside a separate 🔴 beside text giving the percentage: the same fact three times |
+
+In the ticker the tinted, colour-bordered, colour-texted pill became a **5px
+square** in the type colour plus a `.label` — square rather than round, because
+the product is a grid of tiles. That is one use of the hue instead of four.
+
+---
+
+## Favicons and app icons
+
+Generated per chain at build time by `scripts/chain-icons.mjs`, called from the
+`chainMeta()` plugin's `writeBundle` so every build path emits them.
+
+What was there before: `public/favicon.svg` was a purple lightning bolt from an
+unrelated project — 9.5 KB of gaussian-blur filters, in a design system whose
+first rule is that nothing blurs — and `manifest.json` pointed at
+`/icons/icon-*.png`, **a directory that has never existed**. The SPA rewrite
+answered each of those requests with `index.html`, so every "icon" was 3.6 KB of
+HTML served as `image/png`: installing the app gave a broken tile, and
+`apple-touch-icon` and the TON Connect `iconUrl` were dead too.
+
+The mark is the apex mark — one filled tile on a grid, three elements, drawn on
+a 64-unit grid so every edge lands on a whole pixel at 16/32/48/96/128/192/512.
+**The tile takes the chain's accent**, resolved the same way
+`src/lib/chainProfile.js` resolves it (a `PROFILES.accent` override, else the
+`CHAINS` entry's `color`), so 32 open tabs are told apart by colour rather than
+by reading 32 near-identical titles.
+
+> No rasteriser dependency. The mark is flat colour on axis-aligned rectangles,
+> so it is rasterised into an RGBA buffer and PNG-encoded with `node:zlib` — no
+> browser, no canvas, no native module, and byte-identical output on the laptop,
+> the box and CI. Emits SVG, PNG at nine sizes, `favicon.ico`,
+> `apple-touch-icon.png`, and a per-chain `manifest.json` carrying the accent as
+> `theme_color`.
+
 ### What was deliberately left alone
 
 90 of the 96 accent references in `src/components/` are a hardcoded

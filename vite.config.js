@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { writeChainIcons } from './scripts/chain-icons.mjs'
 
 /**
  * Inject per-chain <title> and OG/Twitter meta into index.html at build time.
@@ -35,6 +36,33 @@ function resolveChain() {
   return chain || 'polygon-amoy'
 }
 
+/**
+ * The chain's display name and brand accent, read straight out of the source
+ * the app itself uses. Accent resolution mirrors src/lib/chainProfile.js:
+ * a PROFILES override wins, otherwise the CHAINS entry's colour.
+ */
+const NEXT_KEY = /\n  '?[A-Za-z0-9_-]+'?:\s*\{/
+
+/** The chain's own entry, bounded at the next top-level key. */
+function entryOf(src, chain) {
+  const after = src.split(new RegExp(`\\n  '?${chain}'?:\\s*\\{`))[1]
+  return after === undefined ? '' : after.split(NEXT_KEY)[0]
+}
+
+function resolveBrand(chain) {
+  let name = 'CryptoLand', accent = '#4ade80'
+  try {
+    const block = entryOf(readFileSync('src/lib/blockchain/config.js', 'utf8'), chain)
+    name = (/name:\s*'([^']+)'/.exec(block)?.[1]) || name
+    accent = (/color:\s*'(#[0-9a-fA-F]{6})'/.exec(block)?.[1]) || accent
+  } catch { /* defaults */ }
+  try {
+    const block = entryOf(readFileSync('src/config/profiles.js', 'utf8'), chain)
+    accent = (/accent:\s*'(#[0-9a-fA-F]{6})'/.exec(block)?.[1]) || accent
+  } catch { /* defaults */ }
+  return { name, accent }
+}
+
 function chainMeta() {
   return {
     name: 'cryptoland-chain-meta',
@@ -59,11 +87,21 @@ function chainMeta() {
         writeFileSync(out, JSON.stringify({
           url: origin,
           name: 'CryptoLand',
-          iconUrl: `${origin}/icon-180.png`,
+          // Was /icon-180.png, which no build has ever emitted.
+          iconUrl: `${origin}/icons/icon-192.png`,
           termsOfUseUrl: `${origin}/terms.html`,
           privacyPolicyUrl: `${origin}/privacy.html`,
         }, null, 2) + '\n')
       } catch { /* no dist yet — nothing to rewrite */ }
+
+      // The icon set, tinted with this chain's accent. Replaces a favicon from
+      // an unrelated project and a manifest that pointed at PNGs which have
+      // never existed — the SPA rewrite was answering each of them with
+      // index.html, so every "icon" was HTML served as image/png.
+      try {
+        const { name, accent } = resolveBrand(chain)
+        writeChainIcons(options.dir, { chain, name, accent })
+      } catch (e) { console.warn('  icon set skipped:', e.message) }
     },
 
     transformIndexHtml(html) {
@@ -88,13 +126,13 @@ function chainMeta() {
       let name = 'CryptoLand'
       let tagline = 'Own real Earth territory on-chain.'
       try {
-        const cfg = readFileSync('src/lib/blockchain/config.js', 'utf8')
-        const block = cfg.split(new RegExp(`\\n  '?${chain}'?:\\s*\\{`))[1] ?? ''
+        const block = entryOf(readFileSync('src/lib/blockchain/config.js', 'utf8'), chain)
         name = (/name:\s*'([^']+)'/.exec(block)?.[1]) || name
       } catch { /* fall back to defaults */ }
       try {
-        const prof = readFileSync('src/config/profiles.js', 'utf8')
-        const block = prof.split(new RegExp(`\\n  '?${chain}'?:\\s*\\{`))[1] ?? ''
+        // Bounded for the same reason as the accent: a chain with no `pitch`
+        // was inheriting the next chain's tagline into its link preview.
+        const block = entryOf(readFileSync('src/config/profiles.js', 'utf8'), chain)
         const pitch = /pitch:\s*'([^']*)'/.exec(block)?.[1]
         if (pitch) tagline = pitch.replace(/\\'/g, "'")
       } catch { /* fall back to defaults */ }
