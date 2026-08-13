@@ -116,7 +116,7 @@ function deck(chain) {
   const accentHi = rgbToHex(...hexToRgb(accentUi).map((v) => Math.round(v + (255 - v) * 0.45)))
   const accentLo = rgbToHex(...hexToRgb(accentUi).map((v) => Math.round(v * 0.42)))
 
-  const title = chain ? `CryptoLand on ${chain.name}` : 'CryptoLand by XONO'
+  const title = chain ? `CryptoLand on ${chain.name} — by XONO` : 'CryptoLand by XONO'
   const eyebrow = chain ? chain.name.toUpperCase() : 'MULTICHAIN'
   const tagline = p.tagline ?? 'OWN THE WORLD'
 
@@ -319,6 +319,11 @@ function page({ title, accentHex, accentUi, onAccent, accentSoft, accentHi, acce
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="CryptoLand by XONO — a geospatial NFT game${chain ? ' on ' + esc(chain.name) : ''}.">
+<meta property="og:site_name" content="CryptoLand by XONO">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="Own the world, tile by tile${chain ? ' — on ' + esc(chain.name) : ''}.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <style>
 ${css({ accentHex, accentUi, onAccent, accentSoft, accentHi, accentLo })}
 </style>

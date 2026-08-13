@@ -155,9 +155,15 @@ const html = `<!doctype html>
 <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#000000">
-<title>CryptoLand — the map you can own</title>
+<title>CryptoLand by XONO — Own the world, tile by tile</title>
+<meta property="og:site_name" content="CryptoLand by XONO">
+<meta property="og:url" content="https://xono.ai/">
+<meta property="og:image" content="https://xono.ai/icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CryptoLand by XONO — Own the world, tile by tile">
+<meta name="twitter:image" content="https://xono.ai/icon-512.png">
 <meta name="description" content="Every map ever made is read-only. CryptoLand is the one you can own: 268,435,456 tiles of the real world, a supply fixed by geometry, each tile\u2019s coordinate its own token id. Live on mainnet.">
-<meta property="og:title" content="CryptoLand — own the world, native to your chain">
+<meta property="og:title" content="CryptoLand by XONO — own the world, native to your chain">
 <meta property="og:description" content="268,435,456 claimable tiles over the real world. One codebase, ${families.length} adapter families, native on every chain it ships to.">
 <meta property="og:type" content="website">
 <style>

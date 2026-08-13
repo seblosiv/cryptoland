@@ -343,7 +343,8 @@ const html = `<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#000000">
-<title>CryptoLand — full dossier</title>
+<title>Dossier — CryptoLand by XONO</title>
+<meta property="og:site_name" content="CryptoLand by XONO">
 <style>
 /* Light, high-end, Apple-adjacent. This is the INTERNAL dossier, not the product
    UI — the app's solid-dark tokens still govern src/. Two rules carried over

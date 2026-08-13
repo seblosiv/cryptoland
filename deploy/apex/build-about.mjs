@@ -59,7 +59,8 @@ const html = `<!doctype html>
 <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#000000">
-<title>About — CryptoLand</title>
+<title>About — CryptoLand by XONO</title>
+<meta property="og:site_name" content="CryptoLand by XONO">
 <meta name="description" content="Who builds CryptoLand.">
 <!-- THIS PAGE ONLY: keep the founder's identity out of search indexes and AI
      training corpora. Everything else on xono.ai stays fully indexable - a grant
