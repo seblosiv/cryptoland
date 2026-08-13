@@ -171,9 +171,17 @@ text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .panel h3{font-size:14.5px;margin-bottom:9px;letter-spacing:-.01em}
 .panel p{color:var(--t2);font-size:13.5px}
 .panel code{background:var(--s3);padding:1px 5px;border-radius:4px;font-size:12px}
-.mapwrap{position:relative;border:1px solid var(--b0);background:#080808;overflow:hidden}
-#map{display:block;width:100%;height:clamp(230px,40vw,430px);cursor:crosshair}
-.readout{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;
+.mapwrap{position:relative;border:1px solid var(--b0);background:#05070a;overflow:hidden;
+  aspect-ratio:1 / 0.487}
+.basemap{position:absolute;left:0;width:100%;height:154%;top:-42.5%;
+  display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);
+  filter:grayscale(1) brightness(.42) contrast(1.15);opacity:.62}
+.basemap img{width:100%;height:100%;display:block;object-fit:cover}
+.attrib{position:absolute;right:6px;bottom:4px;font-size:9.5px;color:var(--t3);
+  background:rgba(0,0,0,.5);padding:1px 5px;border-radius:3px}
+.attrib a{color:var(--t3)}
+#map{position:absolute;inset:0;display:block;width:100%;height:100%;cursor:crosshair}
+.readout{border:1px solid var(--b0);border-top:0;display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;
   padding:11px 14px;background:var(--s1);border-top:1px solid var(--b0);font-size:12px}
 .readout .rl{color:var(--t3);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
 .readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
@@ -229,12 +237,14 @@ footer a{color:var(--t2)}
   <p class="lede">This is the real grid over real geography — the same Web Mercator projection the game
   uses. Move across it: every cell you touch is a genuine tile, and its coordinate <em>is</em> its token id.</p>
   <div class="mapwrap">
+    <div class="basemap" id="basemap" aria-hidden="true"></div>
     <canvas id="map" aria-label="World map divided into claimable tiles"></canvas>
-    <div class="readout" id="readout">
-      <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
-      <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
-      <span class="rl">Near</span><span class="rv" id="r-city">move across the map</span>
-    </div>
+    <span class="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
+  </div>
+  <div class="readout" id="readout">
+    <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
+    <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
+    <span class="rl">Near</span><span class="rv" id="r-city">move across the map</span>
   </div>
   <p class="vnote">The lit clusters are the world's cities at their true coordinates. Nothing here is
   ownership data — see <a href="#real">what is real and what is not</a>.</p>
@@ -433,6 +443,17 @@ ${cards}
 (function () {
   var cv = document.getElementById('map'), out = document.getElementById('readout');
   if (!cv) return;
+  // The real basemap, same source the game uses. z=2 is 4x4 for the whole world;
+  // rows 0-2 cover every inhabited latitude, so 12 tiles at ~6 KB each.
+  var bm = document.getElementById('basemap');
+  if (bm) {
+    for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
+      var im = new Image();
+      im.loading = 'lazy'; im.decoding = 'async'; im.alt = '';
+      im.src = 'https://tile.openstreetmap.org/2/' + rx + '/' + ry + '.png';
+      bm.appendChild(im);
+    }
+  }
   var ctx = cv.getContext('2d'), CITIES = ${JSON.stringify(CITIES)};
   var N = 16384, W = 0, H = 0, dpr = 1;
   var V0 = 0.207, V1 = 0.694;                 // Mercator v at ~72°N and ~57°S
@@ -453,7 +474,7 @@ ${cards}
   CITIES.forEach(function (c) {
     var name = c[0], n = c[1], u = lonToU(c[2]), v = latToV(c[3]);
     for (var i = 0; i < n; i++) {
-      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.55) * 0.028;
+      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.85) * 0.020;
       var cu = u + Math.cos(a) * r * 0.55, cv2 = v + Math.sin(a) * r;
       if (cu < 0 || cu > 1 || cv2 < 0 || cv2 > 1) continue;
       var bv = band(cv2); if (bv < 0 || bv >= 1) continue;
@@ -476,7 +497,7 @@ ${cards}
     ctx.clearRect(0, 0, W, H);
     var cw = W / COLS, ch = H / ROWS;
     // Lattice
-    ctx.strokeStyle = 'rgba(255,255,255,0.035)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
     ctx.beginPath();
     for (var i = 0; i <= COLS; i += 2) { ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, H); }
     for (var j = 0; j <= ROWS; j += 2) { ctx.moveTo(0, j * ch); ctx.lineTo(W, j * ch); }
