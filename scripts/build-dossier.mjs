@@ -518,6 +518,7 @@ summary:hover{background:var(--surface-2)}
   ${TABS.map(([id, , , body]) => `<section class="panel" id="p-${id}" role="tabpanel">${body}</section>`).join('')}
 
   <div class="foot">
+    <span class="mono">hello@xono.ai</span>
     <span class="mono">node scripts/build-dossier.mjs</span>
     <span class="mono">sources: config.js · deployments.mjs · programs.mjs · env/ · scripts/formaudit/</span>
   </div>

@@ -164,7 +164,7 @@ function answers(p) {
       '4) Publish the metrics endpoint as a public page so the funder can check progress without asking us.',
     'Amount requested': p.amount ? `Aligned to this programme's range (${p.amount}).` : 'To be scoped.',
     'Open source': 'MIT licensed. Repository published; the chain adapter layer is the reusable public-good component.',
-    'Contact': 'seblosiv@gmail.com',
+    'Contact': 'hello@xono.ai',
   }
 }
 

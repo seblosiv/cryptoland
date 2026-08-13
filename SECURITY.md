@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email **seblosiv@gmail.com** with `SECURITY` in the subject. Please do **not** open
+Email **hello@xono.ai** with `SECURITY` in the subject. Please do **not** open
 a public issue for anything affecting funds or tile ownership.
 
 Include what you can: affected contract or endpoint, chain, a reproduction, and the
