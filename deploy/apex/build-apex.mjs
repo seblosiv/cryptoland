@@ -135,12 +135,8 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 .hero-bg{position:absolute;inset:0;z-index:0}
 /* Two world-widths side by side: the planet wraps, so panning one width and
    resetting is seamless rather than a visible cut. */
-.hero-pan{position:absolute;top:50%;left:0;width:200%;height:auto;aspect-ratio:4/1;
-  transform:translate3d(0,-50%,0);display:grid;grid-template-columns:repeat(8,1fr);
-  grid-template-rows:repeat(3,1fr);filter:grayscale(1) brightness(.62) contrast(1.35);
-  opacity:.85;will-change:transform}
-.hero-pan img{width:100%;height:100%;display:block;object-fit:cover}
-#heroFx{position:absolute;inset:0;width:100%;height:100%}
+#heroMap{position:absolute;inset:0;width:100%;height:100%;display:block;
+  filter:grayscale(1) brightness(.66) contrast(1.3);opacity:.85}
 /* Scrim, painted — never a blur. Reading has to win over atmosphere. */
 .hero-scrim{position:absolute;inset:0;background:
   linear-gradient(97deg,rgba(6,7,9,.97) 0%,rgba(6,7,9,.93) 30%,rgba(6,7,9,.62) 52%,rgba(6,7,9,.1) 78%,transparent 100%),
@@ -170,12 +166,12 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
 @media (max-width:900px){
   .hero{min-height:auto;padding-left:max(20px,4vw);padding-right:max(20px,4vw)}
   .hero-in{padding:70px 0 56px;max-width:none}
-  .hero-pan{opacity:.5;filter:grayscale(1) brightness(.44) contrast(1.3)}
+  #heroMap{opacity:.5;filter:grayscale(1) brightness(.48) contrast(1.25)}
   .hero-scrim{background:
     linear-gradient(180deg,rgba(6,7,9,.94) 0%,rgba(6,7,9,.78) 38%,rgba(6,7,9,.86) 72%,rgba(6,7,9,.97) 100%)}
   .figs{gap:20px 28px}
 }
-@media (prefers-reduced-motion:reduce){.hero-pan{animation:none!important}}
+
 h1{font-size:clamp(31px,5.2vw,50px);letter-spacing:-.032em;font-weight:800;line-height:1.08}
 h1 em{font-style:normal;color:var(--acc)}
 .sub{color:var(--t2);margin-top:18px;max-width:56ch;font-size:16px;line-height:1.68}
@@ -257,8 +253,7 @@ footer a{color:var(--t2)}
 
 <header class="hero">
   <div class="hero-bg" aria-hidden="true">
-    <div class="hero-pan" id="heroPan"></div>
-    <canvas id="heroFx"></canvas>
+    <canvas id="heroMap"></canvas>
     <div class="hero-scrim"></div>
   </div>
 
@@ -598,75 +593,55 @@ ${cards}
 </script>
 
 <script>
-/* Hero motion. The basemap drifts west the way the planet turns, and tiles ignite
-   across it — the product's own behaviour, not decoration. Two world-widths sit
-   side by side so the wrap is seamless: the world genuinely repeats at 180°.
-   Everything stops under prefers-reduced-motion. */
+/* The hero basemap. One canvas, tiles drawn at integer positions — a CSS grid of
+   images left hairline gaps between rows where the pixels rounded, which showed
+   as lines across the bright half of the map.
+   Still, deliberately: a map that drifts and blinks is decoration competing with
+   the sentence next to it. */
 (function () {
-  var pan = document.getElementById('heroPan'), fx = document.getElementById('heroFx');
-  if (!pan || !fx) return;
-  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cv = document.getElementById('heroMap');
+  if (!cv) return;
+  var ctx = cv.getContext('2d'), imgs = [], loaded = 0;
 
-  // 4 cols x 3 rows of z=2, twice across. Rows 0-2 cover every inhabited latitude.
-  for (var pass = 0; pass < 2; pass++)
-    for (var ry = 0; ry < 3; ry++)
-      for (var rx = 0; rx < 4; rx++) {
-        var im = new Image();
-        im.decoding = 'async'; im.alt = '';
-        im.style.gridRow = String(ry + 1);
-        im.style.gridColumn = String(pass * 4 + rx + 1);
-        im.src = 'https://tile.openstreetmap.org/2/' + rx + '/' + ry + '.png';
-        pan.appendChild(im);
-      }
+  for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
+    (function (x, y) {
+      var im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = function () { loaded++; imgs.push({ x: x, y: y, im: im }); draw(); };
+      im.src = 'https://tile.openstreetmap.org/2/' + x + '/' + y + '.png';
+    })(rx, ry);
+  }
 
-  var ctx = fx.getContext('2d'), W = 0, H = 0, dpr = 1, sparks = [];
+  var W = 0, H = 0, dpr = 1;
   function size() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = fx.clientWidth; H = fx.clientHeight;
-    fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
   }
 
-  var seed = 4241;
-  function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
-
-  // A tile lights, holds, fades — the shape of a claim landing.
-  function spawn() {
-    var cw = W / 96, ch = H / 30;
-    sparks.push({ x: Math.floor(rnd() * 96) * cw, y: Math.floor(rnd() * 30) * ch,
-                  w: cw, h: ch, t: 0, life: 190 + rnd() * 200 });
-    if (sparks.length > 46) sparks.shift();
-  }
-
-  var last = 0, acc = 0, panX = 0;
-  function frame(ts) {
-    var dt = last ? Math.min(64, ts - last) : 16; last = ts;
-    // 1 world width per ~210s. Slow enough to read as drift, not as scrolling.
-    panX = (panX + dt * 0.0000794) % 1;
-    pan.style.transform = 'translate3d(' + (-panX * 50).toFixed(4) + '%,-50%,0)';
-
-    acc += dt;
-    if (acc > 150) { acc = 0; spawn(); }
+  function draw() {
+    if (!W || !imgs.length) return;
     ctx.clearRect(0, 0, W, H);
-    for (var i = 0; i < sparks.length; i++) {
-      var s = sparks[i]; s.t += dt;
-      var p = s.t / s.life;
-      if (p >= 1) continue;
-      var a = p < 0.16 ? p / 0.16 : 1 - (p - 0.16) / 0.84;
-      ctx.fillStyle = 'rgba(122,238,166,' + (a * 0.72).toFixed(3) + ')';
-      ctx.fillRect(s.x, s.y, s.w - 1, s.h - 1);
-      ctx.strokeStyle = 'rgba(168,247,199,' + (a * 0.7).toFixed(3) + ')';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 2, s.h - 2);
+    // Frame the inhabited band (Mercator v 0.207-0.694) and let the map bleed off
+    // the right edge, so the composition is a detail of a world rather than a
+    // whole world squeezed into a box.
+    var V0 = 0.207, V1 = 0.694;
+    var worldW = W * 1.55;                       // wider than the frame: it continues
+    var tile = worldW / 4;
+    var top = -V0 * worldW - (worldW * (V1 - V0) - H) / 2;
+    var left = -worldW * 0.06;
+    for (var i = 0; i < imgs.length; i++) {
+      var t = imgs[i];
+      ctx.drawImage(t.im,
+        Math.round(left + t.x * tile), Math.round(top + t.y * tile),
+        Math.ceil(tile) + 1, Math.ceil(tile) + 1);   // +1 closes any rounding seam
     }
-    sparks = sparks.filter(function (s) { return s.t < s.life; });
-    requestAnimationFrame(frame);
   }
 
   size();
-  window.addEventListener('resize', function () { clearTimeout(window.__hr); window.__hr = setTimeout(size, 150); });
-  if (still) { pan.style.transform = 'translate3d(-12%,-50%,0)'; }
-  else { requestAnimationFrame(frame); }
+  var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 150); });
 })();
 </script>
 </body></html>`
