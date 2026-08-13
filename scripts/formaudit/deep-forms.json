@@ -1,0 +1,996 @@
+{
+ "2": {
+  "name": "Gitcoin / Giveth QF",
+  "url": "https://giveth.typeform.com/feedback",
+  "pages": 3,
+  "captcha": [
+   "recaptcha",
+   "hcaptcha"
+  ],
+  "fields_list": [],
+  "verified": "WRONG FORM",
+  "verified_note": "Giveth User Experience Feedback Form \u2014 not a grant application.",
+  "verified_on": "2026-08-12"
+ },
+ "6": {
+  "name": "Radix Grants Program",
+  "url": "https://docs.google.com/forms/d/e/1FAIpQLSeTzc-CcKoTQJJQyoIqLPWH_AcfsgTxP8oOn-MrWeqi_qEp-w/viewform",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Founder Name",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Founder Email",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Founder Telegram Handle",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project Name",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Website (if applicable)",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project description",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "What specific support would you like to receive to help your project succeed?",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "How will a grant help you?",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Please confirm that you agree to the Radix Privacy Notice.",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Sua resposta",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   }
+  ]
+ },
+ "17": {
+  "name": "MultiversX Growth Games",
+  "url": "https://form.typeform.com/to/vRkkboYU",
+  "pages": 3,
+  "captcha": [
+   "recaptcha",
+   "hcaptcha"
+  ],
+  "fields_list": [],
+  "verified": "WRONG FORM",
+  "verified_note": "MultiversX 'Developer Office Hours Request Form' \u2014 technical support booking, not Growth Games.",
+  "verified_on": "2026-08-12"
+ },
+ "25": {
+  "name": "Polygon Community Grants",
+  "url": "https://airtable.com/appmOFbYo2DZ22Bs7/pag1yDj3PQQyWV3Sm/form",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Hadron Membership Application",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "mm/dd/yyyy",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "First name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Last Name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Location",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Email",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Twitter Handle",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Telegram Handle",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "LinkedIn URL",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project Name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project Website",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project One Liner",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "When did you start working on this idea/product.",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Link to Pitch Deck",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Brief Project Description",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "What gives your team a right to win / advantage in this space?",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "No. of co-founders",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "If someone referred you to the program, please provide their name?",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   }
+  ]
+ },
+ "29": {
+  "name": "Starknet Growth Grants",
+  "url": "https://airtable.com/appfoRv2ottjRfTpL/pag0G55zA8aU4V9bD/form",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Starknet Foundation | Seed Grant Application Form",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "One liner",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Website URL",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project GitHub",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Team GitHub Handles",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project X URL",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Other social URL",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact full name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact email",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact Telegram handle",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact GitHub username",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "TG group <> SNF",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "City",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Team",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project overview",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Raise details",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Integrated chains",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Tools, Infrastructure & Frameworks",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Starknet specifics",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Starknet language",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Starknet contributions",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Proposed Solution",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project KPIs",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "User Acquisition Strategy",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Business model",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Project cost components",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Security and Audits",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Funding amount",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Milestone 1 name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "M1 Description",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Milestone 1 amount",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "mmmm d, yyyy",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Track Record",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Other Starknet Grant Programs",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Other Grants",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Starknet collaborations",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Extra support",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Referral",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Make sure you enter the correct details that match a legal contract and KYC.",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Signatory full name",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Legal Entity Address / Signee Address",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Signatory email",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Signatory title",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   }
+  ]
+ },
+ "50": {
+  "name": "Animoca \u2014 Minds Investment Programme",
+  "url": "https://build.hellominds.ai/en/program/apply",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Introduce yourself.",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Jane Smith or Jane Smith & John Doe for co-founders",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "you@example.com",
+    "t": "email",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "How did you hear about the Minds Investment Programme?",
+    "t": "select",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Previous products, companies, open source work, or relevant experience...",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Include your project or company name, who it's for, and what it does. 2-4 sentences.",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Be specific. Who experiences this pain and how do you know?",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Which platform features are you planning to use, Minds, Skills, Tools, Cognition Credits, Guardrails? What bec",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "you@example.com or not yet registered",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Current activity on Minds *",
+    "t": "select",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Minds actively used *",
+    "t": "select",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Created or equipped a Mind",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Used or created a Skill on Bazaar",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Used or created an App on Bazaar",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Connected an MCP server to a Mind",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Configured a Mind's memory",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Orchestrated multiple Minds together",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Connected a Mind to external agents (e.g., other LLMs, Claude Code, custom workflows)",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Used the Minds API directly",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Submitted feedback or bug reports through the platform",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "None yet",
+    "t": "checkbox",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "e.g. \"Personal research assistant that summarizes my morning newsfeed and posts to Telegram\"",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "\"Minds Page\" (ID: 965C4D1A-FA2D-F111-AD1D-0EA9A5017E89) Deploy, update, and manage ephemeral prototypes and st",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "What did you orchestrate, why, and what made it work or not work?",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "e.g. \"API rate limits feel low when I try to backfill 6 months of data\"",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Be concrete. What's the v1 that users can actually use?",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Current stage *",
+    "t": "select",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "https://www.youtube.com/watch?v=\u2026 or https://www.loom.com/share/\u2026",
+    "t": "url",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Our co-founder shipped product X at company Y: https://linkedin.com/in/... We hit 50,000 monthly active users ",
+    "t": "textarea",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Hong Kong nexus",
+    "t": "select",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "@yourhandle or https://t.me/yourhandle",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "https://docs.google.com/presentation/... (optional)",
+    "t": "url",
+    "req": false,
+    "page": 1
+   }
+  ]
+ },
+ "47": {
+  "name": "Arbitrum Gaming Ventures",
+  "url": "https://tally.so/r/0QObE9",
+  "pages": 3,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Arbitrum's Builders form",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Pre-formation (you have a team but have not started building)",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Pre-launch (your product is being built and you have an ETA for launch)",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Very Early (< 6 months) (you have launched your product in beta/testnet/mainnet less than 6 months ago)",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Early (> 6 months) (you have launched your product in beta/testnet/mainnet more than 6 months ago but less tha",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Live since 1 year+",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Arbitrum native",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Multichain including Arbitrum",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Multichain excluding Arbitrum",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "No funds raised",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Angels / pre-seed",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Seed",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Growth",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Received Arbitrum grants or investments",
+    "t": "radio",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Smart-contract audit support",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Gas subsidy (ArbiFuel)",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Marketing or ecosystem visibility",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Investment from Arbitrum",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Help with fundraising",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Mentorship / GTM support",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Other",
+    "t": "checkbox",
+    "req": true,
+    "page": 1
+   }
+  ]
+ },
+ "49": {
+  "name": "Outlier Ventures Base Camp",
+  "url": "https://outlierventures.io/apply/form",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Apply for funding.",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "firstname",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "FIRST NAME *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "FIRST NAME * LAST NAME *",
+    "t": "email",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "EMAIL *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "https://",
+    "t": "url",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "@handle",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "WHERE DID YOU HEAR ABOUT US? Please select\u2026",
+    "t": "file",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "USD (e.g. 5000000)",
+    "t": "number",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "MOST RECENT EQUITY VALUATION (CLOSED ROUND, POST-MONEY) Leave blank if not applicable.",
+    "t": "textarea",
+    "req": false,
+    "page": 1
+   }
+  ]
+ },
+ "58": {
+  "name": "Flare Grants",
+  "url": "https://airtable.com/appyfl68ek3SOoCLh/shrqTkjFHruvr3dMk",
+  "pages": 1,
+  "captcha": [],
+  "fields_list": [
+   {
+    "l": "Grant Application Form",
+    "t": "typeform-q",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project Name *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact First Name *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Contact Last Name *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Email *",
+    "t": "email",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Website",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Project Description",
+    "t": "div",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Legal Entity & Domicile",
+    "t": "text",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Unique Traits",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Flare Eco Value Add",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Growth Strategy",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Flare Protocol Integrations",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Milestones",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Integrations",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "Other Partnerships",
+    "t": "div",
+    "req": false,
+    "page": 1
+   },
+   {
+    "l": "How did you find the Flare grants program? *",
+    "t": "text",
+    "req": true,
+    "page": 1
+   },
+   {
+    "l": "Other Reqs",
+    "t": "div",
+    "req": false,
+    "page": 1
+   }
+  ]
+ }
+}

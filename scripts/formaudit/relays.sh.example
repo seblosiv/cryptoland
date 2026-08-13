@@ -1,0 +1,23 @@
+#!/bin/bash
+# Local unauthenticated relays in front of the ISP proxies.
+#
+# Chrome drops credentials given in --proxy-server, so the auth has to be
+# injected upstream of the browser. pproxy takes upstream credentials after "#";
+# the user:pass@host form is parsed as a cipher spec and errors out.
+cd /root/formaudit || exit 1
+pkill -f "pproxy -l" 2>/dev/null
+sleep 1
+
+CRED="${PROXY_USER}:${PROXY_PASS}"
+start() { setsid nohup pproxy -l "http://0.0.0.0:$1" -r "http://$2#$CRED" >"/root/formaudit/relay-$1.log" 2>&1 & }
+
+start 8891 165.49.211.111:61232
+start 8892 166.88.173.212:61232
+start 8893 64.50.167.6:61232
+sleep 5
+
+echo "  direct : $(curl -s --max-time 20 https://api.ipify.org)"
+for p in 8891 8892 8893; do
+  ip=$(curl -s --max-time 30 -x "http://127.0.0.1:$p" https://api.ipify.org)
+  echo "  :$p   : ${ip:-FAILED}"
+done

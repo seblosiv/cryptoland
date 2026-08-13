@@ -1,0 +1,563 @@
+[
+ {
+  "n": 17,
+  "name": "MultiversX Growth Games",
+  "site": "multiversx.com",
+  "forum": null,
+  "q": [
+   "MultiversX Growth Games grant apply",
+   "MultiversX grants program application 2026"
+  ],
+  "candidates": [],
+  "forum_threads": [],
+  "closed_signals": []
+ },
+ {
+  "n": 34,
+  "name": "Solana Foundation Grants",
+  "site": "solana.org",
+  "forum": null,
+  "q": [
+   "Solana Foundation grants application form",
+   "solana.org grants apply 2026"
+  ],
+  "candidates": [],
+  "forum_threads": [],
+  "closed_signals": []
+ },
+ {
+  "n": 31,
+  "name": "Arbitrum Foundation Grants",
+  "site": "arbitrum.foundation",
+  "forum": "https://forum.arbitrum.foundation",
+  "q": [
+   "Arbitrum Foundation grant program apply 2026",
+   "Arbitrum grants application open"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "Re-introducing Grant Ships - the one and only Competitive Grants Platform",
+    "created": "2024-11-04",
+    "posts": 1,
+    "url": "https://forum.arbitrum.foundation/t/re-introducing-grant-ships-the-one-and-only-competitive-grants-platform/27417"
+   },
+   {
+    "title": "Web3 Grant Program Research and Analysis(C. Syndicate RFP 4 Report)",
+    "created": "2024-09-25",
+    "posts": 4,
+    "url": "https://forum.arbitrum.foundation/t/web3-grant-program-research-and-analysis-c-syndicate-rfp-4-report/26939"
+   },
+   {
+    "title": "Gitcoin Grants Round 20 (GG20) on Arbitrum",
+    "created": "2024-04-11",
+    "posts": 3,
+    "url": "https://forum.arbitrum.foundation/t/gitcoin-grants-round-20-gg20-on-arbitrum/23156"
+   },
+   {
+    "title": "Grant Ships: Weekly Dev Log",
+    "created": "2023-12-20",
+    "posts": 35,
+    "url": "https://forum.arbitrum.foundation/t/grant-ships-weekly-dev-log/20191"
+   },
+   {
+    "title": "Team 10: Grantser: Create Arbitrum Grant Proposals That Get Funded",
+    "created": "2024-02-27",
+    "posts": 2,
+    "url": "https://forum.arbitrum.foundation/t/team-10-grantser-create-arbitrum-grant-proposals-that-get-funded/21538"
+   },
+   {
+    "title": "Notice of ARB Voting Opportunity - Grant Ships \"Gaming on Arbitrum\"",
+    "created": "2024-06-14",
+    "posts": 5,
+    "url": "https://forum.arbitrum.foundation/t/notice-of-arb-voting-opportunity-grant-ships-gaming-on-arbitrum/24948"
+   },
+   {
+    "title": "Thank ARB: Get Rewarded for Contributing to Gitcoin Grants 20",
+    "created": "2024-04-26",
+    "posts": 3,
+    "url": "https://forum.arbitrum.foundation/t/thank-arb-get-rewarded-for-contributing-to-gitcoin-grants-20/23451"
+   },
+   {
+    "title": "Leveraging the STIP Grants Program to grow the GMX and Arbitrum DeFi ecosystem",
+    "created": "2024-04-08",
+    "posts": 1,
+    "url": "https://forum.arbitrum.foundation/t/leveraging-the-stip-grants-program-to-grow-the-gmx-and-arbitrum-defi-ecosystem/23100"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 59,
+  "name": "The Graph Foundation",
+  "site": "thegraph.com",
+  "forum": "https://forum.thegraph.com",
+  "q": [
+   "The Graph Foundation grants apply 2026",
+   "The Graph grant program application"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "The Graph Foundation - 2022 Annual Grants Report",
+    "created": "2023-03-16",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/the-graph-foundation-2022-annual-grants-report/4133"
+   },
+   {
+    "title": "Elaborating on The Graph Retroactive Grants",
+    "created": "2023-01-17",
+    "posts": 2,
+    "url": "https://forum.thegraph.com/t/elaborating-on-the-graph-retroactive-grants/3945"
+   },
+   {
+    "title": "The Graph Foundation - 2023 Annual Grants Report",
+    "created": "2024-04-12",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/the-graph-foundation-2023-annual-grants-report/5706"
+   },
+   {
+    "title": "The Graph Foundation is pausing applications to the Grants Program",
+    "created": "2026-07-06",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/the-graph-foundation-is-pausing-applications-to-the-grants-program/7008"
+   },
+   {
+    "title": "The Graph Foundation 2025 Annual Grants Report",
+    "created": "2026-03-04",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/the-graph-foundation-2025-annual-grants-report/6859"
+   },
+   {
+    "title": "The Graph Foundation 2024 Annual Grants Report",
+    "created": "2025-03-06",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/the-graph-foundation-2024-annual-grants-report/6442"
+   },
+   {
+    "title": "Grant: Integrating Curated Subgraphs alongside indexed protocols on Cookbook.dev",
+    "created": "2023-12-04",
+    "posts": 1,
+    "url": "https://forum.thegraph.com/t/grant-integrating-curated-subgraphs-alongside-indexed-protocols-on-cookbook-dev/4927"
+   },
+   {
+    "title": "Wave 3 RFP & Grant Ideas",
+    "created": "2021-09-14",
+    "posts": 14,
+    "url": "https://forum.thegraph.com/t/wave-3-rfp-grant-ideas/2548"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 2,
+  "name": "Gitcoin / Giveth QF",
+  "site": "giveth.io",
+  "forum": "https://forum.giveth.io",
+  "q": [
+   "Giveth QF round apply project",
+   "Gitcoin grants round application 2026"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "ENS x Giveth Grants",
+    "created": "2024-03-07",
+    "posts": 2,
+    "url": "https://forum.giveth.io/t/ens-x-giveth-grants/1338"
+   },
+   {
+    "title": "Proposal - Grant request for security audit of smart contracts at the core of GIVeconomy",
+    "created": "2022-05-13",
+    "posts": 10,
+    "url": "https://forum.giveth.io/t/proposal-grant-request-for-security-audit-of-smart-contracts-at-the-core-of-giveconomy/617"
+   },
+   {
+    "title": "Funding grant for Commons Stack proposal",
+    "created": "2022-04-11",
+    "posts": 6,
+    "url": "https://forum.giveth.io/t/funding-grant-for-commons-stack-proposal/505"
+   },
+   {
+    "title": "Build with a community of grantees",
+    "created": "2023-12-08",
+    "posts": 2,
+    "url": "https://forum.giveth.io/t/build-with-a-community-of-grantees/1261"
+   },
+   {
+    "title": "Dapp WG Season 2 Proposal",
+    "created": "2023-12-11",
+    "posts": 6,
+    "url": "https://forum.giveth.io/t/dapp-wg-season-2-proposal/1264"
+   },
+   {
+    "title": "Revenue Streams, Platform Fees, and GIVfi v0.1",
+    "created": "2022-09-22",
+    "posts": 24,
+    "url": "https://forum.giveth.io/t/revenue-streams-platform-fees-and-givfi-v0-1/823"
+   },
+   {
+    "title": "Kleros x Giveth integration proposal",
+    "created": "2023-06-11",
+    "posts": 18,
+    "url": "https://forum.giveth.io/t/kleros-x-giveth-integration-proposal/1091"
+   },
+   {
+    "title": "A Deterministic, Audit-Ready Treasury Reporting MVP for Community Transparency",
+    "created": "2026-01-29",
+    "posts": 1,
+    "url": "https://forum.giveth.io/t/a-deterministic-audit-ready-treasury-reporting-mvp-for-community-transparency/2159"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 9,
+  "name": "Scroll Community Grants",
+  "site": "scroll.io",
+  "forum": "https://forum.scroll.io",
+  "q": [
+   "Scroll community grants apply 2026"
+  ],
+  "candidates": [
+   {
+    "u": "https://forum.scroll.io/t/proposal-kenya-scroll-local-node-founder-program/730",
+    "s": 8,
+    "t": "Proposal: Kenya Scroll Local Node Founder Program"
+   },
+   {
+    "u": "https://forum.scroll.io/t/proposal-scroll-dao-delegate-accelerator-proposal/571",
+    "s": 8,
+    "t": "Scroll DAO Delegate Accelerator Proposal - Governance Iterations"
+   },
+   {
+    "u": "https://forum.scroll.io/t/proposal-nigeria-local-node/864",
+    "s": 8,
+    "t": "Proposal: Nigeria Local Node - Global Community"
+   },
+   {
+    "u": "https://www.isocfoundation.org/2026/03/applications-open-for-new-community-centered-connectivity-grant-program/",
+    "s": 6,
+    "t": "Applications Open for the New Community-Centered Connectivity ..."
+   },
+   {
+    "u": "https://www.dol.gov/agencies/eta/grants/apply/find-opportunities",
+    "s": 6,
+    "t": "Funding Opportunities - U.S. Department of Labor"
+   },
+   {
+    "u": "https://trianglecf.org/apply/grants-for-nonprofits/",
+    "s": 6,
+    "t": "Grants for Nonprofits - Triangle Community Foundation"
+   }
+  ],
+  "forum_threads": [
+   {
+    "title": "Introducing Community Grants Support Program",
+    "created": "2025-09-19",
+    "posts": 30,
+    "url": "https://forum.scroll.io/t/introducing-community-grants-support-program/1164"
+   },
+   {
+    "title": "Grants - Navigating Scroll\u2019s Growth Series",
+    "created": "2025-01-20",
+    "posts": 3,
+    "url": "https://forum.scroll.io/t/grants-navigating-scroll-s-growth-series/438"
+   },
+   {
+    "title": "Proposal: DAO DeFi Grant Program",
+    "created": "2025-02-20",
+    "posts": 26,
+    "url": "https://forum.scroll.io/t/proposal-dao-defi-grant-program/499"
+   },
+   {
+    "title": "Scroll Sequencer Fees fund Competitive Grants Program",
+    "created": "2025-04-28",
+    "posts": 17,
+    "url": "https://forum.scroll.io/t/scroll-sequencer-fees-fund-competitive-grants-program/647"
+   },
+   {
+    "title": "Grant Progress Tracking Platform for Scroll",
+    "created": "2025-07-18",
+    "posts": 5,
+    "url": "https://forum.scroll.io/t/grant-progress-tracking-platform-for-scroll/975"
+   },
+   {
+    "title": "Grant Funding For Quality Projects",
+    "created": "2025-04-28",
+    "posts": 11,
+    "url": "https://forum.scroll.io/t/grant-funding-for-quality-projects/644"
+   },
+   {
+    "title": "About the Community Grants category",
+    "created": "2025-09-22",
+    "posts": 1,
+    "url": "https://forum.scroll.io/t/about-the-community-grants-category/1188"
+   },
+   {
+    "title": "Community Council Weekly Update Thread",
+    "created": "2025-09-06",
+    "posts": 12,
+    "url": "https://forum.scroll.io/t/community-council-weekly-update-thread/1140"
+   }
+  ],
+  "closed_signals": [
+   {
+    "u": "https://cannabis.ny.gov/reinvestment",
+    "t": "Applications for the 2026 CGRF are now closed ... Fiscal Year 2026 funding to support youth-focused programs in communities impact"
+   },
+   {
+    "u": "https://www.isac.org/students/during-college/types-of-financial-aid/grants/monetary-award-program/",
+    "t": "The 2026-27 Alternative Application was closed July 30, 2026 and no additional applications will be accepted for the 2026-27 schoo"
+   },
+   {
+    "u": "https://www.transportation.gov/grants/ss4a/how-to-apply",
+    "t": "The fiscal year (FY) 2026 Notice of Funding Opportunity (NOFO) for Safe Streets and Roads for All grants is now closed. The deadli"
+   }
+  ]
+ },
+ {
+  "n": 25,
+  "name": "Polygon Community Grants",
+  "site": "polygon.technology",
+  "forum": "https://forum.polygon.technology",
+  "q": [
+   "Polygon community grants season apply 2026"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "Grant evaluation and granting process",
+    "created": "2021-11-03",
+    "posts": 11,
+    "url": "https://forum.polygon.technology/t/grant-evaluation-and-granting-process/183"
+   },
+   {
+    "title": "(Season 2) Grant Allocator \u2013 Call for Applications",
+    "created": "2024-11-06",
+    "posts": 1,
+    "url": "https://forum.polygon.technology/t/season-2-grant-allocator-call-for-applications/19969"
+   },
+   {
+    "title": "Request for feedback: Grants Pathfinder, a guide to web3 grants",
+    "created": "2024-02-16",
+    "posts": 1,
+    "url": "https://forum.polygon.technology/t/request-for-feedback-grants-pathfinder-a-guide-to-web3-grants/13554"
+   },
+   {
+    "title": "Community Grants Season 1 Transparency Report",
+    "created": "2024-10-31",
+    "posts": 1,
+    "url": "https://forum.polygon.technology/t/community-grants-season-1-transparency-report/19958"
+   },
+   {
+    "title": "Post Grant approval process",
+    "created": "2021-11-08",
+    "posts": 5,
+    "url": "https://forum.polygon.technology/t/post-grant-approval-process/213"
+   },
+   {
+    "title": "Improving DAO Grant Sustainability Through Revenue-Based Buyback",
+    "created": "2025-06-18",
+    "posts": 3,
+    "url": "https://forum.polygon.technology/t/improving-dao-grant-sustainability-through-revenue-based-buyback/21044"
+   },
+   {
+    "title": "Grant to \"UNCHAIN\" for increasing the number of developers who can develop dApps on the Po",
+    "created": "2022-10-26",
+    "posts": 4,
+    "url": "https://forum.polygon.technology/t/grant-to-unchain-for-increasing-the-number-of-developers-who-can-develop-dapps-on-the-polygon-network/10394"
+   },
+   {
+    "title": "Grant Request by Entropyfi",
+    "created": "2021-12-22",
+    "posts": 4,
+    "url": "https://forum.polygon.technology/t/grant-request-by-entropyfi/463"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 15,
+  "name": "Celo Prezenti",
+  "site": "prezenti.xyz",
+  "forum": "https://forum.celo.org",
+  "q": [
+   "Prezenti Celo grants apply round"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "Prezenti Grants: Season 3 Plan",
+    "created": "2026-07-23",
+    "posts": 2,
+    "url": "https://forum.celo.org/t/prezenti-grants-season-3-plan/13598"
+   },
+   {
+    "title": "Budget Request: Prezenti Grant funding: Season 0",
+    "created": "2025-02-03",
+    "posts": 30,
+    "url": "https://forum.celo.org/t/budget-request-prezenti-grant-funding-season-0/10235"
+   },
+   {
+    "title": "Prezenti Season 1 Funding Request: Direct Grants [REVISED]",
+    "created": "2025-07-14",
+    "posts": 17,
+    "url": "https://forum.celo.org/t/prezenti-season-1-funding-request-direct-grants-revised/11754"
+   },
+   {
+    "title": "Prezenti Opens Almond Grant Round! - APPLICATIONS OPEN 17/03 - 18/04",
+    "created": "2025-03-17",
+    "posts": 12,
+    "url": "https://forum.celo.org/t/prezenti-opens-almond-grant-round-applications-open-17-03-18-04/10571"
+   },
+   {
+    "title": "Celo Foundation Grants - Update",
+    "created": "2022-03-17",
+    "posts": 1,
+    "url": "https://forum.celo.org/t/celo-foundation-grants-update/3101"
+   },
+   {
+    "title": "Grant Progress Tracking Platform for Celo",
+    "created": "2025-07-21",
+    "posts": 5,
+    "url": "https://forum.celo.org/t/grant-progress-tracking-platform-for-celo/11847"
+   },
+   {
+    "title": "Prezenti Season 2 Funding Request: Direct Grants",
+    "created": "2026-01-28",
+    "posts": 8,
+    "url": "https://forum.celo.org/t/prezenti-season-2-funding-request-direct-grants/12961"
+   },
+   {
+    "title": "[FINAL] Prezenti H1 2024 | Celo Grants",
+    "created": "2024-02-12",
+    "posts": 15,
+    "url": "https://forum.celo.org/t/final-prezenti-h1-2024-celo-grants/7412"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 37,
+  "name": "Algorand xGov",
+  "site": "algorand.co",
+  "forum": "https://forum.algorand.org",
+  "q": [
+   "Algorand xGov proposal submit 2026"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "[xGov][Beta] Becoming a Proposer and Creating Proposals",
+    "created": "2025-07-28",
+    "posts": 1,
+    "url": "https://forum.algorand.org/t/xgov-beta-becoming-a-proposer-and-creating-proposals/14809"
+   },
+   {
+    "title": "GP8 Measures DRAFT xGov Grants Allocation",
+    "created": "2023-08-17",
+    "posts": 4,
+    "url": "https://forum.algorand.org/t/gp8-measures-draft-xgov-grants-allocation/10196"
+   },
+   {
+    "title": "ARC34 Update for Grants with Milestones and Disclaimer",
+    "created": "2023-06-22",
+    "posts": 7,
+    "url": "https://forum.algorand.org/t/arc34-update-for-grants-with-milestones-and-disclaimer/9850"
+   },
+   {
+    "title": "xGov 202: Pact Stableswap Retroactive Grant",
+    "created": "2024-04-25",
+    "posts": 24,
+    "url": "https://forum.algorand.org/t/xgov-202-pact-stableswap-retroactive-grant/11859"
+   },
+   {
+    "title": "Algorand Grants Application Process & Management",
+    "created": "2023-06-05",
+    "posts": 2,
+    "url": "https://forum.algorand.org/t/algorand-grants-application-process-management/9736"
+   },
+   {
+    "title": "Grant application process 2024",
+    "created": "2024-07-03",
+    "posts": 2,
+    "url": "https://forum.algorand.org/t/grant-application-process-2024/12206"
+   },
+   {
+    "title": "Frustrations in building projects without grant assistance on Algorand",
+    "created": "2024-02-05",
+    "posts": 6,
+    "url": "https://forum.algorand.org/t/frustrations-in-building-projects-without-grant-assistance-on-algorand/11324"
+   },
+   {
+    "title": "Incentivizing node runners for Product Consensus & Clawbacks within Grant Contracts?",
+    "created": "2023-03-18",
+    "posts": 4,
+    "url": "https://forum.algorand.org/t/incentivizing-node-runners-for-product-consensus-clawbacks-within-grant-contracts/9155"
+   }
+  ],
+  "closed_signals": []
+ },
+ {
+  "n": 36,
+  "name": "NEAR House of Stake",
+  "site": "houseofstake.org",
+  "forum": "https://gov.near.org",
+  "q": [
+   "NEAR House of Stake grant proposal submit"
+  ],
+  "candidates": [],
+  "forum_threads": [
+   {
+    "title": "Cofund - Grant Management on NEAR",
+    "created": "2022-03-04",
+    "posts": 5,
+    "url": "https://gov.near.org/t/cofund-grant-management-on-near/16184"
+   },
+   {
+    "title": "Community Squad Weekly Update: 9 FEB 21",
+    "created": "2021-02-09",
+    "posts": 5,
+    "url": "https://gov.near.org/t/community-squad-weekly-update-9-feb-21/600"
+   },
+   {
+    "title": "Community Squad Weekly Updates: 26 April 21",
+    "created": "2021-04-26",
+    "posts": 5,
+    "url": "https://gov.near.org/t/community-squad-weekly-updates-26-april-21/1405"
+   },
+   {
+    "title": "Community Team: Week of Dec 13, 2021",
+    "created": "2021-12-13",
+    "posts": 9,
+    "url": "https://gov.near.org/t/community-team-week-of-dec-13-2021/10861"
+   },
+   {
+    "title": "Community Squad Weekly Update: 20 September 2021",
+    "created": "2021-09-21",
+    "posts": 1,
+    "url": "https://gov.near.org/t/community-squad-weekly-update-20-september-2021/6122"
+   },
+   {
+    "title": "Community Squad Weekly Update: 9 August 2021",
+    "created": "2021-08-09",
+    "posts": 3,
+    "url": "https://gov.near.org/t/community-squad-weekly-update-9-august-2021/4297"
+   },
+   {
+    "title": "Community Squad Weekly Updates: 3 MAY 2021",
+    "created": "2021-05-03",
+    "posts": 7,
+    "url": "https://gov.near.org/t/community-squad-weekly-updates-3-may-2021/1512"
+   },
+   {
+    "title": "Community Squad Weekly Updates: 19 April 21",
+    "created": "2021-04-19",
+    "posts": 6,
+    "url": "https://gov.near.org/t/community-squad-weekly-updates-19-april-21/1330"
+   }
+  ],
+  "closed_signals": []
+ }
+]

@@ -17,7 +17,7 @@ Usage:
 
 Requires: pip install curl_cffi
 """
-import json, re, sys, time, html
+import json, os, re, sys, time, html
 from urllib.parse import urljoin, urlparse
 
 try:
@@ -25,10 +25,16 @@ try:
 except ImportError:
     sys.exit("pip install curl_cffi")
 
-ISP = ["Rh2eHZC5ib0xEds2:OazacE5Xf6X5cz3Y@64.50.167.6:61232",
-       "Rh2eHZC5ib0xEds2:OazacE5Xf6X5cz3Y@165.49.211.111:61232",
-       "Rh2eHZC5ib0xEds2:OazacE5Xf6X5cz3Y@166.88.173.212:61232"]
-GEO = "geonode_22mcas5VgY:36a810f3-d149-4dcc-b97b-291068879ec4@rotating-datacenter.geonode.io:9000"
+# Proxy credentials come from the environment. They were previously hard-coded
+# here and committed, which put a live user:pass into git history — rotate any
+# credential that ever sat in this file.
+#
+#   export PROXY_AUTH="user:pass"
+#   export PROXY_HOSTS="64.50.167.6:61232,165.49.211.111:61232,166.88.173.212:61232"
+#   export PROXY_GEO="user:pass@rotating-datacenter.example.net:9000"   # optional
+_auth = os.environ.get("PROXY_AUTH", "")
+ISP = [f"{_auth}@{h.strip()}" for h in os.environ.get("PROXY_HOSTS", "").split(",") if h.strip()]
+GEO = os.environ.get("PROXY_GEO", "")
 # Rotate fingerprints: a site that blocks one Chrome build often allows another.
 IMPS = ["chrome124", "chrome120", "safari17_0", "edge101"]
 

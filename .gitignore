@@ -54,6 +54,9 @@ venv/
 
 # Per-chain deployment staging output (bundles + seeded DBs)
 deploy/out/
+deploy/deck/
+deploy/apply/
+deploy/status/
 
 # DB backups
 *.db.bak*

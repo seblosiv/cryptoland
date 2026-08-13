@@ -476,3 +476,19 @@ Three env vars are load-bearing per chain and the audit checks all three:
 | `SERVER_URL` | IPN callback unreachable — payments never confirm |
 | `CRYPTOLAND_SITE_HOST` | share cards print the wrong chain's host |
 | `CRYPTOLAND_CHAIN` | `viral.py` defaults to `polygon` on every chain |
+
+## `xono.ai/dossier` — the internal board
+
+`node scripts/build-dossier.mjs` writes `deploy/status/dossier.html`; copy it to
+`deploy/apex/dist/` and rsync to `/srv/cryptoland/apex/dist/` on the apex host
+(`91.99.194.54`, key `~/.ssh/xono_deploy`).
+
+It is served behind **the same basic auth as `/status`** — same `blackside` user,
+the same bcrypt hash, `X-Robots-Tag: noindex`. That is deliberate: the page lists
+deployer and treasury addresses, unsubmitted application copy, and which
+programmes we have not cracked. It must never be indexable.
+
+> ⚠️ The apex Caddy block took `xono.ai` down once before (see the warning
+> above). **Always `caddy validate --config /etc/caddy/Caddyfile` before
+> `systemctl reload caddy`**, and curl `/`, `/about` and `/status` afterwards —
+> a 200/200/401 triple is the check that the reload did not break the apex.

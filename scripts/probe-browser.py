@@ -12,14 +12,16 @@ own Chrome profile.
 
     python3 scripts/probe-browser.py targets.json out.json [limit]
 """
-import asyncio, json, re, sys, random
+import asyncio, json, os, re, sys, random
 
 CHROME = ("/Users/blackside/Library/Caches/ms-playwright/chromium-1228/"
           "chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/"
           "Google Chrome for Testing")
 
-GEO = ("http://geonode_22mcas5VgY:36a810f3-d149-4dcc-b97b-291068879ec4"
-       "@rotating-datacenter.geonode.io:9000")
+# From the environment, never the source. A credential hard-coded here was
+# committed once already; rotate anything that ever sat in this file.
+#   export PROXY_GEO="http://user:pass@rotating-datacenter.example.net:9000"
+GEO = os.environ.get("PROXY_GEO", "")
 
 CLOSED = r"(applications? (are )?(now )?closed|no longer accepting|not accepting|submissions? closed|currently paused|is paused|programme? (has )?(ended|concluded)|discontinued|applications will (re)?open)"
 OPEN   = r"(apply now|applications? (are )?open|submit (your |a )?(application|proposal)|rolling basis|accepting applications|apply here|start your application|open for submissions)"

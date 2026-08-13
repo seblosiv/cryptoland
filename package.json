@@ -8,6 +8,7 @@
     "build": "vite build",
     "build:chain": "bash scripts/build-chain.sh",
     "build:all-chains": "bash scripts/build-chain.sh all",
+    "build:deck": "node scripts/build-deck.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

@@ -204,6 +204,14 @@ Prefer it over a slide deck: it renders the **same** `/metrics/grant` response y
 quoted in step 5, live, from the deployment they are already looking at. A reviewer who
 wants to check a number can, and that is the point.
 
+When a programme **asks** for a deck, send one — `npm run build:deck` writes a
+nine-slide `deploy/deck/<chain>.html` built from that chain's live contract and check
+results, and ⌘P exports the landscape PDF a form expects. Only Rootstock names a deck
+among the open grants; the rest of the demand is the equity and accelerator track
+(Animoca, Alliance DAO, Outlier Ventures, a16z CSX, Arbitrum Gaming Ventures, Base
+Batches, BNB MVB). Full list and rationale in [pitch-deck.md](pitch-deck.md). Attach it
+**alongside** the live page, never instead of it.
+
 It is also honest by construction, which is the part that protects the application:
 the contract row reads "Not yet deployed — mint stubbed" until
 `VITE_CONTRACT_<CHAIN>` is set, and the seeded-world disclosure sits directly under the

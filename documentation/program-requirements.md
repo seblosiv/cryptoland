@@ -182,7 +182,7 @@ MVB — its base rate is ~1–2% anyway.
 | Community engagement | 55% | ❌ **No Discord, no X, no hackathon** |
 | "Why this chain" | high | ⚠️ Data exists in `profiles.js`, not used in applications |
 | Explicit DAU/MAU | 5% | ⚠️ Real numbers are seeded — disclosed |
-| Pitch deck | **5%** | ✅ Not needed (Animoca only) |
+| Pitch deck | **5%** | ✅ Generated per chain — `npm run build:deck`, see [pitch-deck.md](pitch-deck.md) |
 
 ---
 
@@ -699,3 +699,470 @@ The defensible split:
 - **Starknet Seed** — §1: we are disqualified on eligibility, not on the form.
 - **KYC / legal entity** — 20% of programmes; blocks *payout*, not submission.
 - **Community engagement** — 55% cite it; no Discord or X presence exists.
+
+---
+
+## 18. Every form, actually opened — zendriver sweep, 2026-08-11
+
+§17 audited ten landing pages with Playwright. This is the full sweep: **65 pages
+— all 49 non-dead programmes plus the 16 application forms reached by following
+their apply links** — loaded in real Chrome via zendriver, through three
+residential ISP proxies (`165.49.211.111`, `166.88.173.212`, `64.50.167.6`), one
+browser per proxy, sequential. Zero errors. Tooling in `scripts/formaudit/`,
+raw records in `scripts/formaudit/results-2026-08-11.jsonl`.
+
+**Why zendriver and not Playwright:** it drives real Chrome with a clean
+fingerprint and survived JS shells that returned empty before. It was **not** used
+to defeat a challenge. Every captcha found below is reported and left alone — the
+§0 rule stands, and eleven pages hit one.
+
+### What stands between us and each application
+
+| Gate | Landing pages (49) | Real forms (16) |
+|---|---|---|
+| No form on the page | 18 | 7 |
+| Third-party host (Airtable/Typeform/Notion/HubSpot/Google) | 13 | 5 |
+| **Captcha / bot wall** | 10 | 1 |
+| Wallet signature | 5 | 2 |
+| Native `<form>` | 3 | 1 |
+
+### The forms whose fields we now actually know
+
+- **Animoca Minds — 31 fields, and we are not eligible.** Two *required* selects
+  are `Current activity on Minds` and `Minds actively used`, plus free-text on
+  which Minds/Skills/Tools features you will use. This is a programme for teams
+  building **on their Minds platform**, not a general investment form. Also
+  requires a demo video URL, and asks about a Hong Kong nexus. Pitch deck is
+  optional here (a Slides URL).
+- **Outlier Ventures Base Camp — 11 fields, and `pitch_deck__file_` is
+  REQUIRED.** A file upload, not a link. This is the one programme in the sweep
+  that hard-requires the deck. Also asks total funding raised in USD.
+- **Polygon Community Grants — 14 fields** (Airtable, S2/S3 share one form).
+  Required: first/last name, location, email, **Twitter handle**, **Telegram
+  handle**, project name, website, one-liner, number of co-founders. The
+  "no community presence" gap in §7 is not soft here — two required fields.
+- **Avalanche Retro9000, Arbitrum AAP (Tally), NEAR House of Stake, Algorand
+  xGov, Mantle, Flare** — wallet-gated. **This is our best-fit category**:
+  signing is a key operation and we hold the retained deployer.
+
+### Pages that look like forms and are not
+
+Worth recording, because a scripted pass would treat all three as submittable:
+
+- **Taiko** — the "form" is the ecosystem directory's project search.
+- **Cardano Foundation** — a *partnership inquiry* form (job title, company,
+  inquiry type), not a grant application, and captcha-gated.
+- **Cardano Catalyst** — the visible fields are search and newsletter signup; the
+  proposal form is behind an account.
+
+### Captcha-gated — eleven, all human
+
+Scroll · MultiversX Growth · Starknet Seed · Starknet Growth · Optimism Retro ·
+Sui Foundation · Cardano Foundation · a16z CSX · Rootstock · The Graph · Alchemy.
+
+**Correction to the first read of this sweep.** Rootstock's page reported "7
+fields", which looked like a short application form. Inspecting the records shows
+all seven are *radio options on a support contact widget* — "Bug or complaint",
+"Tokens", "Something else". `rootstock.io/funding/` is **not** the grant
+application form, and we still do not have its URL. Field counts alone are not
+evidence of a form; read the labels.
+
+The same caution applies wherever this sweep reports a low field count on a page
+that also reports a captcha — the captcha widget and a newsletter box both
+register as fields.
+
+### What this changes
+
+1. **Wallet-gated programmes are the highest-yield automation**, not form-filling.
+2. **Twitter and Telegram accounts are now a hard blocker**, not a soft one —
+   Polygon requires both fields to submit.
+3. **The deck was worth building**: Outlier Ventures requires the file.
+4. **Drop Animoca** from the actionable list, or re-scope it — the required
+   fields describe a different product than ours.
+
+### The answer sheets
+
+`node scripts/build-apply-pack.mjs` writes one Markdown file per actionable
+programme to `deploy/apply/` — **46 sheets**, each carrying that form's real field
+list from this sweep with a drafted answer per field, built from repo data: the
+chain's own `grantAngle`, its live contract, its post-deployment checks.
+
+Nine of them are captcha-gated. The captcha gates the *submit click*, not the
+answers, so the expensive part — assembling correct, chain-specific, verifiable
+copy — is done ahead of time and the remaining human step is paste-and-submit.
+Captchas are not solved programmatically here and captcha-solving services are
+not used; that is the §0 rule, and it holds for third-party sites regardless of
+who asks.
+
+Two details the generator gets right that a hand-written sheet would not:
+
+- **Explorer links are derived per chain, not from the deployment record.** The 18
+  EVM chains share one record whose `explorer` is Etherscan — quoting that to a
+  Rootstock reviewer sends them to the wrong chain to look up an address that is
+  not there. EVM links now come from each chain's own `explorerUrl`.
+- **Missing assets are marked, not invented.** Twitter and Telegram render as
+  `⚠️ NOT AVAILABLE`, which is what makes Polygon's two required handle fields
+  visible as a blocker instead of quietly producing a plausible-looking answer.
+
+### Credential hygiene — found during this sweep
+
+`scripts/probe-programs.py` and `scripts/probe-browser.py` were **tracked in git
+with live proxy credentials in plaintext**, from the July sweep. Both now read
+from `PROXY_AUTH` / `PROXY_HOSTS` / `PROXY_GEO`. The working tree is clean, but
+the values remain in history across 3 commits that have already been pushed —
+**rotate any proxy credential that ever appeared in those files.** Scrubbing the
+file does not unpublish it.
+
+---
+
+## 19. The forms the landing pages never linked — crawl, 2026-08-11
+
+§18 followed whatever each programme's page linked to and found 34 of 46 had no
+readable application form. That was a limit of the method, not of the programmes:
+the first link matching `/apply|submit/` is often a docs page, a linktree or a
+support widget. `scripts/formaudit/crawl.py` walks each site properly — collects
+every link *and* scrapes the raw HTML for embedded form hosts, ranks them, then
+**opens the top six and counts fields**. A promising URL is a guess; a page with
+eighteen labelled inputs is evidence.
+
+Run through Geonode **residential** exits (the datacenter pool is refused by
+several of these sites; the older `rotating-datacenter` endpoint is dead).
+
+**Eleven application forms located that we did not have:**
+
+| # | Programme | Form |
+|---|---|---|
+| 34 / 41 | **Solana Foundation** (+ rolling) | `airtable.com/apppDmK2Pin9WX8jV/shrR0uMKu4N57TGW7` |
+| 18 / 29 | **Starknet** Seed + Growth | `airtable.com/appfoRv2ottjRfTpL/pag0G55zA8aU4V9bD/form` — **18 fields, all read** |
+| 31 | Arbitrum Foundation (AAP) | `tally.so/r/3xzEzv` |
+| 47 | Arbitrum Gaming Ventures | `tally.so/r/0QObE9` |
+| 6 | Radix Grants | `docs.google.com/forms/d/e/1FAIpQLSeTzc-…` |
+| 33 | SafePal Builder's | `docs.google.com/forms/d/e/1FAIpQLSdBvC…` |
+| 17 | MultiversX Growth | `form.typeform.com/to/vRkkboYU` |
+| 59 | The Graph | `thegraph.typeform.com/applynow` |
+| 2 | Giveth | `giveth.typeform.com/feedback` |
+
+### Two corrections to §17 and §18
+
+- **Starknet is not captcha-gated.** §17 recorded "reCAPTCHA + tinyurl → external
+  ⛔". The reCAPTCHA is on the *marketing page*; the actual application is a plain
+  Airtable form with no challenge. Reading a gate off a landing page and
+  attributing it to the form is wrong — the crawl now reports the gate found on
+  the form itself.
+- **Solana Foundation's form was reachable all along.** It is linked from the
+  grants page as a bare Airtable URL with no `<a>` text matching `/apply/`, which
+  is exactly what the first-match heuristic misses.
+
+### Starknet's 18 required fields — and the blocker they expose
+
+Project name · Website URL · **Project GitHub** · **Project X URL** · Contact full
+name · Contact email · **Contact Telegram handle** · **Contact GitHub username** ·
+TG group ↔ SNF · City · Funding amount · Milestone 1 name / amount / date ·
+Referral · Signatory full name / email / title.
+
+Four of those are accounts we do not have, all required. Combined with Polygon's
+required Twitter *and* Telegram, this is now the single most expensive gap in the
+whole campaign: **it blocks submission outright on the two largest open
+programmes**, and no amount of engineering substitutes for it. Creating a project
+X account, a Telegram handle and a public GitHub profile is the highest-leverage
+hour available.
+
+### Method notes worth keeping
+
+- `tab.evaluate()` returns **strings**. An expression evaluating to an array came
+  back unusable and every page silently reported zero links — always
+  `JSON.stringify()` the result.
+- **Airtable and Tally render their fields inside an iframe**, so a top-document
+  field count reads 0 on a real form. A URL on a known form host is treated as
+  found regardless of field count.
+- Write results incrementally. An earlier run wrote its JSONL only at the end;
+  killing a hung crawl at target 57 of 65 threw away all 57.
+
+---
+
+## 20. Every question on every reachable form — deep read, 2026-08-11
+
+§19 found the forms. This reads them. A single top-document probe returns 0 on
+most real application forms for three unrelated reasons, and each needed its own
+handling in `scripts/formaudit/deepform.py`:
+
+- **Google Forms** renders questions as `div[role=listitem]` with the label in a
+  heading — several have no `<input>` at all until focused.
+- **Typeform** shows **one question per screen**; a single read sees 1 of 30.
+- **Airtable / Tally** render via React after load and paginate on "Next".
+
+So the reader scrolls to the bottom, reads with a probe that understands all four
+shapes, then **clicks forward and re-reads**, accumulating unique questions until
+the form stops advancing. It never types into a field and never submits.
+
+**154 questions catalogued across 9 forms:**
+
+| # | Programme | Questions | Required | Pages |
+|---|---|---|---|---|
+| 29 | Starknet Growth / Seed | **44** | 41 | 1 |
+| 50 | Animoca Minds | 32 | 13 | 1 |
+| 47 | Arbitrum Gaming Ventures | 21 | 20 | 3 |
+| 25 | Polygon Community Grants | 18 | 12 | 1 |
+| 58 | Flare Grants | 17 | 6 | 1 |
+| 6 | Radix Grants | 10 | 8 | 1 |
+| 49 | Outlier Ventures Base Camp | 10 | 5 | 1 |
+
+Paginating changed the picture materially: Starknet went 18 → **44**, Polygon
+14 → 18, Radix 3 → 10, Arbitrum Gaming 0 → 21. Anything measured from a single
+screen undercounts a real form by roughly half.
+
+### The question both Starknet and Arbitrum ask outright
+
+Starknet requires **"Integrated chains"**. Arbitrum Gaming Ventures makes it a
+required radio: **Arbitrum native / Multichain including Arbitrum / Multichain
+excluding Arbitrum**.
+
+This is §0's monogamy problem as a mandatory field — it cannot be finessed by
+leading with `grantAngle`, because the form asks directly. The packs now answer it
+straight: yes, 28 chains carry a live contract; what that does *not* mean is a
+chain switcher with their chain as a dropdown entry; judge this build on its own.
+A reviewer who discovers the other 27 after we implied otherwise has found us
+concealing something, which is worse than the multichain fact itself.
+
+### Starknet also wants what we do not have
+
+Beyond X/Telegram/GitHub (§19), the full 44 include **Team GitHub Handles**,
+**TG group ↔ SNF**, **Raise details**, **Project KPIs**, **User Acquisition
+Strategy**, **Business model**, **Starknet contributions**. "Starknet
+contributions" is unanswerable today — we have deployed to Starknet but
+contributed nothing to it, and §1 already flags the community-involvement gate.
+
+### Still unread
+
+Arbitrum AAP (Tally), Solana Foundation (Airtable share link), The Graph
+(Typeform) and SafePal (Google Forms) returned nothing on both proxy pools —
+they gate on a session, a login, or a slow first paint beyond a 110s budget.
+Their URLs are confirmed; their fields are not. **Do not assume the packs cover
+those four.**
+
+---
+
+## 21. Looking at the screen — six "found forms" that were not, 2026-08-12
+
+§19 and §20 verified forms by *counting fields*. That is not the same as checking
+what the page says. `scripts/formaudit/deepform2.py` screenshots every page it
+reads; reading those screenshots invalidated six records — four of them
+programmes we were about to write applications for.
+
+Evidence images in `scripts/formaudit/evidence/`.
+
+| # | Programme | What the page actually says |
+|---|---|---|
+| 2 | Gitcoin / Giveth QF | **"Giveth User Experience Feedback Form"** — a UX survey |
+| 17 | MultiversX Growth Games (~$1.5M) | **"Developer Office Hours Request Form"** — support booking, with a disclaimer that it is "reserved for advanced technical support only" |
+| 31 | Arbitrum Foundation Grants (~$150K) | **"This form is now closed. The form can't receive new submissions at this moment."** |
+| 59 | The Graph Foundation (~$60K) | **"Hey :) This typeform is now closed."** |
+| 34 / 41 | Solana Foundation (~$250K / ~$100K) | Airtable is the **Active RFPs table**, not an application. Its only visible row reads verbatim: *"If this the only RFP that is visible, it means that there are no other active RFPs at this time. **DO NOT APPLY FOR THIS.**"* |
+
+`deploy/apply/` now renders a `⛔ **Do not use this URL**` banner on all six.
+
+### Why field-counting missed all of this
+
+A closed Tally, a UX survey and an RFP table all present a perfectly well-formed
+page. Two of them even have inputs. The signal that separates them from an
+application is **prose**, and no field probe reads prose. Three heuristics were
+each individually reasonable and jointly wrong:
+
+- "the link text says apply" → Giveth's did;
+- "it is on a known form host" → all six were;
+- "it has ≥3 labelled fields" → the survey and the office-hours form both do.
+
+**Look at the page before trusting the parse.** A screenshot cost one extra call
+per form and overturned six conclusions, two of them on programmes worth a
+combined ~$1.65M in headline amounts.
+
+### What this does to the campaign
+
+Of §19's eleven "located application forms", **five were wrong or closed**. The
+ones that survive verification are Starknet (Seed + Growth), Polygon, Flare,
+Radix, Arbitrum Gaming Ventures, Outlier Ventures, Animoca and SafePal.
+
+Two programme statuses in `deploy/apex/programs.mjs` need review against this:
+**The Graph** and **Arbitrum Foundation Grants** are listed OPEN but their forms
+refuse submissions. Solana is subtler and should not be marked dead — the RFP
+track is empty right now, but `solana.org/grants-funding` is a separate route and
+was not the URL tested here.
+
+---
+
+## 22. Governance forums settle it — SearXNG + Discourse sweep, 2026-08-12
+
+§21 proved six forms were wrong or closed by looking at them. This asks the
+question a screenshot cannot: *is the programme itself still funding?*
+`scripts/formaudit/research.py` runs SearXNG (local, proxied) for candidate
+routes, then queries each ecosystem's **Discourse governance forum** through its
+own `/search.json` — §14's technique, because funding requires a public proposal
+and a forum cannot go quietly stale the way a landing page can.
+
+### The Graph is over — in their own words
+
+> *"The Graph Foundation is pausing applications to the Grants Program. … In
+> recent months, we made the decision to pause the Grants Program to reassess our
+> ecosystem strategic priorities."*
+> — forum.thegraph.com, **2026-07-06**
+
+That is the announcement the closed Typeform was the symptom of. **#59 → DEAD.**
+
+### Newest grant thread per forum — the staleness signal
+
+| Programme | Newest grant thread | Read |
+|---|---|---|
+| Celo Prezenti | **2026-07-23** "Prezenti Grants: Season 3 Plan" | genuinely live |
+| Gitcoin / Giveth | 2026-01-29 | live |
+| Algorand xGov | 2025-07-28 "[xGov][Beta] Becoming a Proposer" | live |
+| Scroll | 2025-09-22 | live |
+| Polygon | 2025-06-18 | thin, watch it |
+| **Arbitrum Foundation** | **2024-11-04** | 21 months silent — matches the closed form |
+| NEAR House of Stake | nothing on gov.near.org since 2022 | wrong forum, or no public process |
+
+**Arbitrum Foundation Grants → FLUX.** A closed form plus a governance forum with
+no grant activity in 21 months is not a temporary shutter. Arbitrum Gaming
+Ventures (#47) is separately confirmed live with a 21-question form — that is the
+Arbitrum route.
+
+### Programme tally after this pass
+
+`OPEN 39 · ROLLING 3 · FLUX 2 · PROPOSAL 2 · NO-FORM 2 · DEAD 10 · BLOCKED 2`
+(was OPEN 41 · DEAD 9 · FLUX 1.)
+
+### Still unknown, and now marked as such
+
+- **MultiversX Growth Games (~$1.5M)** — the URL we held is a support-desk form.
+  SearXNG returned no candidate for the real one.
+- **Gitcoin / Giveth QF** — same, a feedback survey.
+- **Solana Foundation** — the RFP table is empty by its own admission, but
+  `solana.org/grants-funding` is a different route and was not retested. Marked
+  as an empty RFP track, **not** as dead.
+
+Recording "we do not have this URL" is the point. The previous pass recorded a
+support-desk form as a $1.5M application, which is worse than an empty field.
+
+---
+
+## 23. The hunt that found nothing — and why that is the finding, 2026-08-12
+
+30 actionable programmes still had no confirmed application URL. This pass opened
+**76 pages** across them with `scripts/formaudit/hunt.py`, classifying each by
+reading its prose rather than counting its inputs.
+
+**Genuine applications found: zero.** What those 76 pages actually were:
+
+| Classification | Pages |
+|---|---|
+| DOCS — documentation or a listing | 31 |
+| SUPPORT — help desk, office hours, contact | 18 |
+| UNKNOWN | 10 |
+| MAYBE — application language, too few fields | 7 |
+| FEEDBACK — a survey | 5 |
+| CLOSED | 1 |
+| LOGIN — account wall | 1 |
+
+### The three false positives, and the heuristic they killed
+
+The classifier reported three APPLICATIONs. **All three were wrong**, and their
+own field labels say so:
+
+- **Cardano Catalyst** → newsletter signup (`e.g. Ada Lovelace`, `accept-terms` ×2)
+- **Cardano Foundation** → partnership inquiry (`Partnership Inquiry Type`, `Job title`)
+- **Rootstock** → product interest (`Which Vault(s) are of interest to you?`)
+
+All three came from one fallback rule: *"≥6 fields and ≥3 required ⇒ it is an
+application."* It fired three times and was wrong three times. **Deleted.** A
+newsletter box, a partnership form and a product-interest form all clear any
+field-count bar that a real application clears. Only explicit application
+language *plus* real inputs now qualifies.
+
+That is the third time this project has been bitten by the same class of error
+(§21 field counts, §19 first-matching link, now this). The rule that holds:
+**structure never identifies intent — read the words.**
+
+### Two real corrections
+
+- **Base Batches → FLUX.** Verbatim: *"Batches 003: Student Track RUNS FROM
+  Feb 17 – Apr 27, 2026 … Applications closed."*
+- **Avalanche Research Grants** is behind an account wall — *"Sign in to
+  continue"* on Avalanche Builder Hub. Not a captcha; a login.
+
+### What the zero actually means
+
+It is not that the crawler is weak. It is that **most of these programmes do not
+publish a web form at all.** The dominant page type is documentation (31) and the
+second is a support desk (18). Tezos already told us this in §17 — "no form at
+all, proposal by email". The same is very likely true of Beam, Game3, HBAR,
+Alliance, Mantle, Taiko and Flow.
+
+**Stop hunting for forms on these.** The next move is per-programme and human:
+read the docs page and find the stated submission channel — email, a forum
+proposal, a Notion portal, or an account. Automation has extracted what it can.
+
+### Honest position after §§18–23
+
+- **7 programmes** — form confirmed, every question captured (152 total)
+- **7 programmes** — form URL confirmed, fields behind a session or iframe
+- **26 programmes** — no web form located, and probably none exists
+- **4 programmes** — URL verified as the wrong form or closed
+
+---
+
+## 24. The dossier — one page for everything, 2026-08-12
+
+`node scripts/build-dossier.mjs` → `deploy/status/dossier.html`. Eight tabs over
+every artefact this project has produced: **Overview · Chains · Contracts ·
+Wallets · Programmes · Applications · Requirements · Readiness**.
+
+It does **not** replace `deploy/apex/build-status.mjs`, which renders
+`xono.ai/status` for reviewers. This is the internal view — denser, and it carries
+the §§18–23 form work that a funder has no reason to see.
+
+Every figure is read at build time from `config.js`, `deployments.mjs`,
+`programs.mjs`, `env/.env.<chain>` and `scripts/formaudit/*`. Nothing is
+transcribed, so a contract address can never drift from what is deployed.
+
+**Readiness** is the tab that did not exist before. It scores the three things
+that decide whether a submission is possible today — chain live (40), form depth
+(40), blockers (20) — and lists every blocker by name: *chain not deployed ·
+no application route found · captcha · account required · X / Telegram account
+required · public GitHub required · pitch deck file required · demo video
+required*. Nine programmes score with nothing blocking; the rest state exactly
+what is missing.
+
+**Visual system.** The dossier is deliberately **light** — near-white grounds
+(`#fbfbfd` / `#ffffff`), Apple system faces (`-apple-system` / `SF Pro`, `SF Mono`),
+hairlines at `#e3e3e6`, soft two-layer shadows, a segmented-control tab bar, and a
+single blue accent (`#0071e3`) used only for state. Semantic colour is separate
+from the accent.
+
+This is **not** a change to the product. `src/` keeps the solid-dark tokens and
+the pitch deck stays dark; only this internal page is light, at the user's
+explicit request. The no-glassmorphism rule still holds and needed no exception —
+`grep backdrop-filter deploy/status/dossier.html` matches only a comment saying it
+is not used. It commits to one theme on purpose, so there is no
+`prefers-color-scheme` branch and every colour is painted explicitly.
+
+Three rendering notes worth keeping:
+
+- A `<thead>` stuck to the viewport at `top:44px` (to clear the sticky tab bar)
+  rides over the first row. Give the table its own `max-height` scroll box and
+  stick the header to **that** instead — self-contained, and it behaves the same
+  on a phone.
+- **`display:flex` on a `<td>` removes it from table layout**, so that cell's
+  borders stop aligning with the rest of the row — it drew a vertical seam beside
+  the Ready column. Keep the cell a `table-cell` and flex an inner wrapper.
+- Verify by clicking every tab headless at 1500×1000 **and** 390×844, asserting
+  exactly one panel is visible and `scrollWidth <= innerWidth`. Both passed with
+  zero console errors.
+
+### Submission channels for the form-less programmes
+
+`scripts/formaudit/channels.py` read all 29 programmes that have no web form,
+extracting mailto targets, stated how-to-apply sentences and deadlines. Yield was
+deliberately modest and is quoted, not inferred: **grants@fil.org** (Filecoin),
+**bd@flowfoundation.org** (Flow), **hello@onbeam.com** (Beam), plus deadlines on
+Stellar SCF and Avalanche Retro9000. The rest state no public channel on their
+landing page — consistent with §23's finding that most of these programmes are
+documentation, not application funnels.
