@@ -113,8 +113,8 @@ const cards = meta.map(m => `      <a class="card" data-chain="${m.k}" data-fami
 const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CryptoLand — own the world, native to your chain</title>
-<meta name="description" content="A geospatial territory game over the real world: 268,435,456 claimable tiles. One codebase, ${families.length} adapter families, deployed natively on ${TARGETS.length} chains.">
+<title>CryptoLand — the map you can own</title>
+<meta name="description" content="Every map ever made is read-only. CryptoLand is the one you can own: 268,435,456 tiles of the real world, a supply fixed by geometry, each tile\u2019s coordinate its own token id. Live on mainnet.">
 <meta property="og:title" content="CryptoLand — own the world, native to your chain">
 <meta property="og:description" content="268,435,456 claimable tiles over the real world. One codebase, ${families.length} adapter families, native on every chain it ships to.">
 <meta property="og:type" content="website">
@@ -128,7 +128,10 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 header{padding:70px 0 40px}
 h1{font-size:clamp(31px,5.2vw,50px);letter-spacing:-.032em;font-weight:800;line-height:1.08}
 h1 em{font-style:normal;color:var(--acc)}
-.sub{color:var(--t2);margin-top:18px;max-width:60ch;font-size:16.5px}
+.sub{color:var(--t2);margin-top:16px;max-width:62ch;font-size:16.5px;line-height:1.62}
+.sub strong{color:var(--t1);font-weight:600}
+.sub.last{color:var(--t1);font-size:15.5px;margin-top:20px;padding-left:14px;
+  border-left:2px solid #4ade80}
 /* Referrer banner — hidden until JS identifies the chain they arrived from. */
 #from{display:none;margin:26px 0 0;padding:15px 18px;background:var(--s1);
 border:1px solid var(--b0);border-left:3px solid var(--acc);border-radius:10px}
@@ -196,12 +199,16 @@ footer a{color:var(--t2)}
 </style></head><body><div class="wrap">
 
 <header>
-  <p class="kick">Every square metre of Earth has already been mapped.</p>
-  <h1>None of it<br><em>is ownable.</em></h1>
-  <p class="sub">Satellites finished the map decades ago. What was never built is the layer above it — a
-  registry where a place has an owner, and the claim settles somewhere neutral rather than inside one
-  company's database. CryptoLand is that layer at the resolution where it becomes a game: the world split
-  into 268,435,456 tiles of roughly 2.4 km², each claimed, upgraded, traded and governed by whoever holds it.</p>
+  <p class="kick">Every map ever made is read-only.</p>
+  <h1>We built the one<br><em>you can own.</em></h1>
+  <p class="sub">Maps have always told you where things are. None has ever told you what is yours.</p>
+  <p class="sub">CryptoLand divides the world into <strong>268,435,456 tiles</strong> of roughly 2.4 km² —
+  a supply fixed by geometry rather than policy, so it can never be expanded, inflated or granted to
+  insiders. A tile's coordinate <em>is</em> its token id, which makes ownership arithmetic anyone can
+  verify and nobody can forge. Claims settle on a public chain instead of in our database, so the registry
+  outlives the company that started it.</p>
+  <p class="sub last">It is live on mainnet today — and every contract below is verifying itself in your
+  browser as you read this.</p>
 
   <div id="from">
     <b id="from-name"></b> <span>— that is where you just came from.</span>
