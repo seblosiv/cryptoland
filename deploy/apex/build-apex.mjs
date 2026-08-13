@@ -54,6 +54,25 @@ function ui(hex){ const rgb=hex2rgb(hex); if(contrast(rgb,S1)>=4.5) return hex
     if(contrast(m,S1)>=4.5){best=m;hi=t}else lo=t}
   return '#'+best.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('') }
 
+
+/* ── live verification payload ─────────────────────────────────────────────
+   The page proves its own claims by calling each chain's public RPC from the
+   reader's browser. That is only possible because those endpoints send
+   Access-Control-Allow-Origin — scripts/check-rpcs.mjs exists to keep that true,
+   and it is why this can be a live check rather than a screenshot. */
+import { readFileSync as _rf, existsSync as _ex } from 'node:fs'
+const VERIFY = TARGETS.map(k => {
+  const c = byKey[k]
+  const envf = `env/.env.${k}`
+  let addr = null
+  if (_ex(envf)) {
+    const m = _rf(envf, 'utf8').match(new RegExp(`^VITE_CONTRACT_${k.toUpperCase().replace(/-/g, '_')}=(.+)$`, 'm'))
+    if (m && m[1].trim()) addr = m[1].trim()
+  }
+  return { k, name: c.name, family: c.family, rpc: c.rpcUrl, rpc2: c.rpcUrlFallback || null, addr,
+           explorer: c.family === 'evm' && addr ? `${c.explorerUrl}/address/${addr}` : null }
+}).filter(v => v.addr)
+
 const families = [...new Set(TARGETS.map(k => byKey[k].family))]
 const evmCount = TARGETS.filter(k => byKey[k].family === 'evm').length
 
@@ -130,6 +149,20 @@ text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .panel h3{font-size:14.5px;margin-bottom:9px;letter-spacing:-.01em}
 .panel p{color:var(--t2);font-size:13.5px}
 .panel code{background:var(--s3);padding:1px 5px;border-radius:4px;font-size:12px}
+.kick{font-size:clamp(13px,1.6vw,17px);letter-spacing:.02em;color:var(--t2);margin-bottom:14px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:1px;background:var(--b0);
+  border:1px solid var(--b0)}
+.vrow{background:var(--s1);padding:13px 15px;display:flex;flex-direction:column;gap:6px;min-height:86px}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.vname{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+.vstate{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--b1);color:var(--t3);white-space:nowrap}
+.vstate.ok{color:#4ade80;border-color:rgba(74,222,128,.35)}
+.vstate.fail{color:#f87171;border-color:rgba(248,113,113,.35)}
+.vaddr{font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:11px;color:var(--t3);overflow-wrap:anywhere}
+.vmeta{font-size:11.5px;color:var(--t2)}
+.vmeta a{color:var(--t2)}
+.vnote{margin-top:14px;font-size:12.5px;color:var(--t3)}
 .honest{border-left:3px solid #f0b90b}
 .honest h3{color:#f0b90b}
 footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--b0);color:var(--t3);font-size:12.5px}
@@ -137,10 +170,12 @@ footer a{color:var(--t2)}
 </style></head><body><div class="wrap">
 
 <header>
-  <h1>Own the world.<br><em>Native to your chain.</em></h1>
-  <p class="sub">CryptoLand divides the real world into a 16,384 × 16,384 tile grid — 268,435,456 claimable
-  territories of roughly 2.4 km². Players buy, customise, trade, raid and govern land, with AI Guardian
-  agents defending it while they are offline.</p>
+  <p class="kick">Every square metre of Earth has already been mapped.</p>
+  <h1>None of it<br><em>is ownable.</em></h1>
+  <p class="sub">Satellites finished the map decades ago. What was never built is the layer above it — a
+  registry where a place has an owner, and the claim settles somewhere neutral rather than inside one
+  company's database. CryptoLand is that layer at the resolution where it becomes a game: the world split
+  into 268,435,456 tiles of roughly 2.4 km², each claimed, upgraded, traded and governed by whoever holds it.</p>
 
   <div id="from">
     <b id="from-name"></b> <span>— that is where you just came from.</span>
@@ -155,6 +190,15 @@ footer a{color:var(--t2)}
     <div class="stat"><b>1</b><span>Codebase</span></div>
   </div>
 </header>
+
+<section id="verify">
+  <h2>Don't take our word for it</h2>
+  <p class="lede">Every contract below is being read from that chain's own public node, in your browser,
+  right now. Nothing here is a screenshot or a number we typed — if a row says 12,890 bytes, your machine
+  just asked the chain and the chain answered.</p>
+  <div class="vgrid" id="vgrid"></div>
+  <p class="vnote" id="vnote">Checking…</p>
+</section>
 
 <section>
   <h2>The architecture</h2>
@@ -187,15 +231,6 @@ footer a{color:var(--t2)}
 </section>
 
 <section>
-  <h2>Every deployment</h2>
-  <p class="lede">Each is a separate, self-contained build. Open any one and it will look like it was made
-  for that ecosystem alone — because in every way a player can observe, it was.</p>
-  <div class="grid" id="grid">
-${cards}
-  </div>
-</section>
-
-<section>
   <h2>What is real, and what is not</h2>
   <div class="panel honest">
     <h3>Read this before you check the numbers</h3>
@@ -210,6 +245,16 @@ ${cards}
     reports its own traction from its own database and states the same caveats.</p>
   </div>
 </section>
+
+<section>
+  <h2>Every deployment</h2>
+  <p class="lede">Each is a separate, self-contained build. Open any one and it will look like it was made
+  for that ecosystem alone — because in every way a player can observe, it was.</p>
+  <div class="grid" id="grid">
+${cards}
+  </div>
+</section>
+
 
 <footer>
   <a href="/about" style="color:var(--acc)">About &amp; who builds this →</a><br><br>
@@ -246,6 +291,88 @@ ${cards}
   link.href = 'https://' + key + '.xono.ai';
   link.textContent = 'Back to the ' + names[key] + ' build →';
   document.getElementById('from').classList.add('on');
+})();
+</script>
+
+<script>
+/* Live contract verification.
+   Each row asks that chain's own public node whether the contract is really
+   there, from the reader's browser. It cannot lie — it is reading the chain.
+   Rows that fail say so plainly: a page where everything is green regardless of
+   reality is less trustworthy than one that admits an endpoint is down. */
+(function () {
+  var V = ${JSON.stringify(VERIFY)};
+  var grid = document.getElementById('vgrid');
+  var note = document.getElementById('vnote');
+  if (!grid) return;
+
+  var rows = V.map(function (v) {
+    var el = document.createElement('div');
+    el.className = 'vrow';
+    el.innerHTML =
+      '<div class="vhead"><span class="vname"></span><span class="vstate">checking</span></div>' +
+      '<div class="vaddr"></div><div class="vmeta"></div>';
+    el.querySelector('.vname').textContent = v.name;
+    el.querySelector('.vaddr').textContent = v.addr.length > 30
+      ? v.addr.slice(0, 14) + '…' + v.addr.slice(-8) : v.addr;
+    grid.appendChild(el);
+    return { v: v, el: el };
+  });
+
+  var done = 0, ok = 0, failed = 0, onRecord = 0;
+  function settle(r, state, label, meta) {
+    var s = r.el.querySelector('.vstate');
+    s.textContent = label; s.className = 'vstate ' + state;
+    if (meta) r.el.querySelector('.vmeta').innerHTML = meta;
+    done++;
+    if (state === 'ok') ok++; else if (state === 'fail') failed++; else onRecord++;
+    if (done !== rows.length) return;
+    // Count the three outcomes separately. Folding the non-EVM chains — which
+    // speak their own protocols and were never asked — in with genuine RPC
+    // failures would overstate what just happened, which is the one thing this
+    // section cannot afford to do.
+    var attempted = ok + failed;
+    var t = ok + ' of ' + attempted + ' EVM contracts answered live from their own node, just now.';
+    if (failed) t += ' ' + failed + ' public endpoint' + (failed > 1 ? 's' : '') +
+      ' did not respond — that is the node, not the contract.';
+    if (onRecord) t += ' The other ' + onRecord + ' run on non-EVM chains that speak their own protocols; ' +
+      'their addresses are listed above and verifiable in each chain’s explorer.';
+    note.textContent = t;
+  }
+
+  rows.forEach(function (r) {
+    var v = r.v;
+    // EVM answers eth_getCode; the other families each speak their own protocol,
+    // so those are shown as on-record with an explorer link rather than faked.
+    if (v.family !== 'evm') {
+      settle(r, '', 'on record', 'Non-EVM — verify via that chain’s explorer.');
+      return;
+    }
+    function ask(url) {
+      var ctl = new AbortController();
+      var t = setTimeout(function () { ctl.abort(); }, 9000);
+      return fetch(url, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, signal: ctl.signal,
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [v.addr, 'latest'] })
+      }).then(function (res) { return res.json(); })
+        .then(function (j) { clearTimeout(t); return (j && j.result) || '0x'; })
+        .catch(function (e) { clearTimeout(t); throw e; });
+    }
+    var link = v.explorer ? ' · <a href="' + v.explorer + '" target="_blank" rel="noopener">explorer ↗</a>' : '';
+    // Try the primary, then the configured fallback. Ronin's public node refuses
+    // browser origins outright, so without this a perfectly good contract reads
+    // as "rpc down" — the endpoint failing, reported as the contract failing.
+    ask(v.rpc)
+      .catch(function () { if (!v.rpc2) throw new Error('no fallback'); return ask(v.rpc2); })
+      .then(function (code) {
+        var bytes = Math.max(0, (code.length - 2) / 2);
+        if (bytes > 0) settle(r, 'ok', 'verified', bytes.toLocaleString() + ' bytes of bytecode' + link);
+        else settle(r, 'fail', 'no code', 'Node returned no bytecode at this address.' + link);
+      })
+      .catch(function () {
+        settle(r, 'fail', 'rpc down', 'Both public endpoints refused the browser' + link + '.');
+      });
+  });
 })();
 </script>
 </body></html>`

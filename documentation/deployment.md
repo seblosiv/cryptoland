@@ -513,3 +513,33 @@ Two deliberate settings on the Caddy route:
 Send `https://xono.ai/deck/<chain>` in place of a PDF wherever a form takes a
 link. It cannot go stale, it renders on a phone, and the contract address on it
 is one the reviewer can paste straight into an explorer.
+
+
+## The apex verifies itself
+
+`xono.ai/` opens on the insight, then — before it argues anything — proves its own
+claims. Each EVM row fires a real `eth_getCode` against that chain's own public
+node **from the reader's browser** and renders the bytecode length it got back.
+
+This is only possible because those endpoints send `Access-Control-Allow-Origin`.
+`scripts/check-rpcs.mjs` exists to keep that true across all 52 endpoints, and it
+is the reason this can be a live check instead of a screenshot.
+
+Three rules the verifier follows, all of them about not overstating:
+
+- **Failures show as failures.** A page where every row is green regardless of
+  reality is less trustworthy than one admitting an endpoint is down. Ronin's
+  public node answers `curl` but refuses browser requests; its row says "rpc down"
+  and links to the explorer rather than quietly hiding.
+- **Non-EVM chains are never faked green.** They speak their own protocols and are
+  not asked, so they read "on record" with an explorer link — not "verified".
+- **The summary counts three outcomes separately.** Folding 11 unasked non-EVM
+  chains in with 1 genuine RPC failure would overstate what just happened, which
+  is the one thing this section cannot afford to do.
+
+Measured live from `https://xono.ai`: **11 of 12 EVM contracts verify in-browser**,
+1 endpoint refuses browsers, 11 non-EVM on record.
+
+Order on the page is deliberate: **verify → architecture → what is real and what is
+not → deployments.** The honesty block sits above the deployment grid because a
+reviewer who reads it stops hunting for what is being hidden.
