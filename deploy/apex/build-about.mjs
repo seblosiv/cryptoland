@@ -18,16 +18,16 @@ import { writeFileSync, mkdirSync } from 'node:fs'
 /**
  * Render a string as an inline SVG image rather than HTML text.
  *
- * WHY: the founder name and email are the two strings most worth keeping out of
- * automated harvesting — email scrapers and LLM training crawlers both read the
- * HTML text layer. Inside an <svg> the characters are drawn, not marked up, so a
- * naive text extractor gets nothing.
+ * WHY: the founder NAME is drawn as SVG rather than marked up, so a naive text
+ * extractor gets nothing. The EMAIL is deliberately plain, selectable text — a
+ * grant reviewer has to be able to copy it, and hiding it from a human to
+ * inconvenience a scraper is the wrong trade.
  *
  * HONEST LIMIT: this stops naive scraping only. The text still lives in the SVG
- * source, so anyone who looks at the markup, or runs OCR on the rendered page,
- * can read it. It raises the cost; it does not make the data private. The email
- * is additionally split so no `mailto:` or `user@host` literal appears anywhere
- * in the served HTML — it is reassembled in JS on click.
+ * source, so anyone who looks at the markup, or runs OCR, can read it. It raises
+ * the cost; it does not make the data private. Indexing is kept off by three
+ * layers that actually bind: noindex meta tags, an X-Robots-Tag header from
+ * Caddy, and a robots.txt disallow naming 15 AI and search crawlers.
  *
  * Accessibility is preserved with role="img" + aria-label so screen readers and
  * keyboard users are unaffected.
@@ -138,9 +138,7 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 
   <div class="links">
     <a class="link" href="https://www.linkedin.com/in/sebbusiness/" rel="me noopener" target="_blank">LinkedIn <span>@sebbusiness</span></a>
-    <button class="link" id="em" type="button" aria-label="Reveal contact email">
-      Email ${svgText('hello at xono dot ai', { size: 13, weight: 600, fill: 'var(--t3)', letter: '0', label: 'Contact email' })}
-    </button>
+    <a class="link" href="mailto:hello@xono.ai">Email <span>hello@xono.ai</span></a>
     <a class="link" href="/">The game <span>27 live deployments</span></a>
   </div>
 </header>
@@ -173,20 +171,6 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 </footer>
 
 </div>
-<script>
-// The address is assembled at click time from parts, so the served HTML contains
-// no user-at-host string for an email harvester to regex out. This defeats naive
-// scraping only - anyone running the page in a browser can still read it.
-(function () {
-  var b = document.getElementById('em');
-  if (!b) return;
-  var u = ['hel','lo'].join(''), d = ['xono','ai'].join('.');
-  b.addEventListener('click', function () {
-    location.href = 'mail' + 'to:' + u + String.fromCharCode(64) + d;
-  });
-  b.style.cursor = 'pointer';
-})();
-</script>
 </body></html>`
 
 mkdirSync('deploy/apex/dist', { recursive: true })
