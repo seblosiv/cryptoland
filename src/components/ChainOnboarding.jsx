@@ -145,11 +145,10 @@ function Row({ k, v }) {
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '11px 14px', borderRadius: 10, background: 'var(--s2)',
+      border: '1px solid var(--b0)',
     }}>
       <span style={{ fontSize: 12, color: 'var(--t3)' }}>{k}</span>
-      <span style={{
-        fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--t1)',
-      }}>{v}</span>
+      <span className="mono" style={{ fontWeight: 700, color: 'var(--t1)' }}>{v}</span>
     </div>
   )
 }
@@ -210,7 +209,14 @@ export default function ChainOnboarding({ onEnter }) {
 
           {/* Third tile is chain-specific where the profile supplies one, so the
               stat row itself differs per deployment rather than repeating. */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: proof ? 12 : 24 }}>
+          {/* minmax(0,1fr), not 1fr: a bare 1fr is floored at min-content, so
+              Radix's long third label ("Readable transactions") widened its own
+              column and squeezed the other two until "Total Blocks" wrapped on
+              that chain and not on others. Now the three are always equal. */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))',
+            gap: 8, marginBottom: proof ? 12 : 24,
+          }}>
             {[
               ['268M', 'Total Blocks'],
               ['~2.4 km²', 'Per Block'],
@@ -218,12 +224,22 @@ export default function ChainOnboarding({ onEnter }) {
                 ? [ob.chainStat.value, ob.chainStat.label]
                 : ['$12+', 'Starting'],
             ].map(([v, l]) => (
-              <div key={l} style={{ padding: '14px 8px', borderRadius: 12, textAlign: 'center', background: 'var(--s2)' }}>
-                <div style={{
-                  fontFamily: 'var(--mono)', fontSize: 'clamp(14px,3.2vw,19px)', fontWeight: 700,
-                  color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 5,
+              <div key={l} style={{
+                padding: '14px 8px', borderRadius: 12, textAlign: 'center',
+                background: 'var(--s2)', border: '1px solid var(--b0)',
+              }}>
+                <div className="figure" style={{
+                  fontSize: 'clamp(14px,3.2vw,19px)', fontWeight: 700,
+                  color: 'var(--t1)', marginBottom: 5,
                 }}>{v}</div>
-                <div className="label">{l}</div>
+                {/* Wide tracking costs width, and at 390px "Total Blocks" and
+                    "Ledger Close" tipped onto a second line while "Per Block"
+                    did not, leaving three chips of visibly different weight.
+                    Shed a little size on narrow screens to win it back — but
+                    do NOT nowrap: the third chip is per-chain, and Radix's
+                    "Readable transactions" is 21 characters, which would run
+                    straight out of the box. Long labels still wrap. */}
+                <div className="label label-c" style={{ fontSize: 'clamp(8px,2.1vw,9px)' }}>{l}</div>
               </div>
             ))}
           </div>

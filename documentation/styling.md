@@ -109,14 +109,70 @@ Real classes defined in `src/index.css`:
 | `.btn-hero` | Large CTA (intro overlay "Enter CryptoLand") |
 | `.badge`, `.badge-dim`, `.badge-green` | Small status chips |
 | `.pill` | Rounded label (`--r-pill`) |
-| `.label` | Uppercase micro-label |
+| `.label` | Uppercase micro-label — 9px / 500 / `.18em` |
+| `.label-c` | Centred `.label`; pays back the trailing letter-space |
+| `.figure` | Mono, tabular figures, `-.03em` — every number in the UI |
+| `.rule` | Short hairline above a heading (`::before`) |
 | `.input` | Text input on `var(--s2)` |
 | `.divider` | 1px separator using `--b0` |
+| `:focus-visible` | Accent ring — chain accent, `--green` fallback |
 | `.live-dot` | Pulsing "live" indicator |
 | `.modal-backdrop` | Full-screen dim behind modals |
 | `.drag-handle` | Mobile sheet grab handle |
 | `.mono` | Applies `--mono` |
 | `.allow-select` | Opts back into text selection |
+
+---
+
+## The instrument register
+
+Brought over from the apex homepage (`deploy/apex/build-apex.mjs`), whose hero
+readout is the surface in this project that reads most finished. It is a
+**shared** layer in `src/index.css`, so all 27 chain builds inherit it — no
+per-chain CSS, no per-chain components. It changes no colour, no copy and no
+onboarding step; it is type, hairlines and edges only.
+
+**Micro-labels are small and widely tracked, not large and bold.** `.label` is
+9px / 500 / `.18em`, down from 10px / 600 / `.08em`. Letter-spacing appends a
+trailing gap after the final character, which visibly throws a centred label off
+its axis — `.label-c` subtracts it back. Only the centred variant does, because
+a negative margin on every label would drag whatever follows it inline.
+
+**Every figure is tabular.** `.figure` sets `font-variant-numeric: tabular-nums`
+plus `-.03em`. This is not decoration: the HUD counters change while you are
+looking at them, and proportional digits shift width underneath, so the number
+twitches on every update. Fixed advance holds it still.
+
+**Surfaces are defined by hairlines.** `.panel` / `.card` / `.pill` carry a 1px
+`--b0`/`--b1` edge, as do the HUD stat strip, the logo cluster and the search
+field. Those three had none while every button beside them did, so the top
+chrome read as two different systems.
+
+**Focus is visible.** Every control in the app sets `outline: none`, which left
+keyboard users with nothing. `:focus-visible` now draws a ring in the build's own
+accent — correctness and polish in the same rule.
+
+**Looping motion stops under `prefers-reduced-motion`.** Entrances still run at a
+length that reads as instant; the live dot, tickers and spinner stop.
+
+> ⚠️ Wide tracking costs width. On a 390px screen it tipped the onboarding stat
+> labels onto a second line, so the chips read unevenly; they now shed a little
+> size below ~430px. Do **not** reach for `white-space: nowrap` there — the third
+> chip is per-chain and Radix's "Readable transactions" is 21 characters, which
+> would run straight out of the box. That grid is also
+> `repeat(3, minmax(0,1fr))`, not `1fr 1fr 1fr`: a bare `1fr` is floored at
+> min-content, so a long third label widened its own column and squeezed the
+> other two on that chain alone.
+
+### What was deliberately left alone
+
+90 of the 96 accent references in `src/components/` are a hardcoded
+`var(--green)`; only 6 use `var(--chain-accent-*, var(--green))`. So on a
+non-green build the brand wordmark, buttons and map are the chain's colour while
+most state indicators stay CryptoLand green. That is a real inconsistency with
+§3.4's "theming = accent + copy", but it is a **colour** change across 90 call
+sites and was out of scope for this pass. Worth doing deliberately, not as a
+side effect of a typography change.
 
 ---
 

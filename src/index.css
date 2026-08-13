@@ -63,6 +63,8 @@ html {
 
 body {
   font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background: var(--bg);
   color: var(--t1);
   overflow: hidden;
@@ -85,17 +87,20 @@ body {
 
 .panel {
   background: var(--s1);
+  border: 1px solid var(--b1);
   border-radius: var(--r-lg);
   box-shadow: var(--sh-lg);
 }
 
 .card {
   background: var(--s2);
+  border: 1px solid var(--b0);
   border-radius: var(--r-md);
 }
 
 .pill {
   background: var(--s2);
+  border: 1px solid var(--b0);
   border-radius: var(--r-pill);
 }
 
@@ -182,7 +187,7 @@ body {
 .input {
   width: 100%;
   background: var(--s3);
-  border: none;
+  border: 1px solid var(--b1);
   border-radius: var(--r-sm);
   color: var(--t1);
   font-family: var(--font);
@@ -193,20 +198,52 @@ body {
   transition: background 0.12s;
 }
 
-.input:focus { background: var(--s4); }
+.input:focus { background: var(--s4); border-color: var(--chain-accent-ui, var(--green)); }
 .input::placeholder { color: var(--t3); }
 
 /* ── Type ── */
 
 .label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--t3);
 }
 
-.mono { font-family: var(--mono); font-size: 12px; }
+/* Letter-spacing adds a trailing gap after the last character, which throws a
+   centred label visibly off-axis. Only the centred variant pays it back — a
+   negative margin on every label would drag whatever follows it inline. */
+.label-c { text-align: center; margin-right: -0.18em; }
+
+/* Figures. tabular-nums is not decoration here: the HUD counters change while
+   you watch, and proportional digits make them jitter as the glyph widths
+   shift under them. Fixed advance holds the number still. */
+.figure {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* A short hairline above a heading — the apex's one piece of ornament, and
+   the only kind this design system allows. */
+.rule::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--b2);
+  margin-bottom: 12px;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
 
 /* ── Badge ── */
 
@@ -216,9 +253,9 @@ body {
   gap: 4px;
   padding: 3px 9px;
   border-radius: var(--r-pill);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
@@ -251,6 +288,23 @@ body {
 /* ── Divider ── */
 
 .divider { height: 1px; background: var(--b1); }
+
+/* ── Focus, selection ──────────────────────────────────────────────────────
+   Every control in this app sets outline:none, which left keyboard users with
+   no visible focus at all. A ring in the chain's own accent fixes that and is
+   also the detail that makes a UI feel finished — it costs nothing and it is
+   the same colour the build already uses. :focus-visible, so it appears for
+   keyboard and assistive input without ringing every mouse click. */
+:focus-visible {
+  outline: 1px solid var(--chain-accent-ui, var(--green));
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: var(--chain-accent, var(--green));
+  color: var(--chain-accent-ink, #0f0f0f);
+}
 
 /* ── Scrollbar ── */
 
@@ -379,4 +433,16 @@ body {
 
 @media (hover: none) and (pointer: coarse) {
   .desktop-only { display: none !important; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────
+   Entrances still run, but at a length that reads as instant; anything that
+   loops forever — the live dot, the tickers, the spinner — stops. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

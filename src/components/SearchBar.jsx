@@ -48,6 +48,11 @@ export default function SearchBar({ onFlyTo }) {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         background: 'var(--s2)',
+        // Hairline matched to the rest of the top chrome. Dropped along the
+        // bottom edge when the results panel is open so the two read as one
+        // surface rather than two stacked boxes.
+        border: '1px solid var(--b0)',
+        borderBottom: hasDropdown ? 'none' : '1px solid var(--b0)',
         borderRadius: hasDropdown ? '14px 14px 0 0' : 14,
         padding: '0 14px', height: 42,
         boxShadow: 'var(--sh-sm)',
@@ -95,6 +100,8 @@ export default function SearchBar({ onFlyTo }) {
       {hasDropdown && (
         <div style={{
           background: 'var(--s2)',
+          border: '1px solid var(--b0)',
+          borderTop: 'none',
           borderRadius: '0 0 14px 14px',
           overflow: 'hidden',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)',

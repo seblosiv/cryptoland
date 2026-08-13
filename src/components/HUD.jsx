@@ -85,6 +85,9 @@ export default function HUD() {
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '10px 16px',
           background: 'var(--s2)',
+          // Every button in this bar already carries a hairline; these two
+          // containers did not, so the top chrome read as two different systems.
+          border: '1px solid var(--b0)',
           borderRadius: 'var(--r-pill)',
           flexShrink: 0,
           boxShadow: 'var(--sh-sm)',
@@ -107,6 +110,7 @@ export default function HUD() {
           pointerEvents: 'auto',
           display: 'flex', alignItems: 'stretch',
           background: 'var(--s2)',
+          border: '1px solid var(--b0)',
           borderRadius: 'var(--r-pill)',
           overflowX: 'auto', overflowY: 'hidden',
           scrollbarWidth: 'none', flexShrink: 1, minWidth: 0,
@@ -432,14 +436,16 @@ function StatCell({ v, l, flash }) {
       background: lit ? 'rgba(74,222,128,0.08)' : 'transparent',
       transition: 'background 0.5s ease',
     }}>
-      <span style={{
-        fontSize: 13, fontWeight: 700, fontFamily: 'var(--mono)',
+      {/* .figure carries the mono face, tabular figures and optical tracking.
+          Tabular matters here specifically: these counters change while you are
+          looking at them, and proportional digits shift width underneath. */}
+      <span className="figure" style={{
+        fontSize: 13, fontWeight: 700,
         color: lit ? 'var(--green)' : 'var(--t1)',
-        letterSpacing: '-0.02em', lineHeight: 1,
         whiteSpace: 'nowrap',
         transition: 'color 0.4s ease',
       }}>{v}</span>
-      <span className="label">{l}</span>
+      <span className="label label-c">{l}</span>
     </div>
   )
 }
