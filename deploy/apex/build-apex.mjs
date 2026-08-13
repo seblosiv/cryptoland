@@ -175,16 +175,36 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 .attrib a{color:var(--t3)}
 /* The scrim must not eat the pointer, or the left half of the map is dead. */
 .hero-scrim{pointer-events:none}
-.readout{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:baseline;margin-top:26px;
-  padding-top:18px;border-top:1px solid var(--b1);font-size:12.5px}
-.readout .rl{color:var(--t3);font-size:10px;letter-spacing:.16em;text-transform:uppercase}
-.readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
+/* The readout is a survey instrument, because that is literally what it does:
+   you point at ground and it reports the parcel. Hairlines, small caps and
+   tabular figures — the vocabulary of an instrument, not of a web component. */
+.inst{margin-top:34px;max-width:520px;border:1px solid var(--b1);background:rgba(6,7,9,.55)}
+.inst-h{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;
+  border-bottom:1px solid var(--b1);font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--t3)}
+.live{width:5px;height:5px;border-radius:50%;background:#7aeea6;display:block;
+  box-shadow:0 0 0 3px rgba(122,238,166,.15)}
+.inst-b{display:grid;grid-template-columns:repeat(3,1fr)}
+.inst-b>div{padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.inst-b>div+div{border-left:1px solid var(--b0)}
+.inst .rl{color:var(--t4);font-size:9px;letter-spacing:.2em;text-transform:uppercase}
+.inst .rv{color:var(--t1);font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #r-id{color:#7aeea6}
+
+/* A discreet way down, replacing a sentence that told people to look. */
+.cue{position:absolute;left:max(24px,calc(50vw - 570px));bottom:34px;z-index:2;
+  display:flex;align-items:center;gap:12px;text-decoration:none;
+  font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--t3);
+  transition:color .2s ease,gap .2s ease}
+.cue:hover{color:var(--t1);gap:18px}
+.cue i{width:40px;height:1px;display:block;
+  background:linear-gradient(90deg,var(--b2),transparent)}
 /* Scrim, painted — never a blur. Reading has to win over atmosphere. */
 .hero-scrim{position:absolute;inset:0;background:
   linear-gradient(97deg,rgba(6,7,9,.97) 0%,rgba(6,7,9,.93) 30%,rgba(6,7,9,.62) 52%,rgba(6,7,9,.1) 78%,transparent 100%),
   linear-gradient(180deg,rgba(6,7,9,.85) 0%,transparent 20%,transparent 78%,rgba(6,7,9,.92) 100%)}
-.hero-in{position:relative;z-index:1;max-width:660px;padding:96px 0 78px}
+.hero-in{position:relative;z-index:1;max-width:620px;padding:104px 0 92px}
 
 .kick{display:block;font-size:12px;letter-spacing:.19em;
   text-transform:uppercase;color:var(--t3);margin-bottom:22px;font-weight:500}
@@ -197,12 +217,12 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
   -webkit-background-clip:text;background-clip:text;color:transparent;
   -webkit-text-fill-color:transparent;margin:0}
 
-.figs{display:flex;flex-wrap:wrap;gap:34px;margin-top:34px;padding-top:22px;
-  border-top:1px solid var(--b1)}
-.figs span{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--t3);
-  letter-spacing:.01em}
-.figs b{font-size:clamp(19px,2.4vw,26px);font-weight:700;letter-spacing:-.028em;color:var(--t1);
-  font-variant-numeric:tabular-nums}
+.figs{display:flex;flex-wrap:wrap;margin-top:40px;padding-top:24px;border-top:1px solid var(--b1)}
+.figs span{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--t3);
+  letter-spacing:.06em;text-transform:uppercase;padding-right:30px}
+.figs span+span{padding-left:30px;border-left:1px solid var(--b0)}
+.figs b{font-size:clamp(20px,2.5vw,28px);font-weight:700;letter-spacing:-.03em;color:var(--t1);
+  font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:-.03em}
 .handoff{margin-top:30px;font-size:14px;color:var(--t2);display:flex;align-items:center;gap:10px}
 .handoff::before{content:"";width:6px;height:6px;border-radius:50%;background:#4ade80;flex:none;
   box-shadow:0 0 0 4px rgba(74,222,128,.16)}
@@ -212,12 +232,17 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
   #heroMap{opacity:.5;filter:grayscale(1) brightness(.48) contrast(1.25)}
   .hero-scrim{background:
     linear-gradient(180deg,rgba(6,7,9,.94) 0%,rgba(6,7,9,.78) 38%,rgba(6,7,9,.86) 72%,rgba(6,7,9,.97) 100%)}
-  .figs{gap:20px 28px}
+  .figs{flex-wrap:wrap}
+  .figs span{padding-right:22px}
+  .figs span+span{padding-left:22px}
+  .inst-b{grid-template-columns:1fr 1fr}
+  .inst-b>div:nth-child(3){grid-column:1/-1;border-left:0;border-top:1px solid var(--b0)}
+  .cue{display:none}
 }
 
 h1{font-size:clamp(31px,5.2vw,50px);letter-spacing:-.032em;font-weight:800;line-height:1.08}
 h1 em{font-style:normal;color:var(--acc)}
-.sub{color:var(--t2);margin-top:18px;max-width:56ch;font-size:16px;line-height:1.68}
+.sub{color:var(--t2);margin-top:22px;max-width:44ch;font-size:17px;line-height:1.62}
 .sub strong{color:var(--t1);font-weight:600}
 
 /* Referrer banner — hidden until JS identifies the chain they arrived from. */
@@ -304,24 +329,25 @@ footer a{color:var(--t2)}
   <div class="hero-in">
     <p class="kick">Every map ever made is read-only</p>
     <h1>We built the one<br>you can own</h1>
-    <p class="sub">Maps have always told you where things are. None has ever told you what is yours.</p>
-    <p class="sub">CryptoLand divides the world into <strong>268,435,456 tiles</strong> of roughly 2.4&nbsp;km²
-    — a supply fixed by geometry rather than policy, so it can never be expanded, inflated or granted to
-    insiders. A tile's coordinate <em>is</em> its token id, which makes ownership arithmetic anyone can
-    verify and nobody can forge.</p>
+    <p class="sub">Maps tell you where things are. None has ever told you what is yours.</p>
 
     <div class="figs">
       <span><b>268,435,456</b>tiles, fixed forever</span>
-      <span><b>${TARGETS.length}</b>chains live on mainnet</span>
-      <span><b>113/113</b>on-chain checks passing</span>
+      <span><b>${TARGETS.length}</b>chains live</span>
+      <span><b>113/113</b>checks passing</span>
     </div>
 
-    <div class="readout" id="readout">
-      <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
-      <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
-      <span class="rl">Near</span><span class="rv" id="r-city">move across the map →</span>
+    <div class="inst" id="readout">
+      <div class="inst-h"><span>Survey</span><i class="live"></i></div>
+      <div class="inst-b">
+        <div><span class="rl">Tile</span><span class="rv mono" id="r-xy">— — — —</span></div>
+        <div><span class="rl">Token</span><span class="rv mono" id="r-id">—</span></div>
+        <div><span class="rl">Near</span><span class="rv" id="r-city">move across the map</span></div>
+      </div>
     </div>
-    <p class="handoff">Every contract below is verifying itself in your browser as you read this.</p>
+  </div>
+
+  <a class="cue" href="#verify"><span>Verify us</span><i></i></a>
   </div>
 
   <div id="from">
@@ -342,8 +368,10 @@ footer a{color:var(--t2)}
 
 <section>
   <h2>The architecture</h2>
-  <p class="lede">The interesting number is not how many chains this runs on — it is that going native on a
-  new one is an adapter, not a fork.</p>
+  <p class="lede">A supply fixed by geometry rather than policy: 268,435,456 tiles that can never be
+  expanded, inflated or granted to insiders. A tile's coordinate <em>is</em> its token id, so ownership is
+  arithmetic anyone can verify and nobody can forge — and the interesting number is not how many chains
+  this runs on, but that going native on a new one is an adapter, not a fork.</p>
   <div class="two">
     <div class="panel">
       <h3>${families.length} adapter families, not ${TARGETS.length} forks</h3>
