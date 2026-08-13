@@ -259,11 +259,31 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
 .handoff::before{content:"";width:6px;height:6px;border-radius:50%;background:#4ade80;flex:none;
   box-shadow:0 0 0 4px rgba(74,222,128,.16)}
 @media (max-width:900px){
-  .hero{min-height:auto;padding-left:max(20px,4vw);padding-right:max(20px,4vw)}
-  .hero-in{padding:70px 0 56px;max-width:none}
-  #heroMap{opacity:.5;filter:grayscale(1) brightness(.48) contrast(1.25)}
+  /* The map gets the top of the screen; the copy sits under it on solid ground.
+     Full height so both get room rather than fighting over the same pixels. */
+  .hero{min-height:96svh;padding-left:max(20px,4vw);padding-right:max(20px,4vw);
+    align-items:flex-end}
+  .hero-in{padding:0 0 40px;max-width:none}
+  #heroMap{opacity:1}
   .hero-scrim{background:
-    linear-gradient(180deg,rgba(6,7,9,.94) 0%,rgba(6,7,9,.78) 38%,rgba(6,7,9,.86) 72%,rgba(6,7,9,.97) 100%)}
+    linear-gradient(180deg,
+      rgba(5,6,8,.34) 0%,
+      rgba(5,6,8,.04) 10%,
+      rgba(5,6,8,.09) 19%,
+      rgba(5,6,8,.90) 29%,
+      rgba(5,6,8,.995) 37%,
+      rgba(5,6,8,1) 44%,
+      rgba(5,6,8,1) 100%)}
+  /* Figures were wrapping to a stray third row with a dangling rule. */
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:18px 0;margin-top:30px;padding-top:20px}
+  .figs span{padding:0 16px 0 0}
+  .figs span+span{padding-left:16px}
+  .figs span:nth-child(3){grid-column:1/-1;padding-left:0;border-left:0;
+    border-top:1px solid var(--b0);padding-top:18px}
+  .figs b{font-size:22px}
+  .kick{color:var(--t1);
+    text-shadow:0 1px 10px rgba(5,6,8,.95),0 0 24px rgba(5,6,8,.85),0 1px 2px rgba(5,6,8,1)}
+  h1{text-shadow:0 2px 22px rgba(5,6,8,.55)}
   .figs{flex-wrap:wrap}
   .figs span{padding-right:22px}
   .figs span+span{padding-left:22px}
@@ -667,9 +687,14 @@ ${cards}
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // One projection, defined once. Frames the inhabited band (Mercator v
     // 0.207-0.694) and lets the world bleed off the right edge.
-    var worldW = W * 1.55, V0 = 0.207, V1 = 0.694;
-    P = { w: worldW, left: -worldW * 0.06,
-          top: -V0 * worldW - (worldW * (V1 - V0) - H) / 2 };
+    var narrow = W < 900;
+    // A phone showing W*1.55 of world gets open ocean and no coast. Zoom out,
+    // and bias the frame upward so the land sits in the visible top half.
+    var worldW = W * (narrow ? 2.5 : 1.55), V0 = 0.207, V1 = 0.694;
+    var bandH = worldW * (V1 - V0);
+    P = { w: worldW,
+          left: narrow ? -worldW * 0.30 : -worldW * 0.06,
+          top: -V0 * worldW - (bandH - H) * (narrow ? 0.24 : 0.5) };
     draw();
   }
   var toXY = function (u, v) { return [P.left + u * P.w, P.top + v * P.w]; };
