@@ -651,10 +651,48 @@ ${cards}
   if (!cv) return;
   var ctx = cv.getContext('2d'), tiles = [], N = 16384, CELLS = 128;
 
+  /* The same transform CSS would apply, done by hand so it cannot be ignored:
+     luminance → brightness(0.581) → contrast(12) → brightness(0.72). The pivot
+     sits between OSM's ocean (luma 200) and land (239) so they separate instead
+     of both clipping to white. */
+  var LUT = (function () {
+    var t = new Uint8ClampedArray(256);
+    for (var v = 0; v < 256; v++) {
+      var n = (v / 255) * 0.581;
+      n = (n - 0.5) * 12 + 0.5;
+      n *= 0.72;
+      t[v] = Math.max(0, Math.min(255, Math.round(n * 255)));
+    }
+    return t;
+  })();
+
+  function monochrome(im) {
+    var c = document.createElement('canvas');
+    c.width = im.naturalWidth || 256; c.height = im.naturalHeight || 256;
+    var g = c.getContext('2d');
+    g.drawImage(im, 0, 0);
+    try {
+      var d = g.getImageData(0, 0, c.width, c.height), a = d.data;
+      for (var i = 0; i < a.length; i += 4) {
+        var lum = (a[i] * 0.2126 + a[i + 1] * 0.7152 + a[i + 2] * 0.0722) | 0;
+        var o = LUT[lum];
+        a[i] = o; a[i + 1] = o; a[i + 2] = o;
+      }
+      g.putImageData(d, 0, 0);
+    } catch (e) {
+      // Tainted canvas: fall back to the filter, which is better than nothing.
+      g.clearRect(0, 0, c.width, c.height);
+      g.filter = 'grayscale(1) brightness(0.581) contrast(12) brightness(0.72)';
+      g.drawImage(im, 0, 0);
+    }
+    return c;
+  }
+
   for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
     (function (x, y) {
       var im = new Image();
-      im.onload = function () { tiles.push({ x: x, y: y, im: im }); draw(); };
+      im.crossOrigin = 'anonymous';       // OSM sends ACAO:* — keeps pixels readable
+      im.onload = function () { tiles.push({ x: x, y: y, im: monochrome(im) }); draw(); };
       im.src = 'https://tile.openstreetmap.org/2/' + x + '/' + y + '.png';
     })(rx, ry);
   }
@@ -679,7 +717,8 @@ ${cards}
     }
   });
 
-  var W = 0, H = 0, dpr = 1, P = null, hover = null;
+  var W = 0, H = 0, dpr = 1, P = null, hover = null, drift = 0;
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function size() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
@@ -697,7 +736,10 @@ ${cards}
           top: -V0 * worldW - (bandH - H) * (narrow ? 0.24 : 0.5) };
     draw();
   }
-  var toXY = function (u, v) { return [P.left + u * P.w, P.top + v * P.w]; };
+  var toXY = function (u, v) {
+    var x = P.left + ((u - drift + 1) % 1) * P.w;
+    return [x, P.top + v * P.w];
+  };
 
   function draw() {
     if (!P || !W) return;
@@ -706,11 +748,16 @@ ${cards}
     // 1. basemap
     if (tiles.length) {
       ctx.save(); ctx.globalAlpha = 0.95;
-      ctx.filter = 'grayscale(1) brightness(0.581) contrast(12) brightness(0.72)';
       var t = P.w / 4;
       for (var i = 0; i < tiles.length; i++) {
-        ctx.drawImage(tiles[i].im, Math.round(P.left + tiles[i].x * t),
-          Math.round(P.top + tiles[i].y * t), Math.ceil(t) + 1, Math.ceil(t) + 1);
+        var bx = P.left + tiles[i].x * t - drift * P.w;
+        // Draw at both wrap positions; whichever is off-frame costs nothing.
+        for (var rep = 0; rep < 2; rep++) {
+          var px = bx + rep * P.w;
+          if (px > W || px + t < 0) continue;
+          ctx.drawImage(tiles[i].im, Math.round(px), Math.round(P.top + tiles[i].y * t),
+            Math.ceil(t) + 1, Math.ceil(t) + 1);
+        }
       }
       ctx.restore();
     }
@@ -766,8 +813,9 @@ ${cards}
     var r = cv.getBoundingClientRect();
     var px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
     var py = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
-    var u = (px - P.left) / P.w, v = (py - P.top) / P.w;
-    if (u < 0 || u >= 1 || v < 0 || v >= 1) return;
+    var u = ((px - P.left) / P.w + drift) % 1, v = (py - P.top) / P.w;
+    if (u < 0) u += 1;
+    if (v < 0 || v >= 1) return;
     var ci = Math.floor(u * CELLS), cj = Math.floor(v * CELLS);
     hover = [ci, cj];
     // The cell's centre, as a real tile, then the contract's own id maths.
@@ -784,6 +832,16 @@ ${cards}
 
   size();
   var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 150); });
+
+  // One full revolution per ~14 minutes: present, never distracting.
+  if (!still) {
+    var last = 0;
+    requestAnimationFrame(function step(ts) {
+      if (last) { drift = (drift + (ts - last) * 0.0000012) % 1; draw(); }
+      last = ts;
+      requestAnimationFrame(step);
+    });
+  }
 })();
 </script>
 </body></html>`
