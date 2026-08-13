@@ -224,6 +224,24 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
   background:linear-gradient(172deg,#fff 0%,#fff 55%,#eef1f5 78%,#d7dce3 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
   -webkit-text-fill-color:transparent;margin:0}
+/* Light travelling across metal. The band is mostly the same silver as the rest
+   of the headline, with one narrow highlight — a wide bright band reads as a
+   cheap shimmer, a narrow one reads as a surface catching light. */
+.gloss{
+  background:linear-gradient(100deg,
+    #e9ecf1 0%, #e9ecf1 33%, #ffffff 43%, #ffffff 51%, #e9ecf1 61%, #e9ecf1 100%);
+  background-size:280% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  animation:sweep 7.5s cubic-bezier(.5,0,.5,1) infinite;
+}
+@keyframes sweep{
+  0%,12%   {background-position:118% 0}
+  55%,100% {background-position:-18% 0}
+}
+@media (prefers-reduced-motion:reduce){
+  .gloss{animation:none;background-position:50% 0}
+}
 
 .figs{display:flex;flex-wrap:wrap;margin-top:40px;padding-top:24px;border-top:1px solid var(--b1)}
 .figs span{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--t3);
@@ -354,8 +372,9 @@ footer a:hover{color:var(--t1)}
 
   <div class="hero-in">
     <p class="kick">Every map ever made is read-only</p>
-    <h1>We built the one<br>you can own</h1>
-    <p class="sub">Maps tell you where things are. None has ever told you what is yours.</p>
+    <h1>Own the world,<br><span class="gloss">tile by tile</span></h1>
+    <p class="sub">268,435,456 parcels of the real Earth — your street, your city, anywhere on the
+    planet. Claim it, build on it, and hold it against everyone else who wants it.</p>
 
     <div class="figs">
       <span><b>268,435,456</b>tiles, fixed forever</span>
