@@ -125,13 +125,62 @@ const html = `<!doctype html>
 body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
 -webkit-font-smoothing:antialiased;padding:0 20px 90px}
 .wrap{max-width:1080px;margin:0 auto}
-header{padding:70px 0 40px}
+/* ── hero ────────────────────────────────────────────────────────────────
+   Full-bleed, with the real basemap drifting behind the words. Everything that
+   made the old block read as a template is gone: no accent-coloured headline, no
+   rounded stat cards, no flat ground. */
+.hero{position:relative;min-height:min(94vh,880px);display:flex;align-items:center;
+  margin:0 calc(50% - 50vw);padding:0 max(24px,calc(50vw - 570px));overflow:hidden;
+  border-bottom:1px solid var(--b0)}
+.hero-bg{position:absolute;inset:0;z-index:0}
+/* Two world-widths side by side: the planet wraps, so panning one width and
+   resetting is seamless rather than a visible cut. */
+.hero-pan{position:absolute;top:50%;left:0;width:200%;height:auto;aspect-ratio:4/1;
+  transform:translate3d(0,-50%,0);display:grid;grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(3,1fr);filter:grayscale(1) brightness(.62) contrast(1.35);
+  opacity:.85;will-change:transform}
+.hero-pan img{width:100%;height:100%;display:block;object-fit:cover}
+#heroFx{position:absolute;inset:0;width:100%;height:100%}
+/* Scrim, painted — never a blur. Reading has to win over atmosphere. */
+.hero-scrim{position:absolute;inset:0;background:
+  linear-gradient(97deg,rgba(6,7,9,.97) 0%,rgba(6,7,9,.93) 30%,rgba(6,7,9,.62) 52%,rgba(6,7,9,.1) 78%,transparent 100%),
+  linear-gradient(180deg,rgba(6,7,9,.85) 0%,transparent 20%,transparent 78%,rgba(6,7,9,.92) 100%)}
+.hero-in{position:relative;z-index:1;max-width:660px;padding:96px 0 78px}
+
+.kick{display:flex;align-items:center;gap:11px;font-size:12px;letter-spacing:.19em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:22px;font-weight:500}
+.kick i{width:24px;height:1px;background:var(--t4);flex:none;display:block}
+
+/* Optical sheen rather than a colour pop: white type with a faint cool-to-warm
+   fall across it, which reads as light on a surface instead of a highlighter. */
+h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-height:.97;
+  background:linear-gradient(172deg,#fff 0%,#fff 55%,#eef1f5 78%,#d7dce3 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-fill-color:transparent;margin:0}
+
+.figs{display:flex;flex-wrap:wrap;gap:34px;margin-top:34px;padding-top:22px;
+  border-top:1px solid var(--b1)}
+.figs span{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--t3);
+  letter-spacing:.01em}
+.figs b{font-size:clamp(19px,2.4vw,26px);font-weight:700;letter-spacing:-.028em;color:var(--t1);
+  font-variant-numeric:tabular-nums}
+.handoff{margin-top:30px;font-size:14px;color:var(--t2);display:flex;align-items:center;gap:10px}
+.handoff::before{content:"";width:6px;height:6px;border-radius:50%;background:#4ade80;flex:none;
+  box-shadow:0 0 0 4px rgba(74,222,128,.16)}
+@media (max-width:900px){
+  .hero{min-height:auto;padding-left:max(20px,4vw);padding-right:max(20px,4vw)}
+  .hero-in{padding:70px 0 56px;max-width:none}
+  .hero-pan{opacity:.5;filter:grayscale(1) brightness(.44) contrast(1.3)}
+  .hero-scrim{background:
+    linear-gradient(180deg,rgba(6,7,9,.94) 0%,rgba(6,7,9,.78) 38%,rgba(6,7,9,.86) 72%,rgba(6,7,9,.97) 100%)}
+  .figs{gap:20px 28px}
+}
+@media (prefers-reduced-motion:reduce){.hero-pan{animation:none!important}}
 h1{font-size:clamp(31px,5.2vw,50px);letter-spacing:-.032em;font-weight:800;line-height:1.08}
 h1 em{font-style:normal;color:var(--acc)}
-.sub{color:var(--t2);margin-top:16px;max-width:62ch;font-size:16.5px;line-height:1.62}
+.sub{color:var(--t2);margin-top:18px;max-width:56ch;font-size:16px;line-height:1.68}
 .sub strong{color:var(--t1);font-weight:600}
-.sub.last{color:var(--t1);font-size:15.5px;margin-top:20px;padding-left:14px;
-  border-left:2px solid #4ade80}
+
 /* Referrer banner — hidden until JS identifies the chain they arrived from. */
 #from{display:none;margin:26px 0 0;padding:15px 18px;background:var(--s1);
 border:1px solid var(--b0);border-left:3px solid var(--acc);border-radius:10px}
@@ -139,7 +188,7 @@ border:1px solid var(--b0);border-left:3px solid var(--acc);border-radius:10px}
 #from b{color:var(--acc)}
 #from .l{display:inline-block;margin-top:5px;color:var(--t2);font-size:13.5px}
 #from a{color:var(--t1)}
-.stats{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
+.stats{display:none}
 .stat{background:var(--s2);border:1px solid var(--b0);border-radius:10px;padding:11px 15px}
 .stat b{display:block;font-size:19px;letter-spacing:-.02em}
 .stat span{color:var(--t3);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
@@ -206,29 +255,35 @@ footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--b0);color:var
 footer a{color:var(--t2)}
 </style></head><body><div class="wrap">
 
-<header>
-  <p class="kick">Every map ever made is read-only.</p>
-  <h1>We built the one<br><em>you can own.</em></h1>
-  <p class="sub">Maps have always told you where things are. None has ever told you what is yours.</p>
-  <p class="sub">CryptoLand divides the world into <strong>268,435,456 tiles</strong> of roughly 2.4 km² —
-  a supply fixed by geometry rather than policy, so it can never be expanded, inflated or granted to
-  insiders. A tile's coordinate <em>is</em> its token id, which makes ownership arithmetic anyone can
-  verify and nobody can forge. Claims settle on a public chain instead of in our database, so the registry
-  outlives the company that started it.</p>
-  <p class="sub last">It is live on mainnet today — and every contract below is verifying itself in your
-  browser as you read this.</p>
+<header class="hero">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-pan" id="heroPan"></div>
+    <canvas id="heroFx"></canvas>
+    <div class="hero-scrim"></div>
+  </div>
+
+  <div class="hero-in">
+    <p class="kick"><i></i>Every map ever made is read-only</p>
+    <h1>We built the one<br>you can own</h1>
+    <p class="sub">Maps have always told you where things are. None has ever told you what is yours.</p>
+    <p class="sub">CryptoLand divides the world into <strong>268,435,456 tiles</strong> of roughly 2.4&nbsp;km²
+    — a supply fixed by geometry rather than policy, so it can never be expanded, inflated or granted to
+    insiders. A tile's coordinate <em>is</em> its token id, which makes ownership arithmetic anyone can
+    verify and nobody can forge.</p>
+
+    <div class="figs">
+      <span><b>268,435,456</b>tiles, fixed forever</span>
+      <span><b>${TARGETS.length}</b>chains live on mainnet</span>
+      <span><b>0</b>claims held in our database</span>
+    </div>
+
+    <p class="handoff">Every contract below is verifying itself in your browser as you read this.</p>
+  </div>
 
   <div id="from">
     <b id="from-name"></b> <span>— that is where you just came from.</span>
     <span class="l">This page exists to show you the architecture behind it.
     <a id="from-link" href="#">Go back to that build →</a></span>
-  </div>
-
-  <div class="stats">
-    <div class="stat"><b>268M</b><span>Claimable tiles</span></div>
-    <div class="stat"><b>~2.4 km²</b><span>Per tile</span></div>
-    <div class="stat"><b>${families.length}</b><span>Adapter families</span></div>
-    <div class="stat"><b>1</b><span>Codebase</span></div>
   </div>
 </header>
 
@@ -539,6 +594,79 @@ ${cards}
 
   size();
   var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 140); });
+})();
+</script>
+
+<script>
+/* Hero motion. The basemap drifts west the way the planet turns, and tiles ignite
+   across it — the product's own behaviour, not decoration. Two world-widths sit
+   side by side so the wrap is seamless: the world genuinely repeats at 180°.
+   Everything stops under prefers-reduced-motion. */
+(function () {
+  var pan = document.getElementById('heroPan'), fx = document.getElementById('heroFx');
+  if (!pan || !fx) return;
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 4 cols x 3 rows of z=2, twice across. Rows 0-2 cover every inhabited latitude.
+  for (var pass = 0; pass < 2; pass++)
+    for (var ry = 0; ry < 3; ry++)
+      for (var rx = 0; rx < 4; rx++) {
+        var im = new Image();
+        im.decoding = 'async'; im.alt = '';
+        im.style.gridRow = String(ry + 1);
+        im.style.gridColumn = String(pass * 4 + rx + 1);
+        im.src = 'https://tile.openstreetmap.org/2/' + rx + '/' + ry + '.png';
+        pan.appendChild(im);
+      }
+
+  var ctx = fx.getContext('2d'), W = 0, H = 0, dpr = 1, sparks = [];
+  function size() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = fx.clientWidth; H = fx.clientHeight;
+    fx.width = Math.round(W * dpr); fx.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  var seed = 4241;
+  function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+
+  // A tile lights, holds, fades — the shape of a claim landing.
+  function spawn() {
+    var cw = W / 96, ch = H / 30;
+    sparks.push({ x: Math.floor(rnd() * 96) * cw, y: Math.floor(rnd() * 30) * ch,
+                  w: cw, h: ch, t: 0, life: 190 + rnd() * 200 });
+    if (sparks.length > 46) sparks.shift();
+  }
+
+  var last = 0, acc = 0, panX = 0;
+  function frame(ts) {
+    var dt = last ? Math.min(64, ts - last) : 16; last = ts;
+    // 1 world width per ~210s. Slow enough to read as drift, not as scrolling.
+    panX = (panX + dt * 0.0000794) % 1;
+    pan.style.transform = 'translate3d(' + (-panX * 50).toFixed(4) + '%,-50%,0)';
+
+    acc += dt;
+    if (acc > 150) { acc = 0; spawn(); }
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < sparks.length; i++) {
+      var s = sparks[i]; s.t += dt;
+      var p = s.t / s.life;
+      if (p >= 1) continue;
+      var a = p < 0.16 ? p / 0.16 : 1 - (p - 0.16) / 0.84;
+      ctx.fillStyle = 'rgba(122,238,166,' + (a * 0.72).toFixed(3) + ')';
+      ctx.fillRect(s.x, s.y, s.w - 1, s.h - 1);
+      ctx.strokeStyle = 'rgba(168,247,199,' + (a * 0.7).toFixed(3) + ')';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 2, s.h - 2);
+    }
+    sparks = sparks.filter(function (s) { return s.t < s.life; });
+    requestAnimationFrame(frame);
+  }
+
+  size();
+  window.addEventListener('resize', function () { clearTimeout(window.__hr); window.__hr = setTimeout(size, 150); });
+  if (still) { pan.style.transform = 'translate3d(-12%,-50%,0)'; }
+  else { requestAnimationFrame(frame); }
 })();
 </script>
 </body></html>`
