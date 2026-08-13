@@ -162,7 +162,12 @@ length that reads as instant; the live dot, tickers and spinner stop.
 > would run straight out of the box. That grid is also
 > `repeat(3, minmax(0,1fr))`, not `1fr 1fr 1fr`: a bare `1fr` is floored at
 > min-content, so a long third label widened its own column and squeezed the
-> other two on that chain alone.
+> other two on that chain alone. Side padding is **6px**: the column is 95px at
+> 390px and "TRANSACTIONS" needs ~79px, so 8px left it grazing the border.
+>
+> Check this by measuring, not by looking — `scrollWidth > clientWidth` on the
+> label, across the chains with the longest `chainStat.label` (radix, sui, near,
+> flow, rootstock). A 1px spill is invisible in a screenshot and still wrong.
 
 ### What was deliberately left alone
 

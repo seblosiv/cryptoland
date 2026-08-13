@@ -225,7 +225,11 @@ export default function ChainOnboarding({ onEnter }) {
                 : ['$12+', 'Starting'],
             ].map(([v, l]) => (
               <div key={l} style={{
-                padding: '14px 8px', borderRadius: 12, textAlign: 'center',
+                // 6px of side padding, not 8: at 390px each column is 95px, and
+                // "TRANSACTIONS" — the longest unbreakable word any chain puts
+                // in this slot — needs ~79px. 8px left exactly 79px and the
+                // word grazed the border on Radix; 6px leaves 81px.
+                padding: '14px 6px', borderRadius: 12, textAlign: 'center',
                 background: 'var(--s2)', border: '1px solid var(--b0)',
               }}>
                 <div className="figure" style={{
