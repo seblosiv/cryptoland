@@ -51,6 +51,14 @@ const FAMILIES = [...new Set(MAINNET_CHAINS.map(c => c.family))].length
 const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#000000">
 <title>About — CryptoLand</title>
 <meta name="description" content="Who builds CryptoLand.">
 <!-- THIS PAGE ONLY: keep the founder's identity out of search indexes and AI

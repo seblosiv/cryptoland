@@ -147,6 +147,14 @@ const cards = meta.map(m => `      <a class="card" data-chain="${m.k}" data-fami
 const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#000000">
 <title>CryptoLand — the map you can own</title>
 <meta name="description" content="Every map ever made is read-only. CryptoLand is the one you can own: 268,435,456 tiles of the real world, a supply fixed by geometry, each tile\u2019s coordinate its own token id. Live on mainnet.">
 <meta property="og:title" content="CryptoLand — own the world, native to your chain">
@@ -256,33 +264,43 @@ border:1px solid var(--b0);border-left:3px solid var(--acc);border-radius:10px}
 .stat{background:var(--s2);border:1px solid var(--b0);border-radius:10px;padding:11px 15px}
 .stat b{display:block;font-size:19px;letter-spacing:-.02em}
 .stat span{color:var(--t3);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
-section{margin-top:52px}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:8px}
-.lede{color:var(--t2);max-width:72ch;margin-bottom:20px}
-.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(238px,1fr))}
-.card{position:relative;display:block;background:var(--s1);border:1px solid var(--b0);
-border-radius:12px;padding:15px 16px;text-decoration:none;color:inherit;
-transition:border-color .15s,background .15s,transform .15s}
-.card:hover{background:var(--s2);border-color:var(--a);transform:translateY(-1px)}
-.card.hi{border-color:var(--a);background:var(--s2);order:-1;box-shadow:0 0 0 1px var(--a)}
+section{margin-top:clamp(72px,9vw,132px)}
+h2{font-size:10px;text-transform:uppercase;letter-spacing:.28em;color:var(--t4);
+  margin-bottom:20px;font-weight:500;padding-bottom:14px;border-bottom:1px solid var(--b0)}
+.lede{color:var(--t2);max-width:62ch;margin-bottom:32px;font-size:clamp(15px,1.6vw,19px);
+  line-height:1.6;letter-spacing:-.008em}
+.lede em{color:var(--t1);font-style:italic}
+.grid{display:grid;gap:1px;background:var(--b0);grid-template-columns:repeat(auto-fill,minmax(248px,1fr));
+border-top:1px solid var(--b1);border-bottom:1px solid var(--b1)}
+.card{position:relative;display:block;background:var(--bg);padding:18px 20px 20px;
+text-decoration:none;color:inherit;overflow:hidden;
+transition:background .18s ease}
+.card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--a);
+opacity:.34;transform:scaleX(.22);transform-origin:left;transition:transform .3s ease,opacity .3s ease}
+.card:hover{background:var(--s1)}
+.card:hover::after{transform:scaleX(1);opacity:.85}
+.card.hi{background:var(--s1);order:-1}
+.card.hi::after{transform:scaleX(1);opacity:.9}
 .you{display:none}
-.card.hi .you{display:inline-block;position:absolute;top:-9px;left:14px;background:var(--a);
-color:#0f0f0f;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-padding:2px 8px;border-radius:99px}
+.card.hi .you{display:block;font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+color:var(--a);margin-bottom:10px;font-weight:600}
 .row{display:flex;align-items:center;gap:9px}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--a);flex:0 0 auto}
-.name{font-weight:700;letter-spacing:-.01em}
-.term{color:var(--t2);font-size:12.5px;margin-top:7px;min-height:2.6em}
-.meta{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:10.5px;
-text-transform:uppercase;letter-spacing:.07em;font-weight:700}
-.cur{color:var(--a)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--a);flex:0 0 auto}
+.name{font-weight:600;letter-spacing:-.014em;font-size:14.5px}
+.term{color:var(--t3);font-size:12.5px;margin-top:9px;min-height:2.8em;line-height:1.55}
+.meta{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;
+border-top:1px solid var(--b0);font-size:9.5px;
+text-transform:uppercase;letter-spacing:.18em;font-weight:500}
+.cur{color:var(--t2)}
 .gas{color:var(--t3)}
-.eco{margin-left:auto;color:var(--t3);text-transform:none;letter-spacing:0;font-weight:600;font-size:11.5px}
+.eco{margin-left:auto;color:var(--t4);text-transform:none;letter-spacing:0;font-weight:500;font-size:11.5px;
+transition:color .18s ease}
 .card:hover .eco{color:var(--t2)}
-.two{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
-.panel{background:var(--s1);border:1px solid var(--b0);border-radius:12px;padding:19px 21px}
-.panel h3{font-size:14.5px;margin-bottom:9px;letter-spacing:-.01em}
-.panel p{color:var(--t2);font-size:13.5px}
+.two{display:grid;gap:1px;background:var(--b0);grid-template-columns:repeat(auto-fit,minmax(288px,1fr))}
+.panel{background:var(--bg);padding:26px 28px 30px}
+.panel h3{font-size:14px;margin-bottom:11px;letter-spacing:-.008em;font-weight:600}
+.panel h3::before{content:"";display:block;width:20px;height:1px;background:var(--b2);margin-bottom:14px}
+.panel p{color:var(--t3);font-size:13px;line-height:1.68}
 .panel code{background:var(--s3);padding:1px 5px;border-radius:4px;font-size:12px}
 .mapwrap{position:relative;border:1px solid var(--b0);background:#05070a;overflow:hidden;
   aspect-ratio:1 / 0.487}
@@ -300,23 +318,31 @@ text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
 #r-id{color:#4ade80}
 .kick{font-size:clamp(13px,1.6vw,17px);letter-spacing:.02em;color:var(--t2);margin-bottom:14px}
-.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:1px;background:var(--b0);
-  border:1px solid var(--b0)}
-.vrow{background:var(--s1);padding:13px 15px;display:flex;flex-direction:column;gap:6px;min-height:86px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--b0);
+  border-top:1px solid var(--b1);border-bottom:1px solid var(--b1)}
+.vrow{background:var(--bg);padding:16px 18px;display:flex;flex-direction:column;gap:7px;min-height:96px}
 .vhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.vname{font-weight:600;font-size:13.5px;letter-spacing:-.01em}
-.vstate{font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:999px;
-  border:1px solid var(--b1);color:var(--t3);white-space:nowrap}
+.vname{font-weight:600;font-size:13.5px;letter-spacing:-.012em}
+.vstate{font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:0;
+  border:0;color:var(--t4);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.vstate::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--t4);flex:none}
+.vstate.ok::before{background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.14)}
+.vstate.fail::before{background:#f87171}
 .vstate.ok{color:#4ade80;border-color:rgba(74,222,128,.35)}
 .vstate.fail{color:#f87171;border-color:rgba(248,113,113,.35)}
-.vaddr{font-family:var(--mono,ui-monospace,Menlo,monospace);font-size:11px;color:var(--t3);overflow-wrap:anywhere}
-.vmeta{font-size:11.5px;color:var(--t2)}
+.vaddr{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--t4);
+  overflow-wrap:anywhere;letter-spacing:-.02em}
+.vmeta{font-size:11.5px;color:var(--t3);line-height:1.55}
 .vmeta a{color:var(--t2)}
-.vnote{margin-top:14px;font-size:12.5px;color:var(--t3)}
-.honest{border-left:3px solid #f0b90b}
-.honest h3{color:#f0b90b}
-footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--b0);color:var(--t3);font-size:12.5px}
-footer a{color:var(--t2)}
+.vnote{margin-top:20px;font-size:12.5px;color:var(--t3);max-width:76ch;line-height:1.7}
+.honest{background:var(--bg);border-left:1px solid var(--b2);padding-left:26px}
+.honest h3{color:var(--t1)}
+.honest h3::before{background:var(--t2)}
+.honest strong{color:var(--t1);font-weight:600}
+footer{margin-top:clamp(72px,9vw,120px);padding:30px 0 18px;border-top:1px solid var(--b0);
+color:var(--t4);font-size:11.5px;letter-spacing:.02em}
+footer a{color:var(--t3);text-decoration:none}
+footer a:hover{color:var(--t1)}
 </style></head><body><div class="wrap">
 
 <header class="hero">
