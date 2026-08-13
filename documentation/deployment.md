@@ -492,3 +492,24 @@ programmes we have not cracked. It must never be indexable.
 > above). **Always `caddy validate --config /etc/caddy/Caddyfile` before
 > `systemctl reload caddy`**, and curl `/`, `/about` and `/status` afterwards —
 > a 200/200/401 triple is the check that the reload did not break the apex.
+
+
+## `xono.ai/deck/<chain>` — the live decks
+
+`npm run build:deck` → copy `deploy/deck/*.html` (minus `_artifact-*`) into
+`deploy/apex/dist/deck/` → rsync to `/srv/cryptoland/apex/dist/deck/`.
+33 chains, ~1.3 MB total, each self-contained with no external requests.
+
+Two deliberate settings on the Caddy route:
+
+- **Public.** A deck behind a password is not a deck. The reviewer clicks the link
+  from inside an application and it has to render immediately.
+- **`X-Robots-Tag: noindex, nofollow, noarchive`.** This one is not hygiene, it is
+  the whole strategy. 33 near-identical decks in a search index would destroy the
+  exclusivity the per-chain build exists to create — a Rootstock reviewer who
+  searches and finds the Solana deck has learned the single thing every slide was
+  written to avoid saying.
+
+Send `https://xono.ai/deck/<chain>` in place of a PDF wherever a form takes a
+link. It cannot go stale, it renders on a phone, and the contract address on it
+is one the reviewer can paste straight into an explorer.

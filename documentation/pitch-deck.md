@@ -44,6 +44,35 @@ Do not attach it in place of the live page.
 
 ---
 
+## 1b. The narrative, rebuilt 2026-08-13
+
+The first version opened with the product and put "28 chains, 14 VM families" on
+slide 6. Both were wrong for this reader. §0 is explicit that every ecosystem
+grant scores monogamy, so a portability slide argues *against* us — and a
+pre-seed reader does not fund a feature list, they fund a thesis.
+
+The arc is now: **insight → product as consequence → why this chain → on-chain
+proof → the mechanism → honest traction → one ask.**
+
+- **Slide 2 is the insight**, not the product: *"Every square metre of Earth has
+  been mapped. None of it is ownable."* That is the sentence the deck is built to
+  earn.
+- **Slide 7 is the mechanism** — `tokenId = (x << 15) | y`, set at display size.
+  Ownership is not a database row pointing at a place; the identifier *encodes*
+  the place, so anyone can compute the token for any point on Earth without
+  asking us. It is the most elegant true thing this project has, and it replaced
+  the multichain brag entirely.
+- **The ask is one unlock**, not four line items: move the daily loop on-chain.
+
+**Every mention of another chain is gone.** A sweep asserts zero occurrences of
+`28 chains`, `28 mainnet`, `14 VM families`, `on all 18` or `every chain` across
+all 33 chain decks. The shared EVM deployment record writes its checks in fleet
+language ("bytecode present on all 18"), which printed on the exclusivity slide
+would tell a Rootstock reviewer they are one of eighteen — `chainCheck()` rewrites
+that text into the chain's own terms at build time.
+
+---
+
 ## 2. Why the deck is per-chain and not one file
 
 This is the whole design constraint, and it comes from

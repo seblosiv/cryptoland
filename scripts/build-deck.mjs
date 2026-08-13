@@ -84,6 +84,15 @@ const esc = (s) =>
 /** Break a long address so it wraps at a sane point instead of overflowing. */
 const addr = (a) => esc(a)
 
+
+/** Check text is written for the shared EVM record; make it read as one chain. */
+const chainCheck = (t, chain) =>
+  String(t ?? '')
+    .replace(/\bon all \d+\b/gi, chain ? `on ${chain.name}` : 'on mainnet')
+    .replace(/\ball \d+ chains?\b/gi, chain ? chain.name : 'mainnet')
+    .replace(/\bevery chain\b/gi, chain ? chain.name : 'mainnet')
+    .replace(/\bacross \d+ chains?\b/gi, chain ? `on ${chain.name}` : '')
+
 /* ── the deck ───────────────────────────────────────────────────────────── */
 
 function deck(chain) {
@@ -98,7 +107,14 @@ function deck(chain) {
   const accentHex = p.accent ?? chain?.color ?? '#4ade80'
   const accentUi = rgbToHex(...readableInk(hexToRgb(accentHex)))
   // A label sitting ON the accent needs the opposite ink.
-  const onAccent = contrast(hexToRgb('#0f0f0f'), hexToRgb(accentHex)) >= 4.5 ? '#0f0f0f' : '#ffffff'
+  const onAccent = contrast(hexToRgb('#0c0b0a'), hexToRgb(accentHex)) >= 4.5 ? '#0c0b0a' : '#ffffff'
+  // Pulled toward the warm ink so a display-size word in the accent reads as a
+  // considered colour rather than a highlighter.
+  const accentSoft = rgbToHex(...hexToRgb(accentUi).map((v, i) => Math.round(v * 0.62 + [247, 244, 239][i] * 0.38)))
+  // Stops for the chrome gradient: a light lift and a deep shadow of the chain
+  // colour, so the metal reads as lit rather than as a flat tint.
+  const accentHi = rgbToHex(...hexToRgb(accentUi).map((v) => Math.round(v + (255 - v) * 0.45)))
+  const accentLo = rgbToHex(...hexToRgb(accentUi).map((v) => Math.round(v * 0.42)))
 
   const title = chain ? `CryptoLand on ${chain.name}` : 'CryptoLand by XONO'
   const eyebrow = chain ? chain.name.toUpperCase() : 'MULTICHAIN'
@@ -125,7 +141,7 @@ function deck(chain) {
   slide('cover', 'Cover', `
     <div class="cover">
       <p class="eyebrow mono">${esc(tagline)}</p>
-      <h1 class="wordmark">Crypto<span class="thin">Land</span></h1>
+      <h1 class="wordmark chrome">Crypto<span class="thin">Land</span></h1>
       <p class="lede">A map of the real world, divided into ${TILES.toLocaleString('en-US')} tiles.
         Players claim territory, upgrade it, trade it, raid it and govern it${chain ? ` — on ${esc(chain.name)}` : ''}.</p>
       <dl class="cover-meta">
@@ -135,36 +151,50 @@ function deck(chain) {
       </dl>
     </div>`, '<canvas id="grid" aria-hidden="true"></canvas>')
 
-  /* 02 — the product. */
+  /* 02 — the insight. A reader funds a thesis, not a feature list. */
+  slide('insight', 'The insight', `
+    <p class="eyebrow">The insight</p>
+    <p class="kicker">Every square metre of Earth<br>has already been mapped.</p>
+    <h2 class="thesis chrome">None of it is ownable</h2>
+    <p class="lede wide">Satellites finished the map decades ago. What was never built is the layer above it —
+      a registry where a place has an owner, and the claim settles somewhere neutral rather than inside
+      one company's database.</p>
+    <p class="note">CryptoLand is that layer, at the resolution where it becomes a game: Earth divided into
+      ${TILES.toLocaleString('en-US')} tiles, each roughly a city block, each independently ownable.</p>`)
+
+  /* 03 — the product, as the consequence of the insight. */
   slide('product', 'The game', `
-    <p class="eyebrow mono">The game</p>
-    <h2>Territory is the unit of play. Everything else is what you do to it.</h2>
+    <p class="eyebrow">What people do with it</p>
+    <h2>A registry nobody plays is a database. The game is what makes the map fill up.</h2>
     <div class="loop">
       ${[
-        ['Claim', 'Pick a tile anywhere on Earth. It mints to your wallet as ' + (ob.nativeTerm ?? 'an NFT') + '.'],
-        ['Customize', 'Name it, theme it, build on it. The tile carries your mark on the shared map.'],
-        ['Trade', 'List and buy on an in-game marketplace. Land next to a claimed cluster is worth more.'],
-        ['Raid', 'Send an AI Guardian at a neighbour. Defenders stake a Guardian back.'],
-        ['Govern', 'Tile holders vote. Weight is tiles owned, computed server-side, never client-supplied.'],
-      ].map(([h, b], i) => `<div class="step"><span class="mono step-n">${i + 1}</span><h3>${h}</h3><p>${esc(b)}</p></div>`).join('')}
+        ['Claim', 'Any tile on Earth. It mints to your wallet as ' + (ob.nativeTerm ?? 'an NFT') + '.'],
+        ['Build', 'Name it, theme it, develop it. Your mark on a map other people are looking at.'],
+        ['Trade', 'An in-game market. Land beside a claimed cluster is worth more than land alone.'],
+        ['Raid', 'Send an AI Guardian at a neighbour. They stake one back. Territory changes hands.'],
+        ['Govern', 'Holders vote, weighted by tiles held — computed server-side, never client-supplied.'],
+      ].map(([h, b], i) => `<div class="step"><span class="step-n">${String(i + 1).padStart(2, '0')}</span><h3>${h}</h3><p>${esc(b)}</p></div>`).join('')}
     </div>
-    <p class="note">Live product, not a prototype: map, purchase, customization, marketplace,
-      guardians, raids, DAO voting, affiliate payouts and crypto checkout all run today.</p>`)
+    <p class="note">All five run today — map, checkout, marketplace, guardians, raids, governance and payouts.
+      This is a finished product looking for players, not a prototype looking for a build.</p>`)
 
   /* 03 — why THIS chain. The slide the whole per-chain build exists for. */
   if (chain) {
     slide('why', `Why ${chain.name}`, `
-      <p class="eyebrow mono">Why ${esc(chain.name)}</p>
-      <h2 class="claim">${esc(ob.grantAngle ?? p.pitch ?? `Built natively for ${chain.name}.`)}</h2>
+      <p class="eyebrow">Why ${esc(chain.name)}</p>
+      ${(() => {
+        const t = ob.grantAngle ?? ob.why ?? p.pitch ?? `Built for ${chain.name}.`
+        return `<h2 class="thesis chrome${t.length > 95 ? ' long' : ''}">${esc(t)}</h2>`
+      })()}
       <div class="facts">
-        <div class="fact"><dt class="mono">A tile is</dt><dd>${esc(ob.nativeTerm ?? 'an NFT')}</dd></div>
-        ${ob.chainStat ? `<div class="fact"><dt class="mono">${esc(ob.chainStat.label)}</dt><dd class="accent">${esc(ob.chainStat.value)}</dd></div>` : ''}
-        <div class="fact"><dt class="mono">Wallets</dt><dd>${esc(walletNames(chain, p))}</dd></div>
-        <div class="fact"><dt class="mono">Connect</dt><dd>${esc(p.connectLabel ?? 'Connect wallet')}</dd></div>
+        <div class="fact"><dt>A tile is</dt><dd>${esc(ob.nativeTerm ?? 'an NFT')}</dd></div>
+        ${ob.chainStat ? `<div class="fact"><dt>${esc(ob.chainStat.label)}</dt><dd class="accent">${esc(ob.chainStat.value)}</dd></div>` : ''}
+        <div class="fact"><dt>Wallets</dt><dd>${esc(walletNames(chain, p))}</dd></div>
+        ${ob.feeNote ? `<div class="fact wide"><dt>Fees</dt><dd>${esc(ob.feeNote)}</dd></div>` : ''}
       </div>
-      <p class="note">${esc(chain.name)} is not a deployment target bolted on at the end. The build
-        is compiled for ${esc(chain.name)} alone — its wallets, its token standard, its vocabulary,
-        its own colour — and shipped on its own domain. There is no chain switcher to demote it.</p>`)
+      <p class="note">This build is compiled for ${esc(chain.name)} alone — its wallets, its token standard,
+        its vocabulary, its own domain at <span class="mono">${esc(chain.key)}.xono.ai</span>. There is no
+        chain switcher, and ${esc(chain.name)} is not one entry in a dropdown. It is the product.</p>`)
   }
 
   /* 04 — the on-chain evidence for this chain. */
@@ -184,8 +214,8 @@ function deck(chain) {
       </div>
       ${checks.length ? `<ul class="checks">${checks.map((c) =>
         `<li><span class="tick mono">${c.result === 'PASS' ? 'PASS' : esc(c.result)}</span>
-         <span class="ck">${esc(c.name)}</span>
-         ${c.detail ? `<span class="ck-d">${esc(c.detail)}</span>` : ''}</li>`).join('')}</ul>` : ''}`)
+         <span class="ck">${esc(chainCheck(c.name, chain))}</span>
+         ${c.detail ? `<span class="ck-d">${esc(chainCheck(c.detail, chain))}</span>` : ''}</li>`).join('')}</ul>` : ''}`)
   }
 
   /* 05 — the proof that generalises. */
@@ -193,33 +223,34 @@ function deck(chain) {
     <p class="eyebrow mono">Verified, not asserted</p>
     <h2>Every claim on the previous slide is a transaction someone else can read.</h2>
     <div class="stats">
-      <div class="stat"><span class="big-n mono accent">${TALLY.checksPassed}/${TALLY.checksRun}</span>
+      <div class="stat"><span class="big-n chrome">${TALLY.checksPassed}/${TALLY.checksRun}</span>
         <span class="sub">on-chain checks passing, run against live networks after deployment</span></div>
-      <div class="stat"><span class="big-n mono">817</span>
+      <div class="stat"><span class="big-n chrome">817</span>
         <span class="sub">automated tests — 358 frontend, 436 contract, 23 backend invariants</span></div>
-      <div class="stat"><span class="big-n mono">5</span>
+      <div class="stat"><span class="big-n chrome">5</span>
         <span class="sub">separate virtual machines that independently agree tile (16383,&thinsp;16383) is token 536854527</span></div>
     </div>
     <p class="note"><strong>Deploying found defects the tests could not.</strong> The EVM contract
       passed 39 unit tests while <code class="mono">tokenIdFromKey(0,&thinsp;32768)</code> and
       <code class="mono">tokenIdFromKey(1,&thinsp;0)</code> both returned 32768 — one id, two tiles —
       and <code class="mono">claimTile</code> accepted any raw uint256. Caught on-chain, fixed, and
-      now covered by 5 regression tests plus an explicit rejection check on every VM.</p>`)
+      now covered by 5 regression tests plus an explicit out-of-range rejection check.</p>`)
 
-  /* 06 — capability, deliberately AFTER the chain argument. */
-  slide('build', 'Engineering', `
-    <p class="eyebrow mono">Engineering track record</p>
-    <h2>A small team that ships, cheaply, and finishes what it starts.</h2>
-    <div class="stats four">
-      <div class="stat"><span class="big-n mono">${LIVE_COUNT}</span><span class="sub">chains carrying a live mainnet contract</span></div>
-      <div class="stat"><span class="big-n mono">${FAMILIES}</span><span class="sub">distinct VM families, each with a hand-written adapter</span></div>
-      <div class="stat"><span class="big-n mono">~$65</span><span class="sub">total spent to reach mainnet, against a $134 estimate</span></div>
-      <div class="stat"><span class="big-n mono">2,816&thinsp;B</span><span class="sub">Solana program size after rewriting it <code class="mono">no_std</code></span></div>
+  /* 06 — the mechanism. The most elegant true thing we have, and it is ours. */
+  slide('mechanism', 'The mechanism', `
+    <p class="eyebrow">Why this can't be faked</p>
+    <p class="kicker">Ownership is not a row<br>in a database.</p>
+    <h2 class="thesis chrome">The id is the place</h2>
+    <div class="formula">
+      <code class="mono f-eq">tokenId = (x &lt;&lt; 15) | y</code>
+      <span class="f-arrow">→</span>
+      <code class="mono f-out">(16383, 16383) = 536854527</code>
     </div>
-    <p class="note">Solana rent is <code class="mono">(bytes&nbsp;+&nbsp;173)&nbsp;&times;&nbsp;6960</code> lamports,
-      so program size <em>is</em> the price. The framework build was 207,488 bytes — $109 — and almost none of it
-      was our logic. A <code class="mono">no_std</code> raw entrypoint that reads the input buffer in place came to
-      2,816 bytes and <strong>$1.58</strong>. Same behaviour, verified 16/16 on devnet before mainnet.</p>`)
+    <p class="lede wide">The identifier <em>encodes</em> the coordinate. Anyone can compute the token for
+      any point on Earth without asking us, and no two tiles can ever collide into one id.</p>
+    <p class="note">That property is why the registry survives us. If this company disappears, the mapping
+      from coordinate to token is still arithmetic anyone can run, and the owner of record is still on
+      ${chain ? esc(chain.name) : 'chain'}.</p>`)
 
   /* 07 — the honest slide. */
   slide('traction', 'Traction', `
@@ -229,7 +260,7 @@ function deck(chain) {
       <div class="col">
         <h3 class="mono col-h">Real</h3>
         <ul class="plain">
-          <li>${LIVE_COUNT} mainnet contracts, ${TALLY.checksPassed}/${TALLY.checksRun} checks passing</li>
+          <li>${chain ? esc(chain.name) + ' contract live on mainnet' + (rec?.checks?.length ? ', ' + rec.checks.length + ' on-chain checks passing' : '') : 'Contracts live on mainnet, ' + TALLY.checksPassed + '/' + TALLY.checksRun + ' checks passing'}</li>
           <li>Full game loop playable end to end</li>
           <li>Crypto checkout with server-side payment binding</li>
           <li><code class="mono">GET /metrics/grant</code> — a live endpoint, not a screenshot</li>
@@ -249,24 +280,24 @@ function deck(chain) {
       retroactive rounds that rank by transactions or gas burned. Moving the daily loop on-chain is the
       next product decision, and it is what this funding is for.</p>`)
 
-  /* 08 — the ask. */
-  slide('ask', 'Use of funds', `
-    <p class="eyebrow mono">Use of funds</p>
-    <h2>Turn a finished, verified game into one with recurring on-chain activity${chain ? ` on ${esc(chain.name)}` : ''}.</h2>
+  /* 08 — the ask. One unlock, not a wish list. */
+  slide('ask', 'The ask', `
+    <p class="eyebrow">What the money buys</p>
+    <h2 class="compact">One change decides whether this becomes an economy${chain ? ` on ${esc(chain.name)}` : ''}: the daily loop has to settle on-chain.</h2>
     <ol class="milestones">
       ${[
-        ['Move the daily loop on-chain', 'Check-in, upgrade and raid resolution become transactions rather than database writes. This is the single change that makes retroactive and activity-scored rounds winnable.'],
-        ['Player acquisition on one chain', 'A funded campaign aimed at one ecosystem’s own users, reported as organic numbers separated from seed data.'],
-        ['Audit and harden the claim path', 'External review of the claim, marketplace and payout paths before volume arrives.'],
-        ['Publish the metrics openly', 'The grant endpoint becomes a public page so the funder can check progress without asking us.'],
-      ].map(([h, b], i) => `<li><span class="mono ms-n">${String(i + 1).padStart(2, '0')}</span><div><h3>${esc(h)}</h3><p>${esc(b)}</p></div></li>`).join('')}
+        ['Move the loop on-chain', `Check-in, upgrade and raid resolution become ${chain ? esc(chain.name) : 'on-chain'} transactions rather than database writes. Today the game touches the chain once, at purchase. After this it touches it every session — which is the difference between a product that uses ${chain ? esc(chain.name) : 'a chain'} and one that lives there.`],
+        ['Bring players to it', `A funded campaign aimed at ${chain ? esc(chain.name) + '\u2019s own users' : 'one ecosystem'}, reported as organic numbers held separate from seed data.`],
+        ['Harden before volume', 'External review of the claim, marketplace and payout paths while they are still cheap to change.'],
+        ['Report in public', 'The metrics endpoint becomes a public page, so progress is checkable without asking us.'],
+      ].map(([h, b], i) => `<li><span class="ms-n">${String(i + 1).padStart(2, '0')}</span><div><h3>${esc(h)}</h3><p>${esc(b)}</p></div></li>`).join('')}
     </ol>`)
 
   /* 09 — close. */
   slide('close', 'Contact', `
     <div class="close">
       <p class="eyebrow mono">CryptoLand by XONO</p>
-      <h2 class="closing">${esc(tagline)}</h2>
+      <h2 class="closing chrome">${esc(tagline)}</h2>
       <dl class="cover-meta">
         <div><dt class="mono">Live</dt><dd class="mono">${chain ? esc(chain.key) + '.xono.ai' : 'xono.ai'}</dd></div>
         <div><dt class="mono">Status &amp; evidence</dt><dd class="mono">xono.ai/status</dd></div>
@@ -275,12 +306,12 @@ function deck(chain) {
       </dl>
     </div>`)
 
-  return page({ title, accentHex, accentUi, onAccent, chain, slides: slides.join('\n') })
+  return page({ title, accentHex, accentUi, onAccent, accentSoft, accentHi, accentLo, chain, slides: slides.join('\n') })
 }
 
 /* ── the document ───────────────────────────────────────────────────────── */
 
-function page({ title, accentHex, accentUi, onAccent, chain, slides }) {
+function page({ title, accentHex, accentUi, onAccent, accentSoft, accentHi, accentLo, chain, slides }) {
   return `<!doctype html>
 <html lang="en" data-chain="${esc(chain?.key ?? 'neutral')}" data-family="${esc(chain?.family ?? 'multi')}">
 <head>
@@ -289,7 +320,7 @@ function page({ title, accentHex, accentUi, onAccent, chain, slides }) {
 <title>${esc(title)}</title>
 <meta name="description" content="CryptoLand by XONO — a geospatial NFT game${chain ? ' on ' + esc(chain.name) : ''}.">
 <style>
-${css({ accentHex, accentUi, onAccent })}
+${css({ accentHex, accentUi, onAccent, accentSoft, accentHi, accentLo })}
 </style>
 </head>
 <body>
@@ -305,19 +336,34 @@ ${script()}
 `
 }
 
-function css({ accentHex, accentUi, onAccent }) {
+function css({ accentHex, accentUi, onAccent, accentSoft, accentHi, accentLo }) {
   return `
 /* Tokens are the app's, not new ones: src/index.css :root. The deck is a
    projection surface that mirrors a solid-dark product, so it commits to one
    visual world on purpose — no theme media query, every colour painted. */
 :root{
-  --bg:#0f0f0f; --s1:#141414; --s2:#1a1a1a; --s3:#222222; --s4:#2a2a2a;
-  --b0:rgba(255,255,255,0.04); --b1:rgba(255,255,255,0.08); --b2:rgba(255,255,255,0.13);
-  --t1:#ffffff; --t2:rgba(255,255,255,0.55); --t3:rgba(255,255,255,0.28); --t4:rgba(255,255,255,0.14);
+  --bg:#000000; --s1:#0a0a0a; --s2:#101010; --s3:#161616; --s4:#1e1e1e;
+  --b0:rgba(255,255,255,0.05); --b1:rgba(255,255,255,0.10); --b2:rgba(255,255,255,0.17);
+  --t1:#ffffff; --t2:rgba(255,255,255,0.62); --t3:rgba(255,255,255,0.34); --t4:rgba(255,255,255,0.16);
   --accent:${accentHex}; --accent-ui:${accentUi}; --accent-ink:${onAccent};
+  --accent-soft:${accentSoft}; --accent-hi:${accentHi}; --accent-lo:${accentLo};
+  --display:'Inter','Helvetica Neue',Helvetica,Arial,system-ui,sans-serif;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'Space Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --pad:clamp(22px,min(4.4vw,6.4vh),76px);
+  --pad:clamp(24px,min(5vw,7vh),88px);
+}
+
+/* The chrome sweep. A diagonal band of silver blown out to white, falling into
+   the chain's own colour — clipped to the glyphs so the type IS the material.
+   Every stop is explicit because background-clip:text inherits nothing. */
+.chrome{
+  background-image:linear-gradient(146deg,
+    #909090 0%, #e8e8e8 8%, #ffffff 14%, #c6c6c6 22%, #5e5e5e 30%,
+    #bdbdbd 38%, #ffffff 46%,
+    var(--accent-hi) 58%, var(--accent-ui) 70%, var(--accent-ui) 78%,
+    var(--accent-lo) 90%, #17111e 100%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -328,11 +374,11 @@ body{
 code{font-family:var(--mono)}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .num,.big-n{font-variant-numeric:tabular-nums}
-.accent{color:var(--accent-ui)}
+.accent{color:var(--accent-soft)}
 
 /* ── rail ─────────────────────────────────────────────────────────────── */
-.rail{position:fixed;left:0;top:0;bottom:0;width:3px;background:var(--b0);z-index:20}
-.rail-in{width:100%;height:0;background:var(--accent);transition:height .2s linear}
+.rail{position:fixed;left:0;top:0;bottom:0;width:1px;background:var(--b0);z-index:20}
+.rail-in{width:100%;height:0;background:var(--accent-soft);transition:height .25s ease}
 
 /* ── slides ───────────────────────────────────────────────────────────── */
 .deck{scroll-snap-type:y mandatory;height:100dvh;overflow-y:auto;overflow-x:hidden}
@@ -342,39 +388,43 @@ code{font-family:var(--mono)}
   padding:var(--pad); padding-bottom:calc(var(--pad) * 0.5 + 38px);
   border-bottom:1px solid var(--b0);
 }
-.frame{width:100%;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(12px,min(2vw,2.7vh),32px)}
+.frame{width:100%;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(14px,min(2.2vw,3.1vh),40px)}
 .foot{
   position:absolute; left:var(--pad); right:var(--pad); bottom:calc(var(--pad) / 2);
   display:flex; justify-content:space-between; gap:16px;
-  font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--t3);
-  border-top:1px solid var(--b0); padding-top:12px;
+  font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--t3);
+  border-top:1px solid var(--b0); padding-top:13px; align-items:baseline;
 }
-.foot .num{color:var(--t2)}
+.foot .num{font-family:var(--display);font-size:14px;letter-spacing:0;color:var(--t2)}
 
 /* ── type scale ───────────────────────────────────────────────────────── */
 .eyebrow{
-  font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--t2);
-  display:flex; align-items:center; gap:10px;
+  font-family:var(--display); font-weight:300;
+  font-size:clamp(12px,1.5vw,19px); letter-spacing:.34em; text-transform:uppercase;
+  color:var(--t2); display:flex; align-items:center; gap:14px;
 }
-.eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);flex:none}
+.eyebrow::before{content:"";width:0;height:0;flex:none}
 h1.wordmark{
-  font-size:clamp(44px,min(10.5vw,15vh),142px); font-weight:650; letter-spacing:-.05em;
-  line-height:.92; text-wrap:balance;
+  font-family:var(--display);
+  font-size:clamp(52px,min(13.4vw,19vh),190px); font-weight:900; letter-spacing:-.055em;
+  line-height:.84; text-transform:uppercase; text-wrap:balance;
 }
-.wordmark .thin{font-weight:200;color:var(--t2)}
+.wordmark .thin{font-weight:900}
 h2{
-  font-size:clamp(22px,min(4vw,5.6vh),54px); font-weight:600; letter-spacing:-.035em;
-  line-height:1.08; max-width:22ch; text-wrap:balance;
+  font-family:var(--display);
+  font-size:clamp(24px,min(4.3vw,6vh),62px); font-weight:800; letter-spacing:-.042em;
+  line-height:1.0; max-width:19ch; text-transform:uppercase; text-wrap:balance; color:var(--t1);
 }
 h2.claim{max-width:19ch}
-h2.closing{max-width:14ch;font-size:clamp(30px,min(6.5vw,9vh),86px)}
-h3{font-size:clamp(15px,1.5vw,19px);font-weight:600;letter-spacing:-.012em}
-.lede{font-size:clamp(14px,min(1.75vw,2.4vh),21px);color:var(--t2);max-width:56ch;line-height:1.55}
+h2.compact{font-size:clamp(19px,min(2.9vw,4vh),38px);max-width:36ch;line-height:1.1;letter-spacing:-.03em}
+h2.closing{max-width:100%;font-size:clamp(38px,min(9vw,12vh),150px);font-weight:900;letter-spacing:-.055em;line-height:.86}
+h3{font-size:clamp(14px,1.4vw,17px);font-weight:600;letter-spacing:-.006em;color:var(--t1)}
+.lede{font-size:clamp(14px,min(1.7vw,2.3vh),20px);color:var(--t2);max-width:58ch;line-height:1.62;letter-spacing:-.004em}
 .note{
-  font-size:clamp(12px,min(1.25vw,1.75vh),15px); color:var(--t2); max-width:74ch; line-height:1.62;
-  border-left:1px solid var(--b2); padding-left:18px;
+  font-size:clamp(11.5px,min(1.2vw,1.68vh),14.5px); color:var(--t3); max-width:76ch; line-height:1.7;
+  border-left:1px solid var(--b1); padding-left:clamp(16px,2vw,26px);
 }
-.note strong{color:var(--t1);font-weight:600}
+.note strong{color:var(--t2);font-weight:600}
 .note code,.checks code{color:var(--accent-ui);font-size:.92em}
 
 /* ── cover ────────────────────────────────────────────────────────────── */
@@ -396,60 +446,107 @@ h3{font-size:clamp(15px,1.5vw,19px);font-weight:600;letter-spacing:-.012em}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;display:inline-block}
 .addr{overflow-wrap:anywhere;color:var(--t2);font-size:12px;line-height:1.5}
 
+/* ── the rebuilt narrative slides ─────────────────────────────────────── */
+
+/* The thesis statement is the whole slide. It gets the room to be one.
+   Tighter tracking and a lower line-height than h2 so it reads as a claim
+   being made, not a heading introducing something below it. */
+h2.thesis{
+  font-family:var(--display);
+  font-size:clamp(34px,min(8.6vw,12vh),138px); font-weight:900; letter-spacing:-.055em;
+  line-height:.86; text-transform:uppercase; text-wrap:balance;
+  max-width:100%;
+}
+/* Italic, not colour-blocked. A serif italic carries emphasis without shouting;
+   the accent then only tints it, which is why it can stay desaturated. */
+h2.thesis .em{font-style:normal}
+/* A long chain pitch at full display size pushes the supporting facts off the
+   slide. One step down keeps the claim dominant without losing the evidence. */
+h2.thesis.long{font-size:clamp(20px,min(3.1vw,4.3vh),40px);max-width:34ch;line-height:1.06;letter-spacing:-.032em}
+.kicker{
+  font-family:var(--display); font-weight:200;
+  font-size:clamp(15px,min(2.9vw,4vh),46px); letter-spacing:.06em; line-height:1.12;
+  text-transform:uppercase; color:var(--t2); max-width:42ch;
+}
+.lede.wide{max-width:66ch;font-size:clamp(14.5px,min(1.8vw,2.5vh),21px);color:var(--t2)}
+
+/* The mechanism slide's equation is the one place a monospace line is the hero,
+   so it is set at display size rather than as an inline code span. */
+.formula{
+  display:flex;flex-wrap:wrap;align-items:center;gap:clamp(14px,2.6vw,34px);
+  padding:clamp(16px,3vh,30px) 0; border-top:1px solid var(--b1); border-bottom:1px solid var(--b1);
+}
+.f-eq{font-size:clamp(15px,min(2.3vw,3.2vh),31px);letter-spacing:-.01em;color:var(--t2)}
+.f-arrow{color:var(--t3);font-size:clamp(15px,2.4vh,26px);flex:none}
+.f-out{font-size:clamp(15px,min(2.3vw,3.2vh),31px);letter-spacing:-.01em;color:var(--accent-hi)}
+
+/* Step numbers become editorial figures rather than inline digits. */
+.step-n{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;color:var(--t4);
+  display:block;margin-bottom:2px;
+}
+.step h3{color:var(--t1)}
+
+.fact.wide{grid-column:1/-1}
+.ms-n{
+  font-family:var(--display);font-size:15px;letter-spacing:0;color:var(--t3);
+  flex:none;padding-top:2px;
+}
+
 /* ── the loop ─────────────────────────────────────────────────────────── */
-.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;background:var(--b0)}
-.step{background:var(--s1);padding:clamp(13px,2.2vh,20px);display:flex;flex-direction:column;gap:8px}
-.step-n{font-size:11px;color:var(--accent-ui);letter-spacing:.1em}
-.step p{font-size:13px;color:var(--t2);line-height:1.55}
+.loop{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:clamp(18px,3vw,42px)}
+.step{padding:14px 0 0;border-top:1px solid var(--b1);display:flex;flex-direction:column;gap:7px}
+.step p{font-size:12.5px;color:var(--t2);line-height:1.6}
 
 /* ── why-chain facts ──────────────────────────────────────────────────── */
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--b0)}
-.fact{background:var(--s1);padding:clamp(12px,2vh,18px) 20px;display:flex;flex-direction:column;gap:7px}
-.fact dt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3)}
-.fact dd{font-size:15px;line-height:1.35}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:clamp(16px,2.6vw,38px)}
+.fact{padding:12px 0 0;border-top:1px solid var(--b1);display:flex;flex-direction:column;gap:6px}
+.fact dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3)}
+.fact dd{font-size:clamp(13px,1.8vh,15px);line-height:1.38;color:var(--t1)}
 
 /* ── address block + checks ───────────────────────────────────────────── */
 .addrbox{
-  display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px 22px;
-  align-items:baseline; background:var(--s1); border:1px solid var(--b1); padding:clamp(11px,1.9vh,16px) 20px;
+  display:grid; grid-template-columns:auto minmax(0,1fr); gap:9px 26px;
+  align-items:baseline; padding:clamp(13px,2.1vh,20px) 0;
+  border-top:1px solid var(--b1); border-bottom:1px solid var(--b1);
 }
 .addrbox .lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3)}
-.addrbox .addr.big{font-size:clamp(12px,1.5vw,17px);color:var(--t1)}
+.addrbox .addr.big{font-size:clamp(11.5px,1.4vw,16px);color:var(--t1)}
 .addrbox>span:not(.lbl){font-size:13px;color:var(--t2)}
-.checks{list-style:none;display:flex;flex-direction:column;gap:1px;background:var(--b0)}
+.checks{list-style:none;display:flex;flex-direction:column;border-top:1px solid var(--b1)}
 .checks li{
-  background:var(--s1); padding:clamp(6px,1.1vh,9px) 16px; display:grid;
+  padding:clamp(7px,1.2vh,11px) 0; border-bottom:1px solid var(--b0); display:grid;
   grid-template-columns:auto minmax(0,1fr); gap:4px 14px; align-items:baseline;
 }
 .tick{
-  grid-row:span 2; font-size:10px; letter-spacing:.1em; color:var(--accent-ink);
-  background:var(--accent); padding:3px 7px; align-self:start;
+  grid-row:span 2; font-size:9px; letter-spacing:.16em; color:var(--t1);
+  border:1px solid var(--b2); border-radius:999px; padding:3px 10px; align-self:center;
 }
-.ck{font-size:14px}
-.ck-d{font-size:clamp(11px,1.6vh,12px);color:var(--t2);line-height:1.45}
+.ck{font-size:13.5px}
+.ck-d{font-size:clamp(10.5px,1.5vh,11.5px);color:var(--t3);line-height:1.45}
 
 /* ── stats ────────────────────────────────────────────────────────────── */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;background:var(--b0)}
-.stats.four{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-.stat{background:var(--s1);padding:clamp(14px,2.4vh,22px) 20px;display:flex;flex-direction:column;gap:10px}
-.big-n{font-size:clamp(24px,min(3.6vw,5vh),46px);letter-spacing:-.03em;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(206px,1fr));gap:clamp(18px,3vw,44px)}
+.stats.four{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
+.stat{padding:13px 0 0;border-top:1px solid var(--b1);display:flex;flex-direction:column;gap:9px}
+.big-n{font-family:var(--display);font-size:clamp(28px,min(4.2vw,5.8vh),58px);font-weight:900;letter-spacing:-.04em;line-height:.92}
 .sub{font-size:12.5px;color:var(--t2);line-height:1.5}
 
 /* ── honest split ─────────────────────────────────────────────────────── */
-.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--b0)}
-.col{background:var(--s1);padding:clamp(14px,2.4vh,22px);display:flex;flex-direction:column;gap:14px}
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:clamp(20px,3.4vw,48px)}
+.col{padding:13px 0 0;border-top:1px solid var(--b1);display:flex;flex-direction:column;gap:13px}
 .col-h{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3)}
-.col:first-child .col-h{color:var(--accent-ui)}
+.col:first-child .col-h{color:var(--accent-soft)}
 ul.plain{list-style:none;display:flex;flex-direction:column;gap:10px}
 ul.plain li{font-size:13.5px;color:var(--t1);line-height:1.5;padding-left:16px;position:relative}
 ul.plain li::before{content:"";position:absolute;left:0;top:.62em;width:6px;height:1px;background:var(--t4)}
 ul.plain.dim li{color:var(--t2)}
 
 /* ── milestones ───────────────────────────────────────────────────────── */
-.milestones{list-style:none;display:flex;flex-direction:column;gap:1px;background:var(--b0)}
-.milestones li{background:var(--s1);padding:clamp(11px,1.9vh,18px) 20px;display:flex;gap:18px;align-items:baseline}
+.milestones{list-style:none;display:flex;flex-direction:column;border-top:1px solid var(--b1)}
+.milestones li{padding:clamp(11px,1.9vh,20px) 0;border-bottom:1px solid var(--b0);display:flex;gap:clamp(16px,2.4vw,34px);align-items:baseline}
 .ms-n{font-size:11px;color:var(--accent-ui);flex:none;letter-spacing:.08em}
-.milestones p{font-size:clamp(11.5px,1.8vh,13px);color:var(--t2);line-height:1.5;margin-top:4px;max-width:78ch}
+.milestones p{font-size:clamp(10px,1.45vh,12.5px);color:var(--t2);line-height:1.42;margin-top:3px;max-width:82ch}
 
 .close{display:flex;flex-direction:column;gap:clamp(20px,3vw,36px)}
 
@@ -483,6 +580,12 @@ ul.plain.dim li{color:var(--t2)}
 
 /* ── print: a real landscape PDF to attach to a form ──────────────────── */
 @media print{
+  /* Clipped-gradient text can render as blank in a PDF pipeline. Headlines fall
+     back to solid ink for print — the attachment must survive the export. */
+  .chrome{
+    background-image:none!important; color:var(--t1)!important;
+    -webkit-text-fill-color:var(--t1)!important;
+  }
   @page{size:297mm 167mm;margin:0}
   html,body{background:#0f0f0f}
   .rail{display:none}
@@ -502,11 +605,24 @@ ul.plain.dim li{color:var(--t2)}
 /* Very short viewports (a 1024x640 laptop, some projectors). The evidence slide
    is the densest one; scale it down rather than hiding checks — a check that
    silently disappears is exactly the kind of omission this deck argues against. */
+@media (max-height:768px){
+  .frame{gap:clamp(9px,1.8vh,22px)}
+  h2.thesis{font-size:clamp(28px,6.6vh,76px)}
+  h2.thesis.long{font-size:clamp(18px,3.5vh,32px)}
+  h2{font-size:clamp(22px,4.4vh,48px)}
+  .kicker{font-size:clamp(13px,2.3vh,27px)}
+  .lede,.lede.wide{font-size:clamp(13px,1.9vh,17px)}
+  .step p{font-size:12px}
+  .milestones li{padding:clamp(8px,1.4vh,14px) 0}
+}
 @media (max-height:700px){
+  h2.thesis{font-size:clamp(22px,4.6vh,44px)}
   .ck{font-size:13px}
   .addrbox{gap:6px 20px}
   .addrbox .addr.big{font-size:14px}
   .addrbox>span:not(.lbl){font-size:12px}
+  .addrbox{gap:4px 18px;padding:9px 0}
+  .checks li{padding:5px 0}
 }
 
 @media (prefers-reduced-motion:reduce){
