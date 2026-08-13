@@ -41,9 +41,18 @@
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {})
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+            .catch(function () {})
         })
+        // Deliberately NO reload-on-controllerchange here. It is the usual
+        // reflex, and it is the wrong tool: sw.js serves documents
+        // network-first, so a page loaded after a deploy is already the new
+        // build and has nothing to refresh to. All the listener would add is
+        // yanking an open tab out from under whoever is using it — mid
+        // purchase, for instance — every time we ship. The single case that
+        // genuinely cannot self-heal, a page rendered from the pre-fix
+        // worker's cache, is handled inside sw.js activate().
       }
     </script>
   </body>

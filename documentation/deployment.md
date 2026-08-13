@@ -515,6 +515,51 @@ link. It cannot go stale, it renders on a phone, and the contract address on it
 is one the reviewer can paste straight into an explorer.
 
 
+## The service worker, and why a deploy used to cost a blank page
+
+Symptom: a subdomain opens white on the first try and works on reload.
+
+`public/sw.js` served navigations **stale-while-revalidate** out of a cache
+whose version was the constant `'cl-v1'`. Reproduced by installing the worker on
+build A, swapping the server to build B, and reloading: the first page after the
+deploy still asked for build A's `/assets/index-CGB7STv5.js`, and only the
+second load moved to B's `index-C79AVKgo.js`.
+
+**`index.html` is the one file that must never be stale** — it is the only thing
+that knows which hashed assets exist. Serve yesterday's copy and it requests
+files `rsync --delete` removed: no CSS, no JS, a white page. And because the
+version was a constant, `activate` never had an old key to delete, so that
+document could survive any number of deploys.
+
+Three changes:
+
+- **Documents are network-first.** The cache is an offline fallback, nothing
+  more. Hashed assets stay cache-first, which is safe *because* their names
+  change when their bytes do.
+- **The cache version is a hash of the built `index.html`**, stamped into
+  `sw.js` by the `chainMeta()` plugin. Content-derived, not a timestamp, so an
+  unchanged build does not churn every visitor's cache.
+- **No path can resolve to `null`.** `staleWhileRevalidate` ended with
+  `cached ?? fetchPromise` where the promise was `fetch().catch(() => null)`.
+  With nothing cached and one flaky request that resolved to `null`, and
+  `respondWith(null)` is a TypeError — the browser hard-fails the request with
+  no retry. A single blip on the entry chunk was a blank page.
+
+> A page already rendered from the **pre-fix** worker's cache cannot heal
+> itself: that build shipped no listener for a new worker taking over. So
+> `activate` navigates open windows — but **only** when the caches it just
+> deleted include the legacy `cl-v1` name. Once everyone is on a versioned
+> worker this never fires again.
+>
+> There is deliberately **no reload-on-`controllerchange`** in `index.html`. It
+> is the usual reflex and it is the wrong tool here: with network-first
+> documents, a page loaded after a deploy is already the new build. All the
+> listener would add is yanking an open tab out from under whoever is using it,
+> mid-purchase, on every ship.
+
+Verified live on 10 subdomains, cold profile and warm: both mount, and every
+cache is named `cl-<build hash>-*`.
+
 ## The apex hero map
 
 One canvas in `deploy/apex/build-apex.mjs` draws the OSM basemap, the claimable

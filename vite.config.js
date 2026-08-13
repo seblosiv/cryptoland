@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { writeChainIcons } from './scripts/chain-icons.mjs'
 
 /**
@@ -93,6 +94,18 @@ function chainMeta() {
           privacyPolicyUrl: `${origin}/privacy.html`,
         }, null, 2) + '\n')
       } catch { /* no dist yet — nothing to rewrite */ }
+
+      // Stamp the service worker with a hash of the built document. Its cache
+      // version was the constant 'cl-v1', so `activate` never had an old key
+      // to delete and a stale index.html could outlive any number of deploys.
+      // Derived from content, not a timestamp, so an unchanged build produces
+      // an unchanged worker and does not churn every visitor's cache.
+      try {
+        const doc = readFileSync(`${options.dir}/index.html`, 'utf8')
+        const id = createHash('sha256').update(doc).digest('hex').slice(0, 12)
+        const swPath = `${options.dir}/sw.js`
+        writeFileSync(swPath, readFileSync(swPath, 'utf8').replace('__BUILD_ID__', id))
+      } catch (e) { console.warn('  sw build id skipped:', e.message) }
 
       // The icon set, tinted with this chain's accent. Replaces a favicon from
       // an unrelated project and a manifest that pointed at PNGs which have

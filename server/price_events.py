@@ -24,8 +24,19 @@ import logging
 
 log = logging.getLogger("price_events")
 
+import os
 from pathlib import Path
-DB_PATH = Path(__file__).parent / "cryptoland.db"
+
+# Must resolve EXACTLY as main.py does. This module used to hardcode
+# server/cryptoland.db, ignoring CRYPTOLAND_DB — and every per-chain deployment
+# sets that var and keeps its database elsewhere (/srv/cryptoland/<chain>/…).
+# So aiosqlite.connect() failed to open anything and /price-events and /alerts
+# returned 500 on all 32 subdomains.
+#
+# The 500 was the visible half. The other half is worse: had that file existed,
+# all 32 chains would have shared one price-events table, which is precisely
+# the cross-chain data bleed the per-chain deployment model exists to prevent.
+DB_PATH = Path(os.environ.get("CRYPTOLAND_DB") or (Path(__file__).parent / "cryptoland.db"))
 
 # ── Schema ─────────────────────────────────────────────────────────────────────
 

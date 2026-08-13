@@ -575,3 +575,26 @@ The window opens once per day at a date-derived global UTC hour (12-23), lasts e
 ### Frame meta tags
 
 `/t/{tile_key}` emits **OpenGraph**, **Twitter Card**, **and Farcaster Frame vNext** meta tags so a single share works across all three platforms with one unfurl image (`/og/{tile_key}.svg`).
+
+## `CRYPTOLAND_DB` must be read by every module that opens the database
+
+`price_events.py` hardcoded `Path(__file__).parent / "cryptoland.db"` and
+ignored `CRYPTOLAND_DB`. Every per-chain unit sets that variable
+(`Environment=CRYPTOLAND_DB=/srv/cryptoland/%i/%i.db`) and keeps its database
+outside the shared app directory, so `aiosqlite.connect()` raised
+`sqlite3.OperationalError: unable to open database file` and **`/price-events`
+and `/alerts` returned 500 on all 32 subdomains**.
+
+The 500 was the visible half. The other half is worse: had that file existed,
+all 32 chains would have shared one `price_events` table — the exact cross-chain
+bleed the per-chain deployment model exists to prevent, and the thing a grant
+reviewer is most likely to catch.
+
+`viral.py` is the pattern to copy: it takes `db_path` as a parameter from
+`main.py` and never resolves a path itself. **If a module opens the database, it
+either receives the path or resolves it exactly as `main.py` does** —
+`Path(os.environ.get("CRYPTOLAND_DB") or (Path(__file__).parent / "cryptoland.db"))`.
+
+> Restarting all 32 units at once makes every subdomain 502 for ~20s while they
+> come up. That is expected on a shared box; check `is-active` and re-test
+> rather than reading the 502 as a failed fix.
