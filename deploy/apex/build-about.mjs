@@ -139,7 +139,7 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
   <div class="links">
     <a class="link" href="https://www.linkedin.com/in/sebbusiness/" rel="me noopener" target="_blank">LinkedIn <span>@sebbusiness</span></a>
     <button class="link" id="em" type="button" aria-label="Reveal contact email">
-      Email ${svgText('seblosiv at gmail dot com', { size: 13, weight: 600, fill: 'var(--t3)', letter: '0', label: 'Contact email' })}
+      Email ${svgText('hello at xono dot ai', { size: 13, weight: 600, fill: 'var(--t3)', letter: '0', label: 'Contact email' })}
     </button>
     <a class="link" href="/">The game <span>27 live deployments</span></a>
   </div>
@@ -180,7 +180,7 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 (function () {
   var b = document.getElementById('em');
   if (!b) return;
-  var u = ['seb','losiv'].join(''), d = ['gmail','com'].join('.');
+  var u = ['hel','lo'].join(''), d = ['xono','ai'].join('.');
   b.addEventListener('click', function () {
     location.href = 'mail' + 'to:' + u + String.fromCharCode(64) + d;
   });

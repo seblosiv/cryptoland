@@ -73,6 +73,25 @@ const VERIFY = TARGETS.map(k => {
            explorer: c.family === 'evm' && addr ? `${c.explorerUrl}/address/${addr}` : null }
 }).filter(v => v.addr)
 
+
+/* ── interactive map preview ───────────────────────────────────────────────
+   Real geography, real tile maths (the Web Mercator projection from
+   src/lib/tiles.js), and the mechanism made touchable: hover any cell and watch
+   its coordinate become the token id. Deliberately NOT wired to /api/blocks —
+   those worlds are seeded, and rendering seeded holdings as if they were players
+   would contradict the honesty section three blocks below. */
+const CITIES = [
+  ['London',56,-0.13,51.51],['New York',68,-74.01,40.71],['Tokyo',72,139.69,35.69],
+  ['Paris',44,2.35,48.86],['Berlin',34,13.40,52.52],['Warsaw',26,21.01,52.23],
+  ['Singapore',30,103.82,1.35],['Dubai',30,55.27,25.20],['São Paulo',40,-46.63,-23.55],
+  ['Lagos',26,3.38,6.52],['Mumbai',36,72.88,19.08],['Seoul',34,126.98,37.57],
+  ['Sydney',24,151.21,-33.87],['Los Angeles',44,-118.24,34.05],['Mexico City',34,-99.13,19.43],
+  ['Istanbul',30,28.98,41.01],['Toronto',26,-79.38,43.65],['Nairobi',18,36.82,-1.29],
+  ['Jakarta',30,106.85,-6.21],['Buenos Aires',26,-58.38,-34.60],['Cairo',28,31.24,30.04],
+  ['Shanghai',40,121.47,31.23],['Chicago',28,-87.63,41.88],['Madrid',24,-3.70,40.42],
+  ['Johannesburg',20,28.03,-26.20],['Bangkok',26,100.50,13.76],['Amsterdam',20,4.90,52.37],
+]
+
 const families = [...new Set(TARGETS.map(k => byKey[k].family))]
 const evmCount = TARGETS.filter(k => byKey[k].family === 'evm').length
 
@@ -149,6 +168,13 @@ text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .panel h3{font-size:14.5px;margin-bottom:9px;letter-spacing:-.01em}
 .panel p{color:var(--t2);font-size:13.5px}
 .panel code{background:var(--s3);padding:1px 5px;border-radius:4px;font-size:12px}
+.mapwrap{position:relative;border:1px solid var(--b0);background:#080808;overflow:hidden}
+#map{display:block;width:100%;height:clamp(230px,40vw,430px);cursor:crosshair}
+.readout{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;
+  padding:11px 14px;background:var(--s1);border-top:1px solid var(--b0);font-size:12px}
+.readout .rl{color:var(--t3);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
+#r-id{color:#4ade80}
 .kick{font-size:clamp(13px,1.6vw,17px);letter-spacing:.02em;color:var(--t2);margin-bottom:14px}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:1px;background:var(--b0);
   border:1px solid var(--b0)}
@@ -191,6 +217,22 @@ footer a{color:var(--t2)}
   </div>
 </header>
 
+<section id="mapsec">
+  <h2>268,435,456 tiles. Every one addressable.</h2>
+  <p class="lede">This is the real grid over real geography — the same Web Mercator projection the game
+  uses. Move across it: every cell you touch is a genuine tile, and its coordinate <em>is</em> its token id.</p>
+  <div class="mapwrap">
+    <canvas id="map" aria-label="World map divided into claimable tiles"></canvas>
+    <div class="readout" id="readout">
+      <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
+      <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
+      <span class="rl">Near</span><span class="rv" id="r-city">move across the map</span>
+    </div>
+  </div>
+  <p class="vnote">The lit clusters are the world's cities at their true coordinates. Nothing here is
+  ownership data — see <a href="#real">what is real and what is not</a>.</p>
+</section>
+
 <section id="verify">
   <h2>Don't take our word for it</h2>
   <p class="lede">Every contract below is being read from that chain's own public node, in your browser,
@@ -230,7 +272,7 @@ footer a{color:var(--t2)}
   </div>
 </section>
 
-<section>
+<section id="real">
   <h2>What is real, and what is not</h2>
   <div class="panel honest">
     <h3>Read this before you check the numbers</h3>
@@ -373,6 +415,102 @@ ${cards}
         settle(r, 'fail', 'rpc down', 'Both public endpoints refused the browser' + link + '.');
       });
   });
+})();
+</script>
+
+<script>
+/* The map. Real Web Mercator, real city coordinates, real tile maths — the same
+   projection as src/lib/tiles.js, so the cell under the cursor is genuinely the
+   tile that place would mint. The token id is computed the way the contracts
+   compute it: (x << 15) | y, which is why the readout can be trusted. */
+(function () {
+  var cv = document.getElementById('map'), out = document.getElementById('readout');
+  if (!cv) return;
+  var ctx = cv.getContext('2d'), CITIES = ${JSON.stringify(CITIES)};
+  var N = 16384, W = 0, H = 0, dpr = 1;
+  var V0 = 0.207, V1 = 0.694;                 // Mercator v at ~72°N and ~57°S
+  var band = function (v) { return (v - V0) / (V1 - V0); };
+  // Preview resolution: the real grid is 16384 wide, far past a screen, so the
+  // canvas shows a coarser lattice and maps cursor position back to true tiles.
+  var COLS = 128, ROWS = 64, lit = [], byCell = {};
+
+  function lonToU(lon) { return (lon + 180) / 360; }
+  function latToV(lat) {                    // Web Mercator, identical to tiles.js
+    var s = Math.max(-0.9999, Math.min(0.9999, Math.sin(lat * Math.PI / 180)));
+    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+  }
+  // Deterministic scatter so the map is the same image on every load.
+  var seed = 7919;
+  function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
+
+  CITIES.forEach(function (c) {
+    var name = c[0], n = c[1], u = lonToU(c[2]), v = latToV(c[3]);
+    for (var i = 0; i < n; i++) {
+      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.55) * 0.028;
+      var cu = u + Math.cos(a) * r * 0.55, cv2 = v + Math.sin(a) * r;
+      if (cu < 0 || cu > 1 || cv2 < 0 || cv2 > 1) continue;
+      var bv = band(cv2); if (bv < 0 || bv >= 1) continue;
+      var col = Math.floor(cu * COLS), row = Math.floor(bv * ROWS);
+      var k = col + ':' + row;
+      if (!byCell[k]) { byCell[k] = name; lit.push([col, row, 0.35 + rnd() * 0.65, name]); }
+    }
+  });
+
+  function size() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  var hover = null;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var cw = W / COLS, ch = H / ROWS;
+    // Lattice
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (var i = 0; i <= COLS; i += 2) { ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, H); }
+    for (var j = 0; j <= ROWS; j += 2) { ctx.moveTo(0, j * ch); ctx.lineTo(W, j * ch); }
+    ctx.stroke();
+    // Cities
+    lit.forEach(function (t) {
+      var a = 0.18 + t[2] * 0.62;
+      ctx.fillStyle = 'rgba(' + Math.round(120 + t[2] * 135) + ',' +
+        Math.round(200 + t[2] * 55) + ',' + Math.round(150 + t[2] * 60) + ',' + a.toFixed(2) + ')';
+      ctx.fillRect(t[0] * cw + 0.5, t[1] * ch + 0.5, Math.max(1.5, cw - 1), Math.max(1.5, ch - 1));
+    });
+    if (hover) {
+      ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(hover[0] * cw + 0.5, hover[1] * ch + 0.5, cw - 1, ch - 1);
+    }
+  }
+
+  function pick(ev) {
+    var r = cv.getBoundingClientRect();
+    var px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    var py = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
+    var col = Math.max(0, Math.min(COLS - 1, Math.floor(px / (W / COLS))));
+    var row = Math.max(0, Math.min(ROWS - 1, Math.floor(py / (H / ROWS))));
+    hover = [col, row];
+    // Preview cell → the real tile at its centre, then the contract's own id maths.
+    var tx = Math.min(N - 1, Math.floor((col + 0.5) / COLS * N));
+    var vy = V0 + ((row + 0.5) / ROWS) * (V1 - V0);
+    var ty = Math.min(N - 1, Math.max(0, Math.floor(vy * N)));
+    document.getElementById('r-xy').textContent = '(' + tx + ', ' + ty + ')';
+    // BigInt: (16383 << 15) | 16383 exceeds what bit-ops on Number can hold safely.
+    document.getElementById('r-id').textContent =
+      ((BigInt(tx) << 15n) | BigInt(ty)).toString();
+    document.getElementById('r-city').textContent = byCell[col + ':' + row] || 'open territory';
+    draw();
+  }
+  cv.addEventListener('mousemove', pick);
+  cv.addEventListener('touchmove', function (e) { pick(e); e.preventDefault(); }, { passive: false });
+  cv.addEventListener('mouseleave', function () { hover = null; draw(); });
+
+  size();
+  var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 140); });
 })();
 </script>
 </body></html>`
