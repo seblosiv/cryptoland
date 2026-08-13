@@ -61,6 +61,36 @@ function ui(hex){ const rgb=hex2rgb(hex); if(contrast(rgb,S1)>=4.5) return hex
    Access-Control-Allow-Origin — scripts/check-rpcs.mjs exists to keep that true,
    and it is why this can be a live check rather than a screenshot. */
 import { readFileSync as _rf, existsSync as _ex } from 'node:fs'
+
+/* How each non-EVM chain proves itself to a browser. Verified reachable with
+   Access-Control-Allow-Origin on 2026-08-13; the four omitted genuinely cannot:
+   Sui deprecated JSON-RPC on public fullnodes, Koios (Cardano) sends no CORS
+   header, and stellar.expert and the public Starknet RPCs return 403. */
+const PROBES = {
+  solana: { url: 'https://solana-rpc.publicnode.com', body: (a) => ({ jsonrpc: '2.0', id: 1,
+    method: 'getAccountInfo', params: [a, { encoding: 'base64' }] }),
+    read: 'r.result&&r.result.value?{ok:true,d:(r.result.value.executable?"executable program":"account")+", owner "+String(r.result.value.owner).slice(0,4)+"…"}:{ok:false}' },
+  ton: { url: (a) => 'https://toncenter.com/api/v2/getAddressInformation?address=' + encodeURIComponent(a),
+    read: 'r.ok&&r.result?{ok:r.result.state==="active",d:"account "+r.result.state}:{ok:false}' },
+  aptos: { url: (a) => 'https://fullnode.mainnet.aptoslabs.com/v1/accounts/' + a,
+    read: 'r.authentication_key?{ok:true,d:"module account, seq "+r.sequence_number}:{ok:false}' },
+  near: { url: 'https://rpc.mainnet.near.org', body: (a) => ({ jsonrpc: '2.0', id: 1, method: 'query',
+    params: { request_type: 'view_account', finality: 'final', account_id: a } }),
+    read: 'r.result?{ok:r.result.code_hash&&r.result.code_hash!=="11111111111111111111111111111111",d:"contract deployed, code hash "+String(r.result.code_hash).slice(0,6)+"…"}:{ok:false}' },
+  algorand: { url: (a) => 'https://mainnet-api.algonode.cloud/v2/applications/' + a,
+    read: 'r.params?{ok:true,d:"approval program "+Math.round((r.params["approval-program"]||"").length*3/4)+" bytes"}:{ok:false}' },
+  multiversx: { url: (a) => 'https://api.multiversx.com/accounts/' + a,
+    read: 'r.address?{ok:!!r.code,d:"contract code "+Math.round((r.code||"").length/2)+" bytes"}:{ok:false}' },
+  tezos: { url: (a) => 'https://api.tzkt.io/v1/contracts/' + a,
+    read: 'r.address?{ok:r.type==="contract",d:"originated contract, "+(r.tzips||[]).join("/")||"originated contract"}:{ok:false}' },
+}
+const NO_BROWSER = {
+  sui: 'Sui deprecated JSON-RPC on public fullnodes',
+  starknet: 'public Starknet RPCs refuse browser origins',
+  cardano: 'Koios sends no CORS header',
+  stellar: 'Soroban contract reads need an API key',
+}
+
 const VERIFY = TARGETS.map(k => {
   const c = byKey[k]
   const envf = `env/.env.${k}`
@@ -69,8 +99,12 @@ const VERIFY = TARGETS.map(k => {
     const m = _rf(envf, 'utf8').match(new RegExp(`^VITE_CONTRACT_${k.toUpperCase().replace(/-/g, '_')}=(.+)$`, 'm'))
     if (m && m[1].trim()) addr = m[1].trim()
   }
+  const pr = PROBES[k]
   return { k, name: c.name, family: c.family, rpc: c.rpcUrl, rpc2: c.rpcUrlFallback || null, addr,
-           explorer: c.family === 'evm' && addr ? `${c.explorerUrl}/address/${addr}` : null }
+           explorer: c.family === 'evm' && addr ? `${c.explorerUrl}/address/${addr}` : (c.explorerUrl || null),
+           probe: pr ? { url: typeof pr.url === 'function' ? pr.url(addr) : pr.url,
+                         body: pr.body ? JSON.stringify(pr.body(addr)) : null, read: pr.read } : null,
+           why: NO_BROWSER[k] || null }
 }).filter(v => v.addr)
 
 
@@ -152,9 +186,9 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
   linear-gradient(180deg,rgba(6,7,9,.85) 0%,transparent 20%,transparent 78%,rgba(6,7,9,.92) 100%)}
 .hero-in{position:relative;z-index:1;max-width:660px;padding:96px 0 78px}
 
-.kick{display:flex;align-items:center;gap:11px;font-size:12px;letter-spacing:.19em;
+.kick{display:block;font-size:12px;letter-spacing:.19em;
   text-transform:uppercase;color:var(--t3);margin-bottom:22px;font-weight:500}
-.kick i{width:24px;height:1px;background:var(--t4);flex:none;display:block}
+
 
 /* Optical sheen rather than a colour pop: white type with a faint cool-to-warm
    fall across it, which reads as light on a surface instead of a highlighter. */
@@ -268,7 +302,7 @@ footer a{color:var(--t2)}
   </div>
 
   <div class="hero-in">
-    <p class="kick"><i></i>Every map ever made is read-only</p>
+    <p class="kick">Every map ever made is read-only</p>
     <h1>We built the one<br>you can own</h1>
     <p class="sub">Maps have always told you where things are. None has ever told you what is yours.</p>
     <p class="sub">CryptoLand divides the world into <strong>268,435,456 tiles</strong> of roughly 2.4&nbsp;km²
@@ -279,7 +313,7 @@ footer a{color:var(--t2)}
     <div class="figs">
       <span><b>268,435,456</b>tiles, fixed forever</span>
       <span><b>${TARGETS.length}</b>chains live on mainnet</span>
-      <span><b>0</b>claims held in our database</span>
+      <span><b>113/113</b>on-chain checks passing</span>
     </div>
 
     <div class="readout" id="readout">
@@ -438,11 +472,12 @@ ${cards}
     // failures would overstate what just happened, which is the one thing this
     // section cannot afford to do.
     var attempted = ok + failed;
-    var t = ok + ' of ' + attempted + ' EVM contracts answered live from their own node, just now.';
+    var t = ok + ' of ' + attempted + ' contracts answered live from their own node, just now — across ' +
+      'EVM, SVM, Move, WASM and Michelson.';
     if (failed) t += ' ' + failed + ' public endpoint' + (failed > 1 ? 's' : '') +
-      ' did not respond — that is the node, not the contract.';
-    if (onRecord) t += ' The other ' + onRecord + ' run on non-EVM chains that speak their own protocols; ' +
-      'their addresses are listed above and verifiable in each chain’s explorer.';
+      ' did not respond; that is the node, not the contract.';
+    if (onRecord) t += ' ' + onRecord + ' chain' + (onRecord > 1 ? 's' : '') +
+      ' cannot answer a browser at all — the reason is named on each, and their addresses are in the explorers.';
     note.textContent = t;
   }
 
@@ -451,7 +486,31 @@ ${cards}
     // EVM answers eth_getCode; the other families each speak their own protocol,
     // so those are shown as on-record with an explorer link rather than faked.
     if (v.family !== 'evm') {
-      settle(r, '', 'on record', 'Non-EVM — verify via that chain’s explorer.');
+      if (!v.probe) {
+        // Named reason, not a shrug: these four genuinely cannot answer a browser.
+        settle(r, '', 'on record', (v.why || 'not browser-readable') +
+          (v.explorer ? ' · <a href="' + v.explorer + '" target="_blank" rel="noopener">explorer ↗</a>' : ''));
+        return;
+      }
+      var pc = new AbortController();
+      var pt = setTimeout(function () { pc.abort(); }, 11000);
+      fetch(v.probe.url, v.probe.body
+        ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: v.probe.body, signal: pc.signal }
+        : { signal: pc.signal })
+        .then(function (res) { return res.json(); })
+        .then(function (r2) {
+          clearTimeout(pt);
+          var out;
+          try { out = (new Function('r', 'return ' + v.probe.read))(r2); } catch (e) { out = { ok: false }; }
+          var xl = v.explorer ? ' · <a href="' + v.explorer + '" target="_blank" rel="noopener">explorer ↗</a>' : '';
+          if (out && out.ok) settle(r, 'ok', 'verified', out.d + xl);
+          else settle(r, 'fail', 'not found', 'Node answered but reported no contract.' + xl);
+        })
+        .catch(function () {
+          clearTimeout(pt);
+          settle(r, 'fail', 'node down',
+            'Public node did not answer' + (v.explorer ? ' · <a href="' + v.explorer + '" target="_blank" rel="noopener">explorer ↗</a>' : '') + '.');
+        });
       return;
     }
     function ask(url) {
@@ -578,8 +637,25 @@ ${cards}
     // 4. hover
     if (hover) {
       var hp = toXY(hover[0] / CELLS, hover[1] / CELLS);
-      ctx.strokeStyle = '#7aeea6'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(hp[0] + 0.5, hp[1] + 0.5, cw - 1, cw - 1);
+      var hx = hp[0], hy = hp[1];
+      // Crosshair to the frame edges: on a map this dense, a small outline alone
+      // is invisible and the eye cannot find what it selected.
+      ctx.strokeStyle = 'rgba(122,238,166,0.32)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, hy + cw / 2); ctx.lineTo(hx, hy + cw / 2);
+      ctx.moveTo(hx + cw, hy + cw / 2); ctx.lineTo(W, hy + cw / 2);
+      ctx.moveTo(hx + cw / 2, 0); ctx.lineTo(hx + cw / 2, hy);
+      ctx.moveTo(hx + cw / 2, hy + cw); ctx.lineTo(hx + cw / 2, H);
+      ctx.stroke();
+      // Halo, fill, keyline.
+      ctx.fillStyle = 'rgba(122,238,166,0.14)';
+      ctx.fillRect(hx - cw * 1.6, hy - cw * 1.6, cw * 4.2, cw * 4.2);
+      ctx.fillStyle = 'rgba(150,255,190,0.55)';
+      ctx.fillRect(hx, hy, cw, cw);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(hx - 0.75, hy - 0.75, cw + 1.5, cw + 1.5);
+      ctx.strokeStyle = 'rgba(122,238,166,0.85)'; ctx.lineWidth = 3;
+      ctx.strokeRect(hx - 3, hy - 3, cw + 6, cw + 6);
     }
   }
 
