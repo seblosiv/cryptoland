@@ -190,7 +190,7 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 .inst .rl{color:var(--t4);font-size:9px;letter-spacing:.2em;text-transform:uppercase}
 .inst .rv{color:var(--t1);font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#r-id{color:#7aeea6}
+#r-id{color:#e8ecf2}
 
 /* A discreet way down, replacing a sentence that told people to look. */
 .cue{position:absolute;left:max(24px,calc(50vw - 570px));bottom:34px;z-index:2;
@@ -202,8 +202,8 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
   background:linear-gradient(90deg,var(--b2),transparent)}
 /* Scrim, painted — never a blur. Reading has to win over atmosphere. */
 .hero-scrim{position:absolute;inset:0;background:
-  linear-gradient(97deg,rgba(6,7,9,.97) 0%,rgba(6,7,9,.93) 30%,rgba(6,7,9,.62) 52%,rgba(6,7,9,.1) 78%,transparent 100%),
-  linear-gradient(180deg,rgba(6,7,9,.85) 0%,transparent 20%,transparent 78%,rgba(6,7,9,.92) 100%)}
+  linear-gradient(97deg,rgba(5,6,8,.97) 0%,rgba(5,6,8,.93) 30%,rgba(5,6,8,.6) 52%,rgba(5,6,8,.08) 78%,transparent 100%),
+  linear-gradient(180deg,rgba(5,6,8,.88) 0%,transparent 20%,transparent 76%,rgba(5,6,8,.94) 100%)}
 .hero-in{position:relative;z-index:1;max-width:620px;padding:104px 0 92px}
 
 .kick{display:block;font-size:12px;letter-spacing:.19em;
@@ -629,8 +629,8 @@ ${cards}
 
     // 1. basemap
     if (tiles.length) {
-      ctx.save(); ctx.globalAlpha = 0.85;
-      ctx.filter = 'grayscale(1) brightness(0.66) contrast(1.3)';
+      ctx.save(); ctx.globalAlpha = 0.95;
+      ctx.filter = 'grayscale(1) brightness(0.581) contrast(12) brightness(0.72)';
       var t = P.w / 4;
       for (var i = 0; i < tiles.length; i++) {
         ctx.drawImage(tiles[i].im, Math.round(P.left + tiles[i].x * t),
@@ -641,7 +641,7 @@ ${cards}
 
     // 2. the claimable lattice
     var cw = P.w / CELLS;
-    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,220,228,0.055)'; ctx.lineWidth = 1;
     ctx.beginPath();
     for (var c1 = 0; c1 <= CELLS; c1 += 2) {
       var x = P.left + c1 * cw; if (x < -2 || x > W + 2) continue;
@@ -657,8 +657,8 @@ ${cards}
     for (var j = 0; j < lit.length; j++) {
       var p = toXY(lit[j][0] / CELLS, lit[j][1] / CELLS), w = lit[j][2];
       if (p[0] < -cw || p[0] > W || p[1] < -cw || p[1] > H) continue;
-      ctx.fillStyle = 'rgba(' + Math.round(150 + w * 105) + ',' + Math.round(225 + w * 30) +
-        ',' + Math.round(180 + w * 50) + ',' + (0.2 + w * 0.55).toFixed(2) + ')';
+      var lv = Math.round(196 + w * 59);
+      ctx.fillStyle = 'rgba(' + lv + ',' + lv + ',' + (lv + 4) + ',' + (0.14 + w * 0.5).toFixed(2) + ')';
       ctx.fillRect(p[0], p[1], Math.max(1.5, cw - 1), Math.max(1.5, cw - 1));
     }
 
@@ -668,7 +668,7 @@ ${cards}
       var hx = hp[0], hy = hp[1];
       // Crosshair to the frame edges: on a map this dense, a small outline alone
       // is invisible and the eye cannot find what it selected.
-      ctx.strokeStyle = 'rgba(122,238,166,0.32)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, hy + cw / 2); ctx.lineTo(hx, hy + cw / 2);
       ctx.moveTo(hx + cw, hy + cw / 2); ctx.lineTo(W, hy + cw / 2);
@@ -676,14 +676,12 @@ ${cards}
       ctx.moveTo(hx + cw / 2, hy + cw); ctx.lineTo(hx + cw / 2, H);
       ctx.stroke();
       // Halo, fill, keyline.
-      ctx.fillStyle = 'rgba(122,238,166,0.14)';
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
       ctx.fillRect(hx - cw * 1.6, hy - cw * 1.6, cw * 4.2, cw * 4.2);
-      ctx.fillStyle = 'rgba(150,255,190,0.55)';
+      ctx.fillStyle = 'rgba(255,255,255,0.72)';
       ctx.fillRect(hx, hy, cw, cw);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(hx - 0.75, hy - 0.75, cw + 1.5, cw + 1.5);
-      ctx.strokeStyle = 'rgba(122,238,166,0.85)'; ctx.lineWidth = 3;
-      ctx.strokeRect(hx - 3, hy - 3, cw + 6, cw + 6);
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.strokeRect(hx - 2, hy - 2, cw + 4, cw + 4);
     }
   }
 
