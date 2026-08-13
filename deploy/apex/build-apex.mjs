@@ -174,15 +174,13 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 -webkit-font-smoothing:antialiased;padding:0 20px 90px}
 .wrap{max-width:1080px;margin:0 auto}
 /* ── hero ────────────────────────────────────────────────────────────────
-   Full-bleed, with the real basemap drifting behind the words. Everything that
+   Full-bleed, with the real basemap held still behind the words. Everything that
    made the old block read as a template is gone: no accent-coloured headline, no
    rounded stat cards, no flat ground. */
 .hero{position:relative;min-height:min(94vh,880px);display:flex;align-items:center;
   margin:0 calc(50% - 50vw);padding:0 max(24px,calc(50vw - 570px));overflow:hidden;
   border-bottom:1px solid var(--b0)}
 .hero-bg{position:absolute;inset:0;z-index:0}
-/* Two world-widths side by side: the planet wraps, so panning one width and
-   resetting is seamless rather than a visible cut. */
 #heroMap{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
 .attrib{position:absolute;right:10px;bottom:8px;z-index:2;font-size:9.5px;color:var(--t3);
   background:rgba(0,0,0,.45);padding:1px 6px;border-radius:3px}
@@ -261,18 +259,19 @@ h1{font-size:clamp(40px,7vw,92px);letter-spacing:-.042em;font-weight:800;line-he
 @media (max-width:900px){
   /* The map gets the top of the screen; the copy sits under it on solid ground.
      Full height so both get room rather than fighting over the same pixels. */
-  .hero{min-height:96svh;padding-left:max(20px,4vw);padding-right:max(20px,4vw);
-    align-items:flex-end}
-  .hero-in{padding:0 0 40px;max-width:none}
+  .hero{min-height:0;display:block;padding:0 0 46px;align-items:stretch}
+  .hero-bg{position:relative;inset:auto;height:44svh;min-height:290px}
+  .hero-in{position:relative;padding:30px max(20px,4vw) 0;max-width:none}
   #heroMap{opacity:1}
+  /* Only the top edge and the seam into the copy are darkened — the middle of
+     the band stays fully legible map, which is the point of showing it. */
   .hero-scrim{background:
     linear-gradient(180deg,
-      rgba(5,6,8,.34) 0%,
-      rgba(5,6,8,.04) 10%,
-      rgba(5,6,8,.09) 19%,
-      rgba(5,6,8,.90) 29%,
-      rgba(5,6,8,.995) 37%,
-      rgba(5,6,8,1) 44%,
+      rgba(5,6,8,.62) 0%,
+      rgba(5,6,8,.12) 22%,
+      rgba(5,6,8,.06) 55%,
+      rgba(5,6,8,.55) 82%,
+      rgba(5,6,8,.94) 94%,
       rgba(5,6,8,1) 100%)}
   /* Figures were wrapping to a stray third row with a dangling rule. */
   .figs{display:grid;grid-template-columns:1fr 1fr;gap:18px 0;margin-top:30px;padding-top:20px}
@@ -346,22 +345,6 @@ transition:color .18s ease}
 .panel h3::before{content:"";display:block;width:20px;height:1px;background:var(--b2);margin-bottom:14px}
 .panel p{color:var(--t3);font-size:13px;line-height:1.68}
 .panel code{background:var(--s3);padding:1px 5px;border-radius:4px;font-size:12px}
-.mapwrap{position:relative;border:1px solid var(--b0);background:#05070a;overflow:hidden;
-  aspect-ratio:1 / 0.487}
-.basemap{position:absolute;left:0;width:100%;height:154%;top:-42.5%;
-  display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);
-  filter:grayscale(1) brightness(.42) contrast(1.15);opacity:.62}
-.basemap img{width:100%;height:100%;display:block;object-fit:cover}
-.attrib{position:absolute;right:6px;bottom:4px;font-size:9.5px;color:var(--t3);
-  background:rgba(0,0,0,.5);padding:1px 5px;border-radius:3px}
-.attrib a{color:var(--t3)}
-#map{position:absolute;inset:0;display:block;width:100%;height:100%;cursor:crosshair}
-.readout{border:1px solid var(--b0);border-top:0;display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;
-  padding:11px 14px;background:var(--s1);border-top:1px solid var(--b0);font-size:12px}
-.readout .rl{color:var(--t3);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
-.readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
-#r-id{color:#4ade80}
-.kick{font-size:clamp(13px,1.6vw,17px);letter-spacing:.02em;color:var(--t2);margin-bottom:14px}
 .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:var(--b0);
   border-top:1px solid var(--b1);border-bottom:1px solid var(--b1)}
 .vrow{background:var(--bg);padding:16px 18px;display:flex;flex-direction:column;gap:7px;min-height:96px}
@@ -411,9 +394,9 @@ footer a:hover{color:var(--t1)}
     <div class="inst" id="readout">
       <div class="inst-h"><span>Survey</span><i class="live"></i></div>
       <div class="inst-b">
-        <div><span class="rl">Tile</span><span class="rv mono" id="r-xy">— — — —</span></div>
-        <div><span class="rl">Token</span><span class="rv mono" id="r-id">—</span></div>
-        <div><span class="rl">Near</span><span class="rv" id="r-city">move across the map</span></div>
+        <div><span class="rl">Tile</span><span class="rv mono" id="r-xy">(8128, 5440)</span></div>
+        <div><span class="rl">Token</span><span class="rv mono" id="r-id">266343744</span></div>
+        <div><span class="rl">Near</span><span class="rv" id="r-city">London</span></div>
       </div>
     </div>
   </div>
@@ -717,8 +700,9 @@ ${cards}
     }
   });
 
-  var W = 0, H = 0, dpr = 1, P = null, hover = null, drift = 0;
+  var W = 0, H = 0, dpr = 1, P = null, hover = null;
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TOUR = [], ti = 0, touring = true, pulse = 1, tStart = 0, resume = null;
   function size() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
@@ -729,17 +713,15 @@ ${cards}
     var narrow = W < 900;
     // A phone showing W*1.55 of world gets open ocean and no coast. Zoom out,
     // and bias the frame upward so the land sits in the visible top half.
-    var worldW = W * (narrow ? 2.5 : 1.55), V0 = 0.207, V1 = 0.694;
+    var worldW = W * (narrow ? 2.2 : 1.55), V0 = 0.207, V1 = 0.694;
     var bandH = worldW * (V1 - V0);
     P = { w: worldW,
-          left: narrow ? -worldW * 0.30 : -worldW * 0.06,
-          top: -V0 * worldW - (bandH - H) * (narrow ? 0.24 : 0.5) };
+          left: narrow ? -worldW * 0.22 : -worldW * 0.06,
+          top: -V0 * worldW - (bandH - H) * (narrow ? 0.24 : 0.5), narrow: narrow };
+    buildTour();
     draw();
   }
-  var toXY = function (u, v) {
-    var x = P.left + ((u - drift + 1) % 1) * P.w;
-    return [x, P.top + v * P.w];
-  };
+  var toXY = function (u, v) { return [P.left + u * P.w, P.top + v * P.w]; };
 
   function draw() {
     if (!P || !W) return;
@@ -750,14 +732,8 @@ ${cards}
       ctx.save(); ctx.globalAlpha = 0.95;
       var t = P.w / 4;
       for (var i = 0; i < tiles.length; i++) {
-        var bx = P.left + tiles[i].x * t - drift * P.w;
-        // Draw at both wrap positions; whichever is off-frame costs nothing.
-        for (var rep = 0; rep < 2; rep++) {
-          var px = bx + rep * P.w;
-          if (px > W || px + t < 0) continue;
-          ctx.drawImage(tiles[i].im, Math.round(px), Math.round(P.top + tiles[i].y * t),
-            Math.ceil(t) + 1, Math.ceil(t) + 1);
-        }
+        ctx.drawImage(tiles[i].im, Math.round(P.left + tiles[i].x * t),
+          Math.round(P.top + tiles[i].y * t), Math.ceil(t) + 1, Math.ceil(t) + 1);
       }
       ctx.restore();
     }
@@ -785,13 +761,13 @@ ${cards}
       ctx.fillRect(p[0], p[1], Math.max(1.5, cw - 1), Math.max(1.5, cw - 1));
     }
 
-    // 4. hover
+    // 4. the surveyed tile
     if (hover) {
       var hp = toXY(hover[0] / CELLS, hover[1] / CELLS);
-      var hx = hp[0], hy = hp[1];
+      var hx = hp[0], hy = hp[1], a = pulse;
       // Crosshair to the frame edges: on a map this dense, a small outline alone
       // is invisible and the eye cannot find what it selected.
-      ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.30 * a).toFixed(3) + ')'; ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, hy + cw / 2); ctx.lineTo(hx, hy + cw / 2);
       ctx.moveTo(hx + cw, hy + cw / 2); ctx.lineTo(W, hy + cw / 2);
@@ -799,46 +775,88 @@ ${cards}
       ctx.moveTo(hx + cw / 2, hy + cw); ctx.lineTo(hx + cw / 2, H);
       ctx.stroke();
       // Halo, fill, keyline.
-      ctx.fillStyle = 'rgba(255,255,255,0.10)';
-      ctx.fillRect(hx - cw * 1.6, hy - cw * 1.6, cw * 4.2, cw * 4.2);
-      ctx.fillStyle = 'rgba(255,255,255,0.72)';
+      // The halo contracts as it lands, so the eye is led to the cell rather
+      // than having to search the frame for what changed.
+      var g = cw * (1.6 + (1 - a) * 2.2);
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.10 * a).toFixed(3) + ')';
+      ctx.fillRect(hx - g, hy - g, cw + g * 2, cw + g * 2);
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.72 * a).toFixed(3) + ')';
       ctx.fillRect(hx, hy, cw, cw);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,' + a.toFixed(3) + ')'; ctx.lineWidth = 2;
       ctx.strokeRect(hx - 2, hy - 2, cw + 4, cw + 4);
+    }
+  }
+
+  // One place that writes the instrument, whether a finger or the tour drives it.
+  function survey(ci, cj, name) {
+    hover = [ci, cj];
+    var tx = Math.min(N - 1, Math.floor(((ci + 0.5) / CELLS) * N));
+    var ty = Math.min(N - 1, Math.floor(((cj + 0.5) / CELLS) * N));
+    document.getElementById('r-xy').textContent = '(' + tx + ', ' + ty + ')';
+    document.getElementById('r-id').textContent = ((BigInt(tx) << 15n) | BigInt(ty)).toString();
+    document.getElementById('r-city').textContent = name;
+  }
+
+  // Only cities actually inside the current frame — the phone crops to a
+  // different swath than the desktop, and touring a tile nobody can see reads
+  // as a dead panel.
+  function buildTour() {
+    TOUR = [];
+    var m = (P.w / CELLS) * 3, x0 = P.narrow ? m : W * 0.52;
+    CITIES.forEach(function (c) {
+      var ci = Math.floor(lonToU(c[2]) * CELLS), cj = Math.floor(latToV(c[3]) * CELLS);
+      var p = toXY(ci / CELLS, cj / CELLS);
+      if (p[0] > x0 && p[0] < W - m && p[1] > m && p[1] < H - m) TOUR.push([ci, cj, c[0]]);
+    });
+    if (touring && TOUR.length) {
+      var e = TOUR[ti % TOUR.length];
+      survey(e[0], e[1], e[2]);
     }
   }
 
   function pick(ev) {
     if (!P) return;
+    touring = false; pulse = 1; clearTimeout(resume);
     var r = cv.getBoundingClientRect();
     var px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
     var py = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
-    var u = ((px - P.left) / P.w + drift) % 1, v = (py - P.top) / P.w;
-    if (u < 0) u += 1;
-    if (v < 0 || v >= 1) return;
+    var u = (px - P.left) / P.w, v = (py - P.top) / P.w;
+    if (u < 0 || u >= 1 || v < 0 || v >= 1) return;
     var ci = Math.floor(u * CELLS), cj = Math.floor(v * CELLS);
-    hover = [ci, cj];
-    // The cell's centre, as a real tile, then the contract's own id maths.
-    var tx = Math.min(N - 1, Math.floor(((ci + 0.5) / CELLS) * N));
-    var ty = Math.min(N - 1, Math.floor(((cj + 0.5) / CELLS) * N));
-    document.getElementById('r-xy').textContent = '(' + tx + ', ' + ty + ')';
-    document.getElementById('r-id').textContent = ((BigInt(tx) << 15n) | BigInt(ty)).toString();
-    document.getElementById('r-city').textContent = byCell[ci + ':' + cj] || 'open territory';
+    survey(ci, cj, byCell[ci + ':' + cj] || 'open territory');
     draw();
+    release();
+  }
+  // Hand the map back a few seconds after the visitor stops, so it is never
+  // left frozen on whatever they touched last.
+  function release() {
+    clearTimeout(resume);
+    resume = setTimeout(function () { touring = true; tStart = 0; }, 3500);
   }
   cv.addEventListener('mousemove', pick);
+  cv.addEventListener('touchstart', function (e) { pick(e); }, { passive: true });
   cv.addEventListener('touchmove', function (e) { pick(e); e.preventDefault(); }, { passive: false });
-  cv.addEventListener('mouseleave', function () { hover = null; draw(); });
+  cv.addEventListener('touchend', release, { passive: true });
+  cv.addEventListener('mouseleave', release);
 
   size();
   var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 150); });
 
-  // One full revolution per ~14 minutes: present, never distracting.
+  // The survey walks the world: a tile lights, is read out, and hands over to
+  // the next city. Nothing else on the map moves.
   if (!still) {
-    var last = 0;
     requestAnimationFrame(function step(ts) {
-      if (last) { drift = (drift + (ts - last) * 0.0000012) % 1; draw(); }
-      last = ts;
+      if (touring && TOUR.length) {
+        if (!tStart || ts - tStart > 3000) {
+          if (tStart) ti++;
+          var e = TOUR[ti % TOUR.length];
+          survey(e[0], e[1], e[2]);
+          tStart = ts;
+        }
+        var k = Math.min(1, (ts - tStart) / 620);
+        var eased = 1 - Math.pow(1 - k, 3);
+        if (eased !== pulse) { pulse = eased; draw(); }
+      }
       requestAnimationFrame(step);
     });
   }

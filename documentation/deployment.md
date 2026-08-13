@@ -515,6 +515,48 @@ link. It cannot go stale, it renders on a phone, and the contract address on it
 is one the reviewer can paste straight into an explorer.
 
 
+## The apex hero map
+
+One canvas in `deploy/apex/build-apex.mjs` draws the OSM basemap, the claimable
+lattice, the world's cities at their true coordinates and the surveyed tile —
+with **one projection**, so the tile the readout names is the tile the basemap is
+showing. Three decisions there were each paid for by a bug.
+
+**Monochrome is done per pixel, not with `ctx.filter`.** `ctx.filter` is ignored
+by older iOS Safari — silently, so the raw blue OSM tiles just paint through and
+nothing errors. Chromium supports it, which is why headless testing never caught
+it. The transform is now a 256-entry LUT (luminance → `brightness(0.581)` →
+`contrast(12)` → `brightness(0.72)`, the pivot sitting between OSM's ocean at
+luma 200 and its land at 239 so they separate instead of both clipping white).
+Tiles load with `crossOrigin='anonymous'` — OSM sends `ACAO:*` — so the canvas
+stays readable; a tainted canvas falls back to `ctx.filter` rather than to
+nothing. **Verify by measuring, not looking**: sample the rendered canvas and
+assert 0% of pixels have channel separation.
+
+**The map surveys itself, because a phone has no cursor.** The readout used to
+say "move across the map", which on a touch device is an instruction that cannot
+be followed and a panel that can never fill. It now walks real cities on a ~3s
+cadence, lighting each tile with an eased 620ms halo and reading out its true
+coordinate and `(x << 15) | y` token id. Pointing at the map takes over; **an
+idle timer hands it back**, not `mouseleave` — a cursor resting on the map never
+leaves it, so waiting for exit stopped the survey for good after one stray move.
+`buildTour()` only queues cities inside the current frame, and on wide screens
+only the half not covered by the copy, since a crosshair under the headline is
+one nobody sees.
+
+**Mobile gives the map its own band.** Stacking copy *on* the map and relying on
+a gradient to keep it readable fails exactly where the landmass is brightest.
+Under 900px the hero is a block: map band on top (`44svh`), copy on solid black
+beneath, nothing overlapping and nothing needing rescue by a scrim. The phone
+frame is also a wider swath (`W * 2.2`, offset `0.22`) so the Americas, Europe
+and Africa are all in shot — the old crop put New York and São Paulo off-frame,
+which emptied half the tour.
+
+> Watch for **stale CSS outliving its markup**. The block that styled a second,
+> since-removed map survived and was still repainting the token id green,
+> retracking the hero eyebrow and re-insetting the attribution. Dead selectors
+> are not inert when they share names with live ones.
+
 ## The apex verifies itself
 
 `xono.ai/` opens on the insight, then — before it argues anything — proves its own
