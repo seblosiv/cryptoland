@@ -135,8 +135,17 @@ body{background:var(--bg);color:var(--t1);font:15px/1.6 -apple-system,BlinkMacSy
 .hero-bg{position:absolute;inset:0;z-index:0}
 /* Two world-widths side by side: the planet wraps, so panning one width and
    resetting is seamless rather than a visible cut. */
-#heroMap{position:absolute;inset:0;width:100%;height:100%;display:block;
-  filter:grayscale(1) brightness(.66) contrast(1.3);opacity:.85}
+#heroMap{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.attrib{position:absolute;right:10px;bottom:8px;z-index:2;font-size:9.5px;color:var(--t3);
+  background:rgba(0,0,0,.45);padding:1px 6px;border-radius:3px}
+.attrib a{color:var(--t3)}
+/* The scrim must not eat the pointer, or the left half of the map is dead. */
+.hero-scrim{pointer-events:none}
+.readout{display:flex;flex-wrap:wrap;gap:4px 26px;align-items:baseline;margin-top:26px;
+  padding-top:18px;border-top:1px solid var(--b1);font-size:12.5px}
+.readout .rl{color:var(--t3);font-size:10px;letter-spacing:.16em;text-transform:uppercase}
+.readout .rv{color:var(--t1);font-variant-numeric:tabular-nums}
+#r-id{color:#7aeea6}
 /* Scrim, painted — never a blur. Reading has to win over atmosphere. */
 .hero-scrim{position:absolute;inset:0;background:
   linear-gradient(97deg,rgba(6,7,9,.97) 0%,rgba(6,7,9,.93) 30%,rgba(6,7,9,.62) 52%,rgba(6,7,9,.1) 78%,transparent 100%),
@@ -255,6 +264,7 @@ footer a{color:var(--t2)}
   <div class="hero-bg" aria-hidden="true">
     <canvas id="heroMap"></canvas>
     <div class="hero-scrim"></div>
+    <span class="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
   </div>
 
   <div class="hero-in">
@@ -272,6 +282,11 @@ footer a{color:var(--t2)}
       <span><b>0</b>claims held in our database</span>
     </div>
 
+    <div class="readout" id="readout">
+      <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
+      <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
+      <span class="rl">Near</span><span class="rv" id="r-city">move across the map →</span>
+    </div>
     <p class="handoff">Every contract below is verifying itself in your browser as you read this.</p>
   </div>
 
@@ -281,24 +296,6 @@ footer a{color:var(--t2)}
     <a id="from-link" href="#">Go back to that build →</a></span>
   </div>
 </header>
-
-<section id="mapsec">
-  <h2>268,435,456 tiles. Every one addressable.</h2>
-  <p class="lede">This is the real grid over real geography — the same Web Mercator projection the game
-  uses. Move across it: every cell you touch is a genuine tile, and its coordinate <em>is</em> its token id.</p>
-  <div class="mapwrap">
-    <div class="basemap" id="basemap" aria-hidden="true"></div>
-    <canvas id="map" aria-label="World map divided into claimable tiles"></canvas>
-    <span class="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</span>
-  </div>
-  <div class="readout" id="readout">
-    <span class="rl">Tile</span><span class="rv mono" id="r-xy">—</span>
-    <span class="rl">Token id</span><span class="rv mono" id="r-id">—</span>
-    <span class="rl">Near</span><span class="rv" id="r-city">move across the map</span>
-  </div>
-  <p class="vnote">The lit clusters are the world's cities at their true coordinates. Nothing here is
-  ownership data — see <a href="#real">what is real and what is not</a>.</p>
-</section>
 
 <section id="verify">
   <h2>Don't take our word for it</h2>
@@ -485,160 +482,127 @@ ${cards}
 })();
 </script>
 
+
 <script>
-/* The map. Real Web Mercator, real city coordinates, real tile maths — the same
-   projection as src/lib/tiles.js, so the cell under the cursor is genuinely the
-   tile that place would mint. The token id is computed the way the contracts
-   compute it: (x << 15) | y, which is why the readout can be trusted. */
+/* The hero map. One canvas doing everything: the real OSM basemap, the claimable
+   lattice over it, the world's cities at their true coordinates, and the hover
+   readout. There is exactly one projection here, so the tile reported under the
+   cursor is the tile the basemap is showing. */
 (function () {
-  var cv = document.getElementById('map'), out = document.getElementById('readout');
+  var cv = document.getElementById('heroMap');
   if (!cv) return;
-  // The real basemap, same source the game uses. z=2 is 4x4 for the whole world;
-  // rows 0-2 cover every inhabited latitude, so 12 tiles at ~6 KB each.
-  var bm = document.getElementById('basemap');
-  if (bm) {
-    for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
+  var ctx = cv.getContext('2d'), tiles = [], N = 16384, CELLS = 128;
+
+  for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
+    (function (x, y) {
       var im = new Image();
-      im.loading = 'lazy'; im.decoding = 'async'; im.alt = '';
-      im.src = 'https://tile.openstreetmap.org/2/' + rx + '/' + ry + '.png';
-      bm.appendChild(im);
-    }
+      im.onload = function () { tiles.push({ x: x, y: y, im: im }); draw(); };
+      im.src = 'https://tile.openstreetmap.org/2/' + x + '/' + y + '.png';
+    })(rx, ry);
   }
-  var ctx = cv.getContext('2d'), CITIES = ${JSON.stringify(CITIES)};
-  var N = 16384, W = 0, H = 0, dpr = 1;
-  var V0 = 0.207, V1 = 0.694;                 // Mercator v at ~72°N and ~57°S
-  var band = function (v) { return (v - V0) / (V1 - V0); };
-  // Preview resolution: the real grid is 16384 wide, far past a screen, so the
-  // canvas shows a coarser lattice and maps cursor position back to true tiles.
-  var COLS = 128, ROWS = 64, lit = [], byCell = {};
 
-  function lonToU(lon) { return (lon + 180) / 360; }
-  function latToV(lat) {                    // Web Mercator, identical to tiles.js
-    var s = Math.max(-0.9999, Math.min(0.9999, Math.sin(lat * Math.PI / 180)));
-    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
-  }
-  // Deterministic scatter so the map is the same image on every load.
-  var seed = 7919;
+  // Cities, placed by the same Web Mercator maths the game uses (src/lib/tiles.js).
+  var CITIES = ${JSON.stringify(CITIES)}, lit = [], byCell = {}, seed = 7919;
   function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
-
+  function lonToU(l) { return (l + 180) / 360; }
+  function latToV(la) {
+    var s2 = Math.max(-0.9999, Math.min(0.9999, Math.sin(la * Math.PI / 180)));
+    return 0.5 - Math.log((1 + s2) / (1 - s2)) / (4 * Math.PI);
+  }
   CITIES.forEach(function (c) {
-    var name = c[0], n = c[1], u = lonToU(c[2]), v = latToV(c[3]);
-    for (var i = 0; i < n; i++) {
-      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.85) * 0.020;
-      var cu = u + Math.cos(a) * r * 0.55, cv2 = v + Math.sin(a) * r;
-      if (cu < 0 || cu > 1 || cv2 < 0 || cv2 > 1) continue;
-      var bv = band(cv2); if (bv < 0 || bv >= 1) continue;
-      var col = Math.floor(cu * COLS), row = Math.floor(bv * ROWS);
-      var k = col + ':' + row;
-      if (!byCell[k]) { byCell[k] = name; lit.push([col, row, 0.35 + rnd() * 0.65, name]); }
+    var u = lonToU(c[2]), v = latToV(c[3]);
+    for (var i = 0; i < c[1]; i++) {
+      var a = rnd() * Math.PI * 2, r = Math.pow(rnd(), 0.85) * 0.017;
+      var cu = u + Math.cos(a) * r * 0.55, cvv = v + Math.sin(a) * r;
+      if (cu < 0 || cu > 1 || cvv < 0 || cvv > 1) continue;
+      var ci = Math.floor(cu * CELLS), cj = Math.floor(cvv * CELLS);
+      var k = ci + ':' + cj;
+      if (!byCell[k]) { byCell[k] = c[0]; lit.push([ci, cj, 0.35 + rnd() * 0.65]); }
     }
   });
 
+  var W = 0, H = 0, dpr = 1, P = null, hover = null;
   function size() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // One projection, defined once. Frames the inhabited band (Mercator v
+    // 0.207-0.694) and lets the world bleed off the right edge.
+    var worldW = W * 1.55, V0 = 0.207, V1 = 0.694;
+    P = { w: worldW, left: -worldW * 0.06,
+          top: -V0 * worldW - (worldW * (V1 - V0) - H) / 2 };
     draw();
   }
+  var toXY = function (u, v) { return [P.left + u * P.w, P.top + v * P.w]; };
 
-  var hover = null;
   function draw() {
+    if (!P || !W) return;
     ctx.clearRect(0, 0, W, H);
-    var cw = W / COLS, ch = H / ROWS;
-    // Lattice
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+
+    // 1. basemap
+    if (tiles.length) {
+      ctx.save(); ctx.globalAlpha = 0.85;
+      ctx.filter = 'grayscale(1) brightness(0.66) contrast(1.3)';
+      var t = P.w / 4;
+      for (var i = 0; i < tiles.length; i++) {
+        ctx.drawImage(tiles[i].im, Math.round(P.left + tiles[i].x * t),
+          Math.round(P.top + tiles[i].y * t), Math.ceil(t) + 1, Math.ceil(t) + 1);
+      }
+      ctx.restore();
+    }
+
+    // 2. the claimable lattice
+    var cw = P.w / CELLS;
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
     ctx.beginPath();
-    for (var i = 0; i <= COLS; i += 2) { ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, H); }
-    for (var j = 0; j <= ROWS; j += 2) { ctx.moveTo(0, j * ch); ctx.lineTo(W, j * ch); }
+    for (var c1 = 0; c1 <= CELLS; c1 += 2) {
+      var x = P.left + c1 * cw; if (x < -2 || x > W + 2) continue;
+      ctx.moveTo(x, 0); ctx.lineTo(x, H);
+    }
+    for (var r1 = 0; r1 <= CELLS; r1 += 2) {
+      var y = P.top + r1 * cw; if (y < -2 || y > H + 2) continue;
+      ctx.moveTo(0, y); ctx.lineTo(W, y);
+    }
     ctx.stroke();
-    // Cities
-    lit.forEach(function (t) {
-      var a = 0.18 + t[2] * 0.62;
-      ctx.fillStyle = 'rgba(' + Math.round(120 + t[2] * 135) + ',' +
-        Math.round(200 + t[2] * 55) + ',' + Math.round(150 + t[2] * 60) + ',' + a.toFixed(2) + ')';
-      ctx.fillRect(t[0] * cw + 0.5, t[1] * ch + 0.5, Math.max(1.5, cw - 1), Math.max(1.5, ch - 1));
-    });
+
+    // 3. cities
+    for (var j = 0; j < lit.length; j++) {
+      var p = toXY(lit[j][0] / CELLS, lit[j][1] / CELLS), w = lit[j][2];
+      if (p[0] < -cw || p[0] > W || p[1] < -cw || p[1] > H) continue;
+      ctx.fillStyle = 'rgba(' + Math.round(150 + w * 105) + ',' + Math.round(225 + w * 30) +
+        ',' + Math.round(180 + w * 50) + ',' + (0.2 + w * 0.55).toFixed(2) + ')';
+      ctx.fillRect(p[0], p[1], Math.max(1.5, cw - 1), Math.max(1.5, cw - 1));
+    }
+
+    // 4. hover
     if (hover) {
-      ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(hover[0] * cw + 0.5, hover[1] * ch + 0.5, cw - 1, ch - 1);
+      var hp = toXY(hover[0] / CELLS, hover[1] / CELLS);
+      ctx.strokeStyle = '#7aeea6'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(hp[0] + 0.5, hp[1] + 0.5, cw - 1, cw - 1);
     }
   }
 
   function pick(ev) {
+    if (!P) return;
     var r = cv.getBoundingClientRect();
     var px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
     var py = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
-    var col = Math.max(0, Math.min(COLS - 1, Math.floor(px / (W / COLS))));
-    var row = Math.max(0, Math.min(ROWS - 1, Math.floor(py / (H / ROWS))));
-    hover = [col, row];
-    // Preview cell → the real tile at its centre, then the contract's own id maths.
-    var tx = Math.min(N - 1, Math.floor((col + 0.5) / COLS * N));
-    var vy = V0 + ((row + 0.5) / ROWS) * (V1 - V0);
-    var ty = Math.min(N - 1, Math.max(0, Math.floor(vy * N)));
+    var u = (px - P.left) / P.w, v = (py - P.top) / P.w;
+    if (u < 0 || u >= 1 || v < 0 || v >= 1) return;
+    var ci = Math.floor(u * CELLS), cj = Math.floor(v * CELLS);
+    hover = [ci, cj];
+    // The cell's centre, as a real tile, then the contract's own id maths.
+    var tx = Math.min(N - 1, Math.floor(((ci + 0.5) / CELLS) * N));
+    var ty = Math.min(N - 1, Math.floor(((cj + 0.5) / CELLS) * N));
     document.getElementById('r-xy').textContent = '(' + tx + ', ' + ty + ')';
-    // BigInt: (16383 << 15) | 16383 exceeds what bit-ops on Number can hold safely.
-    document.getElementById('r-id').textContent =
-      ((BigInt(tx) << 15n) | BigInt(ty)).toString();
-    document.getElementById('r-city').textContent = byCell[col + ':' + row] || 'open territory';
+    document.getElementById('r-id').textContent = ((BigInt(tx) << 15n) | BigInt(ty)).toString();
+    document.getElementById('r-city').textContent = byCell[ci + ':' + cj] || 'open territory';
     draw();
   }
   cv.addEventListener('mousemove', pick);
   cv.addEventListener('touchmove', function (e) { pick(e); e.preventDefault(); }, { passive: false });
   cv.addEventListener('mouseleave', function () { hover = null; draw(); });
-
-  size();
-  var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 140); });
-})();
-</script>
-
-<script>
-/* The hero basemap. One canvas, tiles drawn at integer positions — a CSS grid of
-   images left hairline gaps between rows where the pixels rounded, which showed
-   as lines across the bright half of the map.
-   Still, deliberately: a map that drifts and blinks is decoration competing with
-   the sentence next to it. */
-(function () {
-  var cv = document.getElementById('heroMap');
-  if (!cv) return;
-  var ctx = cv.getContext('2d'), imgs = [], loaded = 0;
-
-  for (var ry = 0; ry < 3; ry++) for (var rx = 0; rx < 4; rx++) {
-    (function (x, y) {
-      var im = new Image();
-      im.crossOrigin = 'anonymous';
-      im.onload = function () { loaded++; imgs.push({ x: x, y: y, im: im }); draw(); };
-      im.src = 'https://tile.openstreetmap.org/2/' + x + '/' + y + '.png';
-    })(rx, ry);
-  }
-
-  var W = 0, H = 0, dpr = 1;
-  function size() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = cv.clientWidth; H = cv.clientHeight;
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw();
-  }
-
-  function draw() {
-    if (!W || !imgs.length) return;
-    ctx.clearRect(0, 0, W, H);
-    // Frame the inhabited band (Mercator v 0.207-0.694) and let the map bleed off
-    // the right edge, so the composition is a detail of a world rather than a
-    // whole world squeezed into a box.
-    var V0 = 0.207, V1 = 0.694;
-    var worldW = W * 1.55;                       // wider than the frame: it continues
-    var tile = worldW / 4;
-    var top = -V0 * worldW - (worldW * (V1 - V0) - H) / 2;
-    var left = -worldW * 0.06;
-    for (var i = 0; i < imgs.length; i++) {
-      var t = imgs[i];
-      ctx.drawImage(t.im,
-        Math.round(left + t.x * tile), Math.round(top + t.y * tile),
-        Math.ceil(tile) + 1, Math.ceil(tile) + 1);   // +1 closes any rounding seam
-    }
-  }
 
   size();
   var to; window.addEventListener('resize', function () { clearTimeout(to); to = setTimeout(size, 150); });
