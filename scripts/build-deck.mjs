@@ -301,7 +301,7 @@ function deck(chain) {
       <dl class="cover-meta">
         <div><dt class="mono">Live</dt><dd class="mono">${chain ? esc(chain.key) + '.xono.ai' : 'xono.ai'}</dd></div>
         <div><dt class="mono">Contact</dt><dd class="mono">hello@xono.ai</dd></div>
-        <div><dt class="mono">Live metrics</dt><dd class="mono">${chain ? esc(chain.key) + '.xono.ai/ecosystem' : 'xono.ai/ecosystem'}</dd></div>
+        <div><dt class="mono">Live metrics</dt><dd class="mono">${chain ? esc(chain.key) + '.xono.ai/ecosystem' : 'xono.ai'}</dd></div>
         ${contract ? `<div class="wide"><dt class="mono">${esc(chain.name)} contract</dt><dd class="mono addr">${addr(contract)}</dd></div>` : ''}
       </dl>
     </div>`)
