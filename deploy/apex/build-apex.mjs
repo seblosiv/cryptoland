@@ -32,7 +32,7 @@
  */
 import { writeFileSync, mkdirSync } from 'node:fs'
 
-const { MAINNET_CHAINS } = await import('../../src/lib/blockchain/config.js')
+const { MAINNET_CHAINS, explorerAddressUrl } = await import('../../src/lib/blockchain/config.js')
 const { PROFILES } = await import('../../src/config/profiles.js')
 
 const TARGETS = ['polygon','avalanche','base','arbitrum','ronin','bnb','optimism','scroll','celo',
@@ -101,7 +101,8 @@ const VERIFY = TARGETS.map(k => {
   }
   const pr = PROBES[k]
   return { k, name: c.name, family: c.family, rpc: c.rpcUrl, rpc2: c.rpcUrlFallback || null, addr,
-           explorer: c.family === 'evm' && addr ? `${c.explorerUrl}/address/${addr}` : (c.explorerUrl || null),
+           // Every non-EVM chain used to fall through to the explorer HOMEPAGE here.
+           explorer: explorerAddressUrl(addr, k),
            probe: pr ? { url: typeof pr.url === 'function' ? pr.url(addr) : pr.url,
                          body: pr.body ? JSON.stringify(pr.body(addr)) : null, read: pr.read } : null,
            why: NO_BROWSER[k] || null }

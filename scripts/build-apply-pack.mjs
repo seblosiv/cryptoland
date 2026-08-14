@@ -28,7 +28,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'deploy', 'apply')
 const AUDIT = join(ROOT, 'scripts', 'formaudit', 'results-2026-08-11.jsonl')
 
-const { CHAINS, MAINNET_CHAINS } = await import(join(ROOT, 'src/lib/blockchain/config.js'))
+const { CHAINS, MAINNET_CHAINS, explorerAddressUrl } = await import(join(ROOT, 'src/lib/blockchain/config.js'))
 const { PROFILES } = await import(join(ROOT, 'src/config/profiles.js'))
 const { DEPLOYMENTS, deploymentTally } = await import(join(ROOT, 'deploy/apex/deployments.mjs'))
 const { PROGRAMS } = await import(join(ROOT, 'deploy/apex/programs.mjs'))
@@ -124,9 +124,10 @@ function answers(p) {
   // Quoting that to a Rootstock reviewer sends them to the wrong chain's explorer
   // to look up an address that is not there, so EVM links are derived from the
   // chain's own explorerUrl instead.
-  const explorer = c && contract
-    ? (c.family === 'evm' ? `${c.explorerUrl}/address/${contract}` : rec?.explorer ?? null)
-    : null
+  // Derived per chain rather than taken from `rec.explorer`: the 18 EVM chains
+  // share ONE deployment record whose explorer is Etherscan, and every non-EVM
+  // chain without a record fell through to null or to the explorer homepage.
+  const explorer = c && contract ? explorerAddressUrl(contract, c.key) : null
 
   const checkLine = rec?.checks?.length
     ? `\nVerified after deployment with ${rec.checks.length} on-chain checks, all passing: ` +

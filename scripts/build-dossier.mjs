@@ -21,7 +21,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const FA = join(ROOT, 'scripts', 'formaudit')
 const OUT = join(ROOT, 'deploy', 'status')
 
-const { CHAINS, MAINNET_CHAINS, CHAIN_FAMILIES } = await import(join(ROOT, 'src/lib/blockchain/config.js'))
+const { CHAINS, MAINNET_CHAINS, CHAIN_FAMILIES, explorerAddressUrl } = await import(join(ROOT, 'src/lib/blockchain/config.js'))
 const { PROFILES } = await import(join(ROOT, 'src/config/profiles.js'))
 const { DEPLOYMENTS, BLOCKED_DEPLOYMENTS, deploymentTally } = await import(join(ROOT, 'deploy/apex/deployments.mjs'))
 const { PROGRAMS, STATUS_META } = await import(join(ROOT, 'deploy/apex/programs.mjs'))
@@ -65,7 +65,7 @@ const chains = MAINNET_CHAINS.filter((c) => !c.halted).map((c) => {
     key: c.key, name: c.name, family: c.family, id: c.id ?? null,
     accent: PROFILES[c.key]?.accent ?? c.color,
     addr, live: Boolean(addr),
-    explorer: addr ? (c.family === 'evm' ? `${c.explorerUrl}/address/${addr}` : rec?.explorer ?? null) : null,
+    explorer: explorerAddressUrl(addr, c.key),
     lang: rec?.lang ?? null,
     checks: rec?.checks?.length ?? 0,
     date: rec?.date ?? null,

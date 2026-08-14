@@ -9,7 +9,7 @@
  * (copy-paste or File > Open), plus a real .csv alongside it.
  */
 import { writeFileSync, readFileSync, existsSync } from 'node:fs'
-const { MAINNET_CHAINS } = await import('../../src/lib/blockchain/config.js')
+const { MAINNET_CHAINS, explorerAddressUrl } = await import('../../src/lib/blockchain/config.js')
 const { PROFILES } = await import('../../src/config/profiles.js')
 const { PROGRAMS, STATUS_META, VERIFIED_ON, tally } = await import('./programs.mjs')
 const { DEPLOYMENTS, BLOCKED_DEPLOYMENTS, deploymentTally } = await import('./deployments.mjs')
@@ -102,7 +102,8 @@ const rows = T.map(k => {
     currency: c.nativeCurrency?.symbol ?? '',
     gasless: c.gasless ? 'YES' : 'NO',
     cost: COST[k] != null ? `$${COST[k].toFixed(2)}` : 'n/a',
-    explorer: c.explorerUrl ?? '',
+    // Was the bare explorer root for every chain, EVM included.
+    explorer: explorerAddressUrl(contract, k) ?? c.explorerUrl ?? '',
     grant: c.grant ?? '',
   }
 })

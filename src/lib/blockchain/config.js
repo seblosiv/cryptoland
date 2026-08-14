@@ -22,6 +22,23 @@
  * build time, so the dynamic lookups below are statically resolved per build.
  * `||` (not `??`) so an empty env value falls back rather than becoming ''.
  */
+/* Verified 2026-08-14 against the live explorers. cardano, near and evm use
+   '/address/', which is the default. radix is the documented shape but is NOT
+   verified — no Radix contract is deployed yet, so there was nothing to load. */
+const ADDR_PATH_BY_FAMILY = {
+  solana:  '/account/',
+  ton:     '/',
+  aptos:   '/account/',
+  sui:     '/account/',
+  starknet:'/contract/',
+  stellar: '/contract/',
+  algorand:'/application/',
+  multiversx: '/accounts/',
+  tezos:   '/',
+  flow:    '/account/',
+  radix:   '/component/',
+}
+
 function defineChain(key, cfg) {
   const K = key.toUpperCase().replace(/-/g, '_')
   // `import.meta.env` only exists under Vite. Falling back to an empty object
@@ -49,6 +66,11 @@ function defineChain(key, cfg) {
     explorerUrl:        cfg.explorerUrl,
     explorerTxPath:     cfg.explorerTxPath  ?? '/tx/',
     explorerNFTPath:    cfg.explorerNFTPath ?? '/token/',
+    // Where a CONTRACT lives on that ecosystem's explorer. Keyed by family so
+    // testnets inherit it, and every value below was verified by loading the
+    // URL and asserting the address renders on the page — an explorer is an
+    // SPA, so a 200 only proves the shell loaded, not that the path is real.
+    explorerAddrPath:   cfg.explorerAddrPath ?? ADDR_PATH_BY_FAMILY[cfg.family] ?? '/address/',
     nativeCurrency:     cfg.nativeCurrency,
     contractAddress:    env[`VITE_CONTRACT_${K}`]    || null,
     marketplaceAddress: env[`VITE_MARKETPLACE_${K}`] || null,
@@ -747,6 +769,24 @@ export function chainById(chainId) {
 
 export function explorerTxUrl(txHash) {
   return `${ACTIVE_CHAIN.explorerUrl}${ACTIVE_CHAIN.explorerTxPath}${txHash}`
+}
+
+/**
+ * A link straight to the deployed contract on that chain's own explorer.
+ *
+ * This existed nowhere, and four separate build scripts had each written the
+ * same broken shortcut: `family === 'evm' ? explorerUrl + '/address/' + addr :
+ * explorerUrl`. So every non-EVM chain linked to the explorer HOMEPAGE — a
+ * reviewer clicking "Algorand" on xono.ai landed on lora.algokit.io/mainnet
+ * with no contract in sight, which reads as a project that has not deployed.
+ *
+ * @param {string} addr      contract address / application id / object id
+ * @param {string} [chainKey] defaults to the active build's chain
+ */
+export function explorerAddressUrl(addr, chainKey) {
+  const c = chainKey ? CHAINS[chainKey] : ACTIVE_CHAIN
+  if (!c || !addr || !c.explorerUrl) return null
+  return `${c.explorerUrl}${c.explorerAddrPath}${addr}`
 }
 
 export function explorerNFTUrl(tokenId) {

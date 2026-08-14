@@ -194,6 +194,32 @@ export const DEPLOYMENTS = [
     checks: [{ name: 'contract originated', result: 'PASS', detail: 'exists on mainnet, storage seeded with owner + 700 bps' }],
   },
 
+  // Both of these were live on mainnet but absent from this array, so every
+  // count derived from it said 27 chains instead of 29 — the same class of
+  // omission that made a deployed TON contract read as "not deployed".
+  // Confirmed against each chain's own public API on 2026-08-14 before adding.
+  {
+    chain: 'Algorand', network: 'MAINNET', family: 'algorand', lang: 'PyTeal / AVM', date: '2026-08-09',
+    contract: '3668732652',
+    explorer: 'https://lora.algokit.io/mainnet/application/3668732652',
+    note: 'An Algorand contract is an APPLICATION ID, not an address — the explorer path is /application/, which is why a generic /address/ link could never resolve it.',
+    checks: [
+      { name: 'application exists', result: 'PASS', detail: 'algod returns id 3668732652, approval program 604 bytes' },
+      { name: 'global state seeded', result: 'PASS', detail: '6 global-state entries, creator QRIYMYF5…7XWDKA' },
+    ],
+  },
+
+  {
+    chain: 'MultiversX', network: 'MAINNET', family: 'multiversx', lang: 'Rust / WASM', date: '2026-08-09',
+    contract: 'erd1qqqqqqqqqqqqqpgqe06mjam7gthrzhp0z0c8gckenv55vkja8pmsg7gdpc',
+    explorer: 'https://explorer.multiversx.com/accounts/erd1qqqqqqqqqqqqqpgqe06mjam7gthrzhp0z0c8gckenv55vkja8pmsg7gdpc',
+    note: 'The devnet faucet silently rate-limited us for days; mainnet was funded directly and deployed instead.',
+    checks: [
+      { name: 'code deployed', result: 'PASS', detail: 'api.multiversx.com returns 24,726 bytes of code' },
+      { name: 'deployment timestamp', result: 'PASS', detail: 'deployedAt 1786312482 = 2026-08-09' },
+    ],
+  },
+
   {
     chain: 'Stellar',
     network: 'testnet',
