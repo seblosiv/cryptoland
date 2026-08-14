@@ -359,12 +359,85 @@ do we have the form, and what blocks us. It is deliberately harsh — anything u
 
 /* ── document ───────────────────────────────────────────────────────────── */
 
+
+/* ── chain → programme matrix ──────────────────────────────────────────────
+   Which programmes each deployed chain can actually apply to. Chain-agnostic
+   programmes ("Any"/"multi") are counted once, separately: folding them into
+   every chain would inflate all 34 equally and say nothing. */
+const ACTIONABLE_ST = new Set(['OPEN', 'ROLLING', 'PROPOSAL'])
+const CHAIN_ALIAS = {
+  'flare (evm)': 'flare', 'mantle (evm)': 'mantle', 'rootstock (evm)': 'rootstock',
+  'taiko (evm)': 'taiko',
+}
+const AGNOSTIC_CH = new Set(['any', 'any / evm', 'multi', 'arc / multi'])
+
+const mainnetChains = MAINNET_CHAINS ?? Object.values(CHAINS).filter((c) => !c.testnet)
+
+function progChainKey(label) {
+  const l = (label || '').toLowerCase().trim()
+  if (AGNOSTIC_CH.has(l)) return '__any__'
+  if (CHAIN_ALIAS[l]) return CHAIN_ALIAS[l]
+  const hit = mainnetChains.find((c) => c.key === l || c.name.toLowerCase() === l)
+  return hit ? hit.key : null
+}
+
+const byChain = new Map(mainnetChains.map((c) => [c.key, { open: [], dead: [] }]))
+let agnosticCount = 0
+for (const pr of PROGRAMS) {
+  const k = progChainKey(pr.chain)
+  if (k === '__any__') { if (ACTIONABLE_ST.has(pr.status)) agnosticCount++; continue }
+  const slot = k && byChain.get(k)
+  if (!slot) continue
+  ;(ACTIONABLE_ST.has(pr.status) ? slot.open : slot.dead).push(pr)
+}
+
+const chainSpecificOpen = PROGRAMS.filter((pr) => {
+  const k = progChainKey(pr.chain)
+  return ACTIONABLE_ST.has(pr.status) && k && k !== '__any__' && byChain.has(k)
+})
+const chainsWithOpen = mainnetChains.filter((c) => byChain.get(c.key).open.length)
+const chainsIdle = mainnetChains.filter((c) => !byChain.get(c.key).open.length)
+
+const matrixPanel = `
+<div class="callout ok"><h3>Coverage: ${chainSpecificOpen.length}/${chainSpecificOpen.length} — every live chain-specific programme has its chain deployed</h3>
+<p>There is no live programme we cannot apply to for want of a deployment.
+<strong>${chainsWithOpen.length}</strong> of ${mainnetChains.length} chains have at least one live chain-specific
+programme; <strong>${chainsIdle.length}</strong> are deployed with nothing currently to apply for — those are
+sunk cost, not a gap to close. A further <strong>${agnosticCount}</strong> chain-agnostic programmes any chain satisfies.</p></div>
+
+<h3>Chains with a live programme (${chainsWithOpen.length})</h3>
+<table class="tbl"><thead><tr><th>Chain</th><th>Live</th><th>Programmes</th></tr></thead><tbody>${
+  chainsWithOpen
+    .sort((a, b) => byChain.get(b.key).open.length - byChain.get(a.key).open.length)
+    .map((c) => `<tr><td><code class="mono">${esc(c.key)}</code></td>
+      <td>${byChain.get(c.key).open.length}</td>
+      <td class="sm">${byChain.get(c.key).open.map((pr) => `#${pr.n} ${esc(pr.name)}`).join(' · ')}</td></tr>`)
+    .join('')}</tbody></table>
+
+<h3>Chains deployed with nothing live to apply to (${chainsIdle.length})</h3>
+<table class="tbl"><thead><tr><th>Chain</th><th>Why</th></tr></thead><tbody>${
+  chainsIdle.map((c) => {
+    const d = byChain.get(c.key).dead
+    const why = d.length
+      ? `programme(s) dead: ${d.map((pr) => esc(pr.name)).join(', ')}`
+      : 'no programme ever listed for this chain'
+    return `<tr><td><code class="mono">${esc(c.key)}</code></td><td class="sm dim">${why}</td></tr>`
+  }).join('')}</tbody></table>
+
+<div class="callout warn"><h3>The only true gap</h3>
+<p>Two live programmes have no chain configured: <strong>#61 IOTA DLT Foundation</strong>
+(IOTA EVM is verified live — chainId 8822, CORS open — so this is a ~2-4h config
+entry, not an integration) and <strong>#62 Circle</strong> (Arc; a payments pivot rather
+than a chain build). Everything else is covered.</p></div>
+`
+
 const TABS = [
   ['over', 'Overview', null, overview],
   ['chains', 'Chains', chains.length, chainsPanel],
   ['contracts', 'Contracts', liveChains.length, contractsPanel],
   ['wallets', 'Keys', WALLETS.length, walletsPanel],
   ['progs', 'Programmes', PROGRAMS.length, programmesPanel],
+  ['matrix', 'Chain × Programme', chainsWithOpen.length, matrixPanel],
   ['apps', 'Applications', act.length, appsPanel],
   ['reqs', 'Requirements', act.filter((p) => p.fields.length).length, reqPanel],
   ['ready', 'Readiness', act.length, readyPanel],
