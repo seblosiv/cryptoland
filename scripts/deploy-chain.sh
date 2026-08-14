@@ -117,7 +117,7 @@ $chain.$DOMAIN {
         header Access-Control-Allow-Origin "*"
         file_server
     }
-    @api path /blocks* /stats* /health* /metrics* /np* /auth* /account* /sessions* /affiliate* /users* /guardian* /guardians* /price-events* /tile-price-context* /nft* /marketplace* /analytics* /dao* /token* /feed* /streak* /share* /empire* /search* /agents* /squads* /drop* /news* /alerts* /t/* /og*
+    @api path /blocks* /stats* /health* /metrics* /np* /chain* /auth* /account* /sessions* /affiliate* /users* /guardian* /guardians* /price-events* /tile-price-context* /nft* /marketplace* /analytics* /dao* /token* /feed* /streak* /share* /empire* /search* /agents* /squads* /drop* /news* /alerts* /t/* /og*
     handle @api {
         reverse_proxy 127.0.0.1:$port
     }

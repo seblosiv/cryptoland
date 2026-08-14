@@ -87,6 +87,39 @@ incomplete change. The relevant file is usually one of `documentation/`
 {`architecture`, `backend`, `frontend`, `blockchain`, `multichain`, `auth`,
 `styling`, `grants`, `game-mechanics`, `guardian`, `affiliate`, `viral`}`.md`.
 
+### 🔴 Production is `ssh xono`. Never `cv-old`.
+
+```bash
+ssh xono            # root@91.99.194.54, key ~/.ssh/xono_deploy — the ONLY key
+                    # in that box's authorized_keys (SHA256:fracH/UlT6M6wKmjz…)
+ssh sociala-prod    # the OTHER box (62.238.20.165) — SearXNG/research only,
+                    # shared with unrelated projects. Not CryptoLand.
+```
+
+⛔ **`cv-old` is a leftover alias from an unrelated project.** It points at the
+same IP but offers `~/.ssh/cv_scraper_ops`, which that box does not authorise.
+On 2026-08-14 an entire evening was lost to it: the key was rejected, and rather
+than checking whether a different *local* key was correct, the failure was
+misdiagnosed as a fail2ban ban and then as a removed key — costing two server
+reboots, two root password resets, and hand-editing `authorized_keys` through a
+console that silently corrupts pasted characters. `~/.ssh/xono_deploy` was there
+the whole time, named after the server, and already the default in
+`scripts/verify-on-prod.sh`.
+
+**When SSH fails, compare fingerprints FIRST, before any other theory:**
+```bash
+for k in ~/.ssh/*.pub; do ssh-keygen -lf "$k"; done   # local keys
+# on the box: ssh-keygen -lf /root/.ssh/authorized_keys
+```
+
+Two more traps on that box: its host key is **ED25519**, so a stale **ECDSA**
+line in `known_hosts` raises a "REMOTE HOST IDENTIFICATION HAS CHANGED" warning
+that is benign (verify with `ssh-keyscan`, then `ssh-keygen -R`); and the Hetzner
+web console **corrupts pasted text** (`>>`→`..`, `&&`→`77`, `_`→`-`, `+`→`=`,
+`@`→`2`), so never hand the user a paste-fragile one-liner for it.
+
+**Never ask for or use a root password.** Key auth only.
+
 ### 🔴 Never commit secrets or databases.
 
 - `server/.env` holds **live NOWPayments API key + IPN secret**.

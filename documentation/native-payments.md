@@ -247,25 +247,13 @@ lie that costs the user their money twice.
 
 ## 7. What is NOT done — read before promising anything
 
-**Nine of fourteen families verify; five do not.** The client-side
-`payNative()` exists for all 14, but a payment only settles where a verifier
-does too.
+**All 14 families now have a verifier.** Written is not the same as proven,
+though, so the table below is what matters.
 
-| | Families | Chains |
-|---|---|---|
-| ✅ Verifier written | `evm` `solana` `ton` `starknet` `stellar` `algorand` `multiversx` `radix` `tezos` | 29 |
-| ❌ Still missing | `aptos` `sui` `cardano` `near` `flow` | 5 |
+**Verification status.** Each was checked against a live mainnet transaction
+with four cases (exact amount, wrong treasury, 2× underpaid, garbage hash):
 
-The five missing ones report `enabled: false` from `/chain/pay-info` and fall
-back to the off-chain rail — no user-visible breakage, just no wallet button.
-Each needs one file, `server/verifiers/<family>.py`, exporting `verify()`; the
-package docstring and `verify_evm` are the spec.
-
-**Verification status of what exists.** Six were independently re-checked
-against live mainnet transactions — not just by the author — with four cases
-each (exact amount, wrong treasury, 2× underpaid, garbage hash):
-
-| Family | Independently confirmed on mainnet |
+| Family | Confirmed on mainnet |
 |---|---|
 | `evm` | ✅ real Base transfer; also confirmed a contract-routed tx is rejected and dead RPCs return `pending` |
 | `stellar` | ✅ incl. a 1-stroop edge case |
@@ -273,9 +261,22 @@ each (exact amount, wrong treasury, 2× underpaid, garbage hash):
 | `tezos` | ✅ incl. a 7-hour-old transaction (TzKT indexes historically) |
 | `multiversx` | ✅ |
 | `solana` | ✅ (see the net-balance note below) |
+| `aptos` | ✅ real APT deposit, matched via `DepositEvent` |
+| `flow` | ✅ real `TokensDeposited`, incl. exact UFix64→base-unit conversion |
+| `sui` | ✅ real `balanceChanges` entry |
+| `cardano` | ✅ **and the change-output trap specifically**: on a transaction moving 619,390 ADA total where only 823 ADA reached the target address, the verifier credits 823. Counting `total_output` there would have settled a tile for 750× the real payment |
 | `starknet` | ⚠️ STRK contract address confirmed on-chain (`symbol()` → `STRK`), verifier itself not re-checked against a live STRK transfer |
 | `radix` | ⚠️ see below — unresolved discrepancy |
 | `ton` | ⚠️ not re-checked; the BOC→transaction resolution is the least proven code here |
+| `near` | ⚠️ **written but NOT proven.** Plain NEAR transfers are rare in recent blocks — repeated scans of the chain and an explorer API turned up only contract calls, so no live transfer was found to test against. The gas-refund exclusion (receipts with `predecessor_id: "system"`) is reasoned, not demonstrated. **Prove it before enabling NEAR** |
+
+⚠️ **`cardano` cannot complete end-to-end yet** regardless of the verifier:
+`adapters/cardano.js::payNative()` posts to `/cardano/build-payment`, a route
+that does not exist in `server/main.py`. CIP-30 wallets have no send primitive,
+so the transaction must be built server-side. That endpoint is the remaining
+work. (`/cardano/build-mint`, `/sui/build-mint`, `/solana/build-mint`,
+`/solana/send-tx`, `/solana/tx-status` and `/ton/build-mint` are all likewise
+referenced by existing adapters and likewise missing — a pre-existing gap.)
 
 **Solana and Radix credit NET balance change, not gross.** On Solana the amount
 comes from `preBalances`/`postBalances`, so a transaction where the recipient
