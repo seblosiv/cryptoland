@@ -78,11 +78,39 @@ const liveChains = chains.filter((c) => c.live)
 
 /* ── wallets ────────────────────────────────────────────────────────────── */
 
+// Every treasury below is held in the founder's own Trust Wallet (Hedera in a
+// separate phone wallet), NOT on the server. The box holds one key only — the
+// deployer — and revenue deliberately never lands there. Each address was
+// checksum-validated before being configured; see documentation/native-payments.md.
 const WALLETS = [
-  { role: 'Deployer', addr: '0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58',
-    note: 'The retained deployer. Avalanche Retro9000 and OP Atlas both require the ORIGINAL deployer to sign a message to claim contract ownership — losing this key forfeits attribution permanently.' },
-  { role: 'Treasury receiver', addr: '0xB8156B85D26df44A662d151EE00d1205FC254c47',
-    note: 'Set as treasuryReceiver on all 18 EVM deployments, so sale revenue never accrues to the hot deployer key.' },
+  { role: 'Deployer', chain: 'EVM (all)', addr: '0xD10178e0E4a6A4aBebAd4d5Dc51DD09Ec10ede58',
+    note: 'The retained deployer, and owner of all 17 live EVM deployments. Avalanche Retro9000 and OP Atlas both require the ORIGINAL deployer to sign a message to claim contract ownership — losing this key forfeits attribution permanently. Held on the server; receives no revenue.' },
+  { role: 'Treasury', chain: 'EVM (17 chains)', addr: '0xB8156B85D26df44A662d151EE00d1205FC254c47',
+    note: 'treasuryReceiver on every EVM deployment AND the live native-payment treasury. One address collects all 17 EVM chains. Held in Trust Wallet.' },
+  { role: 'Treasury', chain: 'Hedera', addr: '0x0000000000000000000000000000000000a4d651',
+    note: 'Account 0.0.10802769 in long-zero EVM form. Hedera needs its OWN treasury: unlike other EVM chains it requires the recipient account to exist, and the EVM treasury above returns "Not found" on its mirror node — every Hedera payment would have failed. Held in a phone wallet.' },
+  { role: 'Treasury', chain: 'Solana', addr: '8xdtEbaDpZFwGQdScZQhNXKhMq3uSs9gpHj3H83spwED', note: 'Trust Wallet.' },
+  { role: 'Treasury', chain: 'TON', addr: 'UQAhSxMdQe6nd858cjPpD4IfFcx_OEgLz-tcqJYSeVmPJ_S1', note: 'Trust Wallet. Non-bounceable mainnet form, CRC16 verified.' },
+  { role: 'Treasury', chain: 'Aptos', addr: '0x85da9541b7991739c07c1d2bcc4e61dec3aafacd6958e490c66f698938552fa3', note: 'Trust Wallet.' },
+  { role: 'Treasury', chain: 'Sui', addr: '0x84654a3917c0c8b30881d9bf53f7783a5b902de84ac82c6b6473ac2ffb63d8cd', note: 'Trust Wallet. Configured, but Sui payment is blocked on a missing server-side transaction builder.' },
+  { role: 'Treasury', chain: 'Cardano', addr: 'addr1qyepr3s496umpzx23vefezulug6c3ggvmxlvwkdu37f7ea433nvfwv7x2t9nydd6tar6ms8q0e8ektr8t4g5kgy7hxcsmf0llt', note: 'Trust Wallet. MAINNET addr1 — bech32 verified. (The repo keystore holds an addr_test1 address; mainnet ADA sent there would be unrecoverable.) Blocked on a missing server-side transaction builder.' },
+  { role: 'Treasury', chain: 'Stellar', addr: 'GBMICAZGWSF4ZMSARVXI2RXITW3UBFQJUWKPGGWU2JQNF7FAW27CCLV6', note: 'Trust Wallet. CRC16-XModem verified.' },
+  { role: 'Treasury', chain: 'Algorand', addr: 'VD6FLXGOJP6JUAHE6XNQ3Q5OC3P4BUQ5THBW35L4KPZE6M7WMFMV7QU6ZU', note: 'Trust Wallet. sha512/256 checksum verified.' },
+  { role: 'Treasury', chain: 'NEAR', addr: '88629e3a005c12a10fe1e672c29115d714164dd6b1f1983c500c676b02ff9dbf', note: 'Trust Wallet, implicit account. NOTE: the NEAR verifier is UNPROVEN — no live plain transfer could be found to test against.' },
+  { role: 'Treasury', chain: 'Tezos', addr: 'tz1iXSvkgzXca36x52mocVjAcbz6whAitWET', note: 'Trust Wallet. base58check verified.' },
+]
+
+// Chains that are live as sites but cannot yet take a wallet payment, and why.
+const PAY_GAPS = [
+  { chain: 'starknet',   reason: 'no treasury address configured yet (Trust Wallet does not support Starknet — needs Argent X or Braavos)' },
+  { chain: 'multiversx', reason: 'no treasury address configured yet (needs xPortal or the MultiversX web wallet)' },
+  { chain: 'radix',      reason: 'no treasury address configured yet (needs the Radix Wallet)' },
+  { chain: 'flow',       reason: 'no treasury address configured yet (needs Flow Wallet or Blocto)' },
+  { chain: 'cardano',    reason: 'treasury set, but /cardano/build-payment is not implemented — CIP-30 wallets have no send primitive, so the transaction must be built server-side' },
+  { chain: 'sui',        reason: 'treasury set, but /sui/build-transfer is not implemented — a Sui PTB needs BCS encoding the browser cannot do' },
+  { chain: 'skale',      reason: 'gasless chain — sFUEL is a valueless faucet token, so there is nothing to charge. Its contract also never deployed (deployer whitelist)' },
+  { chain: 'moonbeam',   reason: 'halted in config.js' },
+  { chain: 'oasys',      reason: 'takes payment, but has NO mainnet contract — only ever deployed to Oasys testnet' },
 ]
 const NON_EVM_ADDR = liveChains.filter((c) => c.family !== 'evm' && c.addr)
 
@@ -244,13 +272,20 @@ message</strong> to claim ownership of your contracts. A lost or throwaway deplo
 permanently — and therefore the grant.</p></div>
 <div class="cards">${WALLETS.map((w) => `
   <div class="card">
-    <div class="card-h"><span class="pname">${esc(w.role)}</span></div>
+    <div class="card-h"><span class="pname">${esc(w.role)}</span><span class="pill">${esc(w.chain || '')}</span></div>
     <code class="mono addr blk">${esc(w.addr)}</code>
     <p class="sm dim">${esc(w.note)}</p>
   </div>`).join('')}</div>
+<div class="callout warn"><h3>Where the money lands</h3>
+<p>Every treasury above is held in the founder's own <strong>Trust Wallet</strong> (Hedera in a separate
+phone wallet) — <strong>not on the server</strong>. The production box holds exactly one key, the deployer,
+and it is deliberately excluded from revenue. Each address was checksum-validated before being configured.</p></div>
+<h3>Chains that cannot take a wallet payment yet</h3>
+<table class="tbl"><thead><tr><th>Chain</th><th>Why</th></tr></thead><tbody>${PAY_GAPS.map((g) => `
+<tr><td><code class="mono">${esc(g.chain)}</code></td><td class="sm">${esc(g.reason)}</td></tr>`).join('')}</tbody></table>
 <div class="callout warn"><h3>Key custody status</h3>
-<p>Both keys are <strong>retained and backed up</strong>. The deployer signs for contract-ownership
-claims; the treasury key never touches a deployment. Contract addresses live under
+<p>The deployer is <strong>retained and backed up</strong> and signs for contract-ownership claims;
+no treasury key ever touches a deployment, and no treasury key is on the server. Contract addresses live under
 <a href="#contracts">Contracts</a> — they are public identifiers, not keys, and were previously
 mixed into this count.</p></div>`
 

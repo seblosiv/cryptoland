@@ -156,20 +156,46 @@ stage_apex() {
     # /status — private deployment board. Basic auth over HTTPS, with the
     # password stored ONLY as a bcrypt hash (cost 14); the plaintext is never in
     # the repo or the server config. Also noindex, since it lists internal state.
-    @status path /status /status/ /status.html /status.csv
-    handle @status {
+    # /status was a second private board over the same data as /dossier.
+    # Redirected, not deleted, so existing links still resolve.
+    redir /status /dossier permanent
+    redir /status/ /dossier permanent
+    redir /status.html /dossier permanent
+
+    # The CSV exports are separate artefacts, not a duplicate view.
+    @statuscsv path /status.csv /programs.csv
+    handle @statuscsv {
         basic_auth {
             blackside {{STATUS_HASH}}
         }
         header X-Robots-Tag "noindex, nofollow, noarchive"
-        @statuscsv path /status.csv
-        handle @statuscsv {
-            file_server
+        file_server
+    }
+
+
+    # /dossier — internal working dossier: chains, contracts, wallets, grant
+    # programmes, their form fields and readiness. Same protection as /status:
+    # it lists deployer addresses and unsubmitted application copy.
+    @dossier path /dossier /dossier/ /dossier.html
+    handle @dossier {
+        basic_auth {
+            blackside {{STATUS_HASH}}
         }
-        handle {
-            rewrite * /status.html
-            file_server
-        }
+        header X-Robots-Tag "noindex, nofollow, noarchive"
+        rewrite * /dossier.html
+        file_server
+    }
+
+    # /deck/<chain> — the per-chain pitch decks. Public so a reviewer can open
+    # the link straight from an application; noindex so the 33 of them never
+    # surface next to each other in a search result.
+    @deck path /deck /deck/ /deck/*
+    handle @deck {
+        header X-Robots-Tag "noindex, nofollow, noarchive"
+        header Cache-Control "public, max-age=300"
+        # /deck/rootstock resolves to /deck/rootstock.html
+        try_files {path} {path}.html /deck/index.html
+        file_server
     }
 
     @about path /about /about/ /about.html
@@ -190,7 +216,6 @@ stage_apex() {
         file_server
     }
 }
-
 APEXEOF
   # Substitute AFTER the literal heredoc so the bcrypt hash survives bash intact.
   sed -i.bak -e "s|{{DOMAIN}}|$DOMAIN|g" \

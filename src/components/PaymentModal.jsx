@@ -6,10 +6,14 @@ import { useWalletStore } from '../store/walletStore'
 import { useUserStore } from '../store/userStore'
 import { useAffiliateStore } from '../store/affiliateStore'
 import { useAuthStore } from '../store/authStore'
+import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
+import { logoFor } from './logos'
 import { tileBasePrice } from '../lib/tiles'
 import { statusLabel } from '../lib/nowpayments'
 import { useIsMobile } from '../lib/hooks'
 import { GuestClaimModal } from './AuthModal'
+
+const ChainLogo = logoFor(ACTIVE_CHAIN.key)
 
 const CURRENCIES = [
   { id: 'usdttrc20',    name: 'USDT',     icon: '₮', color: '#26a17b', minUsd: 12.00, primary: true },
@@ -38,41 +42,92 @@ const STEPS = ['select', 'payment', 'confirming', 'confirmed']
  * cannot explain is worse than no button, and every visitor without a wallet
  * would see one.
  */
-function NativePayOption() {
+function NativePayOption({ price }) {
   const nativePay          = useGameStore(s => s.nativePay)
   const checkNativePay     = useGameStore(s => s.checkNativePay)
   const startNativePayment = useGameStore(s => s.startNativePayment)
+  const [hover, setHover]  = useState(false)
 
   useEffect(() => { checkNativePay?.() }, [checkNativePay])
 
   if (!nativePay?.available) return null
-  const { chain_name: chainName, symbol } = nativePay.server ?? {}
+  const { chain_name: chainName, symbol, confirmations } = nativePay.server ?? {}
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* The chain is the product on a chain-native build, so it gets the
+          masthead rather than a line of small print under a currency grid. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '13px 14px', borderRadius: 8,
+        background: 'var(--s2)',
+        border: '1px solid var(--b1)',
+        borderLeft: '2px solid var(--chain-accent)',
+      }}>
+        {/* The chain's own logomark, tinted by its accent — the logomarks are
+            monochrome and paint with currentColor, so setting colour tints it. */}
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, flexShrink: 0,
+          background: 'var(--s3)', border: '1px solid var(--b1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--chain-accent-ui)',
+        }}>
+          {ChainLogo ? <ChainLogo size={16} /> : <span style={{ fontSize: 15 }}>{ACTIVE_CHAIN.logo}</span>}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
+            Pay in {symbol} on {chainName}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
+            Direct from your wallet — no exchange, no bridge
+          </div>
+        </div>
+      </div>
+
       <button
         onClick={startNativePayment}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
         style={{
-          width: '100%', padding: '14px 16px', borderRadius: 7,
+          width: '100%', padding: '15px 16px', borderRadius: 8,
           background: 'var(--chain-accent)', color: 'var(--chain-accent-ink)',
-          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14,
+          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14.5,
           letterSpacing: '-0.01em', WebkitTapHighlightColor: 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+          transform: hover ? 'translateY(-1px)' : 'none',
+          filter: hover ? 'brightness(1.07)' : 'none',
+          transition: 'transform 0.14s ease, filter 0.14s ease',
         }}
       >
-        Pay with wallet on {chainName}
+        <span>Connect wallet &amp; pay</span>
+        {price != null && (
+          <span style={{ fontFamily: 'var(--mono)', opacity: 0.72 }}>
+            ${Number(price).toFixed(2)}
+          </span>
+        )}
+        <span style={{ transform: hover ? 'translateX(2px)' : 'none', transition: 'transform 0.14s ease' }}>→</span>
       </button>
-      <div style={{ fontSize: 11, color: 'var(--t3)', textAlign: 'center' }}>
-        Sends {symbol} on {chainName} straight from your wallet — no exchange, no bridge.
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '2px 0' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
-        <div className="label" style={{ color: 'var(--t4)' }}>or pay another way</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
+
+      {/* Reassurance, not decoration: a buyer about to sign a wallet
+          transaction wants to know the price is fixed and roughly how long
+          they will be waiting afterwards. */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: 14,
+        fontSize: 10.5, color: 'var(--t4)',
+      }}>
+        <span>Price locked 15 min</span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>{confirmations === 1 ? '1 confirmation' : `${confirmations} confirmations`}</span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>Settles on-chain</span>
       </div>
     </div>
   )
 }
-const STEP_LABELS = { select: 'Currency', payment: 'Pay', confirming: 'Confirm', confirmed: 'Done' }
+// "Currency" is only honest when there is a currency to choose. On a wallet
+// build the first step is connecting and approving, so it says so.
+const STEP_LABELS       = { select: 'Currency', payment: 'Pay', confirming: 'Confirm', confirmed: 'Done' }
+const STEP_LABELS_NATIVE = { select: 'Connect', payment: 'Approve', confirming: 'Confirm', confirmed: 'Done' }
 
 function fmt(s) {
   return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`
@@ -87,6 +142,7 @@ export default function PaymentModal() {
   const tickPaymentTimer   = useGameStore(s => s.tickPaymentTimer)
   const [copied, setCopied] = useState(false)
   const isMobile = useIsMobile()
+  const nativePayReady = useGameStore(s => Boolean(s.nativePay?.available))
 
   useEffect(() => {
     if (purchaseStep !== 'payment') return
@@ -163,7 +219,7 @@ export default function PaymentModal() {
                   fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600,
                   color: active ? 'var(--green)' : done ? 'var(--green)' : 'var(--t3)',
                 }}>
-                  {STEP_LABELS[step]}
+                  {(nativePayReady ? STEP_LABELS_NATIVE : STEP_LABELS)[step]}
                 </span>
               </div>
             )
@@ -193,6 +249,8 @@ function CurrencySelect() {
   const setPurchaseEmail    = useGameStore(s => s.setPurchaseEmail)
 
   const authUser = useAuthStore(s => s.user)
+  // Drives whether the (currently non-functional) off-chain currency grid shows.
+  const nativePayReady = useGameStore(s => Boolean(s.nativePay?.available))
   const [email, setEmail] = useState('')
 
   const price = selectedKey ? (() => {
@@ -214,8 +272,23 @@ function CurrencySelect() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-      <NativePayOption email={email} />
+      <NativePayOption price={price} />
 
+      {/* The off-chain currency grid is hidden wherever the wallet path works.
+          Two reasons, and the second is the decisive one:
+
+          1. A chain-native build should not open by offering USDT on Tron. The
+             whole point of <chain>.xono.ai is that it IS that chain.
+          2. It does not work. No deployment carries NOWPAYMENTS_API_KEY, so
+             every one of these currencies fails with INVALID_API_KEY *after*
+             the user has picked one and pressed Generate Payment. Showing a
+             row of dead buttons next to a working one is worse than showing
+             nothing.
+
+          It still renders on chains with no wallet path (skale, moonbeam,
+          cardano, sui…) so those are not left with no options at all — and it
+          comes back automatically for everyone the moment a key is configured. */}
+      {!nativePayReady && (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
         {CURRENCIES.map(c => {
           const tooLow  = price < c.minUsd
@@ -245,6 +318,7 @@ function CurrencySelect() {
           )
         })}
       </div>
+      )}
 
       {/* Price display */}
       <div style={{
@@ -279,9 +353,14 @@ function CurrencySelect() {
         </div>
       )}
 
-      <button className="btn" style={{ width: '100%' }} onClick={handleStart}>
-        Generate Payment →
-      </button>
+      {/* Goes with the currency grid: without a NOWPayments key this button
+          only produces an INVALID_API_KEY error. The wallet path has its own
+          call to action above. */}
+      {!nativePayReady && (
+        <button className="btn" style={{ width: '100%' }} onClick={handleStart}>
+          Generate Payment →
+        </button>
+      )}
     </div>
   )
 }
