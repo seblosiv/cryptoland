@@ -487,6 +487,40 @@ Three env vars are load-bearing per chain and the audit checks all three:
 > variables it owns and preserves the rest. If you ever re-add a per-chain env
 > var, verify a dry-run push does not eat it.
 
+## 🔴 The white screen — a missing asset must 404, never fall through to the SPA
+
+**Symptom:** a subdomain shows a blank white page on first load. Nothing in the
+console. Reloading sometimes fixes it. A grant reviewer opening the link sees
+nothing and closes the tab.
+
+**Cause:** the per-subdomain Caddy block had one `handle` with
+`try_files {path} /index.html`, which applied to `/assets/*` too. A request for
+a bundle from an earlier deploy therefore returned **index.html with HTTP 200
+and `content-type: text/html`**. The browser loads that as a `<script
+type="module">`, it is not JavaScript, execution fails **silently**, `#root`
+never mounts. No error is logged, which is why it looked intermittent and
+unexplainable: it only happens to someone whose cached shell predates the
+current asset hashes, i.e. anyone revisiting after a deploy.
+
+**Fix (two layers, both required):**
+
+1. `scripts/deploy-chain.sh` now emits a dedicated block *before* the fallback:
+   ```
+   handle /assets/* { file_server }        # 404 on miss
+   handle { try_files {path} /index.html; file_server }
+   ```
+2. `public/sw.js` `cacheFirst()` treats a `.js`/`.css` response whose
+   content-type is `text/html` as a miss, then calls `staleShellRecovery()` —
+   drops every `cl-*` cache and unregisters, so the next load is entirely from
+   the network. It deliberately does **not** reload open tabs: documents are
+   already network-first, and yanking someone out of a purchase to announce a
+   deploy is its own bug.
+
+**Guard:** `node scripts/check-spa-fallback.mjs` checks all 32 subdomains for
+`site=200 · missing-asset=404 · deep-link=200` and exits 1 on regression. Run it
+after every deploy. Verified 2026-08-14 by poisoning a live cache with a shell
+pointing at a dead bundle — the page still rendered.
+
 ## `xono.ai/dossier` — the internal board
 
 `node scripts/build-dossier.mjs` writes `deploy/status/dossier.html`; copy it to

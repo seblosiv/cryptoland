@@ -151,6 +151,21 @@ async function cacheFirst(request, cacheName, maxAgeSec = 3600) {
   }
   try {
     const response = await fetch(request)
+
+    // A build asset that comes back as HTML means the server answered a miss
+    // with the SPA fallback (try_files ... /index.html). The browser would load
+    // that as a module script, fail silently, and render an empty #root — a
+    // white page with nothing in the console. Caddy no longer does this, but a
+    // stale cached shell can still ask for a bundle that no longer exists, so
+    // treat it as the miss it is rather than caching HTML under a .js URL.
+    if (response && response.ok && /\.(js|css)$/.test(new URL(request.url).pathname)) {
+      const ct = response.headers.get('content-type') || ''
+      if (ct.includes('text/html')) {
+        await staleShellRecovery()
+        return Response.error()
+      }
+    }
+
     if (response && response.ok) cache.put(request, response.clone()).catch(() => {})
     return response
   } catch {
@@ -158,6 +173,26 @@ async function cacheFirst(request, cacheName, maxAgeSec = 3600) {
     // outright, which is how one flaky asset became a blank page.
     return cached ?? Response.error()
   }
+}
+
+/**
+ * The shell we served is older than the assets on the server.
+ *
+ * Drop every cache and unregister, so the very next load comes entirely from
+ * the network. Deliberately does NOT reload open tabs: yanking someone out of a
+ * purchase mid-flow is its own bug, and documents are network-first, so their
+ * next navigation is fresh anyway. Guarded so a burst of failing assets
+ * triggers this once, not once per file.
+ */
+let recovering = false
+async function staleShellRecovery() {
+  if (recovering) return
+  recovering = true
+  try {
+    const keys = await caches.keys()
+    await Promise.all(keys.filter(k => k.startsWith('cl-')).map(k => caches.delete(k)))
+    await self.registration.unregister()
+  } catch { /* best effort — the next navigation is network-first regardless */ }
 }
 
 self.addEventListener('push', (event) => {

@@ -121,6 +121,21 @@ $chain.$DOMAIN {
     handle @api {
         reverse_proxy 127.0.0.1:$port
     }
+    # Build output must 404 when it is missing — never fall through to the SPA.
+    #
+    # This is the white-screen bug. try_files sent EVERY miss to /index.html,
+    # so a request for a bundle from an older deploy returned index.html with
+    # HTTP 200 and content-type text/html. The browser loads that as a module
+    # script, it is not JavaScript, execution fails silently, #root stays empty:
+    # a blank page with nothing in the console. A returning visitor hits it
+    # whenever their cached shell points at assets a later deploy replaced —
+    # and a grant reviewer opening the link sees a white screen.
+    #
+    # A real 404 lets the service worker and the browser recover instead of
+    # silently rendering nothing.
+    handle /assets/* {
+        file_server
+    }
     handle {
         try_files {path} /index.html
         file_server
