@@ -483,8 +483,6 @@ export const BLOCKED_DEPLOYMENTS = [
     reason: 'Address funded by the faucet. Cardano is UTXO: there is no contract to deploy — the validator (hash 136221254c9413270c543ede66c58e73964ee2820ed8406f52c6511c) is referenced by a spending transaction, optionally published as a reference script. Building the first minting tx is the remaining work.' },
   { chain: '12 other EVM testnets', network: 'various',
     reason: 'Every other EVM faucet gates on a captcha (Injective, Moonbase, BNB, Fuji), a wallet/social login (Beam, Hedera, Fuji), a mainnet balance (BNB wants 0.002 BNB), or a puzzle (Ronin: rotate an Axie). Oasys was the only one automatable — and since all 17 EVM chains share one bytecode, one deployment covers the contract logic for all of them.' },
-  { chain: 'TON', network: 'testnet',
-    reason: 'faucet is a Telegram bot (@testgiver_ton_bot) — needs a Telegram account.' },
   { chain: 'Algorand', network: 'testnet',
     reason: '`algokit dispenser fund` exists but requires `algokit dispenser login` (OAuth). The classic bank.testnet dispenser is now an explorer wanting a connected wallet.' },
   { chain: 'MultiversX', network: 'devnet',

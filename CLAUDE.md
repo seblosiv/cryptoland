@@ -496,7 +496,17 @@ Done and working:
 
 Known gaps — be honest about these, do not paper over them:
 
-- **Mainnet is unfunded — but testnet verification is DONE for Stellar.** The
+- **MAINNET IS LIVE ON 27 CHAINS — this section used to say the opposite and it
+  cost a wrong answer to the user.** Deployed 9–11 Aug 2026 and verifiable now:
+  18 EVM chains share `0x89C6bcfb0aCC152F98599261dc2A72a996c3763F` (12,890 bytes
+  of identical bytecode, confirmed live by `eth_getCode` on polygon, base,
+  arbitrum, avalanche, optimism, bnb, celo and scroll), plus Solana, Starknet,
+  TON, Cardano, Stellar, Aptos, Sui, NEAR and Tezos. `deploy/apex/deployments.mjs`
+  → `DEPLOYMENTS` is the authority; **read that array, not `BLOCKED_DEPLOYMENTS`,
+  before saying anything is undeployed.** A stale TON *testnet* row in the blocked
+  list was read as "TON is not deployed" while TON mainnet had been active for
+  four days.
+- **Testnet verification is also DONE for Stellar.** The
   contract is live on Stellar testnet
   (`CBVB7GK65CN2KB4NMQ3CGC6LIHFQU7IZ46KWZTUHKAFLO4BT6EBB4FFW`) with **18/18 checks
   passing**, including the one that cannot be unit-tested: `withdraw` paying a
@@ -528,11 +538,12 @@ Known gaps — be honest about these, do not paper over them:
   > `claimTile` accepted any raw uint256, making `2^200` claimable. Fixed, with
   > 5 regression tests. **Three deployments have now produced three defects no
   > test could reach. Deploy early.**
-- **Contract readiness across the 45 actionable programmes: 100% compiled,
-  64% proven on a real testnet, 0% mainnet.** Nine chains close the gap —
-  Solana, Sui, Starknet, Cardano, Algorand, MultiversX, Radix, Tezos, Flow —
-  and **every one of their faucets is deliberately human-gated** (captcha,
-  wallet-connect, or social login). Starknet advertises an API "for a script or
+- **Contract readiness: 100% compiled, and 27 chains live on MAINNET.** The
+  remaining testnet gaps (Algorand, MultiversX, Radix, Flow) matter only for
+  pre-mainnet verification of those specific chains — they do not gate a
+  submission, because those chains are either already on mainnet or not a grant
+  target. Where a testnet is still wanted, **every one of those faucets is
+  deliberately human-gated** (captcha, wallet-connect, or social login). Starknet advertises an API "for a script or
   AI agent" but every documented endpoint 404s; only the GitHub route works.
   `documentation/testnet-funding.md` has the addresses and the exact click list.
   This is not engineerable around, and it costs nothing — Aptos and Ronin were
