@@ -130,8 +130,9 @@ export const PROGRAMS = [
     status: 'OPEN', verified: '2026-07-30', url: 'https://hbarfoundation.org',
     evidence: '"Submit a proposal"', note: 'Enterprise-formal process.' },
   { n: 41, name: 'Solana Foundation (rolling)', chain: 'Solana', amount: '~$100K', equity: '0%',
-    status: 'ROLLING', verified: '2026-08-12', url: 'https://solana.org/grants-funding',
-    evidence: '"rolling basis"', note: 'Same Airtable RFP table as #34 — no active RFPs as of 2026-08-12.' },
+    status: 'ROLLING', verified: '2026-08-14', url: 'https://solana.org/grants-funding',
+    evidence: '"rolling basis"',
+    note: 'Same Airtable RFP table as #34 — no active RFPs as of 2026-08-12. ⚠️ The 24-input Google Form linked from solana.org (docs.google.com/forms/d/e/1FAIpQLScy2RwYkNF2Leklwn…) is a HIRING form, not a grant application: its required fields are "What positions are you hiring for?", "Full Time or Contract roles?", "Ideal locations for hiring talent". §21 again — a form-shaped URL on a grants page is not the grant form. Do not draft against it.' },
   { n: 44, name: 'BNB Chain MVB S10', chain: 'BNB', amount: '~$300K', equity: '0%',
     status: 'OPEN', verified: '2026-07-30', url: 'https://www.bnbchain.org/en/developers/mvb',
     evidence: 'probe: OPEN', note: 'Cohort programme — season windows open and close.' },
@@ -257,9 +258,15 @@ export const PROGRAMS = [
     status: 'ROLLING', verified: '2026-07-31', url: 'https://www.mantle.xyz/grants',
     evidence: '"rolling basis"',
     note: 'CHAIN NOW CONFIGURED (2026-07-31): id 5000, RPC verified, build target added. Ready to apply.' },
+  // Opening the actual Airtable (2026-08-14) changed this from OPEN to
+  // invitation-only: a REQUIRED field asks "Which Taiko Team Member(s) Did You
+  // Receive Your Invitation to Apply?". "Submit a project" on the ecosystem
+  // page is not an open call — you cannot answer that question cold.
   { n: 56, name: 'Taiko Grants', chain: 'Taiko (EVM)', amount: '~$50K', equity: '0%',
-    status: 'OPEN', verified: '2026-07-31', url: 'https://taiko.xyz/ecosystem',
-    evidence: '"Submit a project"', note: 'CHAIN NOW CONFIGURED: id 167000, based rollup. Ready to apply.' },
+    status: 'NO-FORM', verified: '2026-08-14',
+    url: 'https://airtable.com/appiHMc0glvIWmuan/shrvmPOFrTleLFQJd',
+    evidence: 'Airtable required field: "Which Taiko Team Member(s) Did You Receive Your Invitation to Apply? *"',
+    note: 'INVITE-ONLY. 16 inputs; Project Name*, Applicant Email*, Applicant Telegram*, Project Website* — plus the invitation field, which is the blocker. Chain IS configured (id 167000, based rollup) so we are technically ready; the route in is a relationship, not a form. Approach a team member first, e.g. via the Taiko Discord, rather than drafting an application.' },
   { n: 57, name: 'Rootstock Grants', chain: 'Rootstock (EVM)', amount: '~$50K', equity: '0%',
     status: 'OPEN', verified: '2026-07-31', url: 'https://rootstock.io/grants',
     evidence: '"apply for"',
@@ -270,7 +277,7 @@ export const PROGRAMS = [
   { n: 59, name: 'The Graph Foundation', chain: 'Any / EVM', amount: '~$60K', equity: '0%',
     status: 'DEAD', verified: '2026-08-12', url: 'https://thegraph.com/grants',
     evidence: '"The Graph Foundation is pausing applications to the Grants Program … we made the decision to pause the Grants Program to reassess our ecosystem strategic priorities."',
-    note: 'PAUSED. Announced on forum.thegraph.com 2026-07-06, corroborated by the application Typeform returning "Hey :) This typeform is now closed." Do not submit.' },
+    note: 'PAUSED. Announced on forum.thegraph.com 2026-07-06, corroborated by the application Typeform returning "Hey :) This typeform is now closed." Do not submit. DEEP CRAWL 2026-08-14 confirms the grants Typeform (/applynow) still has ZERO inputs. But a SEPARATE Typeform is live: thegraph.typeform.com/to/rhYddDRu, titled "Inbound Partnership Form" with isFormClosed:false. That is NOT the grants programme — it is partnerships/integrations — so the DEAD status stands. It is, however, a real open channel to the Foundation if we ever want to approach them about being a subgraph consumer rather than a grantee.' },
   // Marked OPEN on the evidence '"grant application"' — but that string is in
   // the *instructions*, not an open round. Rendering the page on 2026-08-14:
   // "Round 1 has been closed on August 16, 2025. Please stay tuned for the next
