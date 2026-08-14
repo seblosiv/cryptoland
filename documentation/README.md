@@ -33,6 +33,7 @@ After that, pick the doc for the area you are changing from the index below.
 | File | Contents |
 |------|----------|
 | [backend.md](backend.md) | FastAPI server, SQLite schema, every REST endpoint, accounts + affiliate internals |
+| [native-payments.md](native-payments.md) | Paying for a tile in the chain's own token from the user's wallet — quote → wallet → on-chain verify, and which chains actually work |
 | [frontend.md](frontend.md) | React components, Zustand store, lib utilities, entry points |
 | [auth.md](auth.md) | Universal identity model — `user_id` UUID, email / wallet / guest accounts, linking |
 | [blockchain.md](blockchain.md) | Chain-agnostic adapter pattern, `CryptoLandTile.sol`, SIWE wallet auth |

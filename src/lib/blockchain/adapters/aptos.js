@@ -92,6 +92,53 @@ export async function signPurchase({ tileKey, price }) {
   }
 }
 
+// ── Native payment (plain APT transfer to the treasury) ─────────────────────
+
+/**
+ * Pay for a tile in APT, from the user's own wallet.
+ *
+ * `0x1::aptos_account::transfer`, not `0x1::coin::transfer<AptosCoin>`: the
+ * former creates the recipient account and registers its coin store when the
+ * treasury has never been funded, which the raw coin transfer aborts on. It is
+ * a framework entry function, so this works with no module of ours deployed.
+ *
+ * `amount` is a decimal STRING of octas (1 APT = 1e8) from the server's quote,
+ * and stays a string: a Move u64 crosses the wallet boundary as text for the
+ * same reason we never parse the quote as a Number.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const octas = BigInt(amount)         // throws on a malformed quote
+  if (octas <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  const provider = getProvider()
+  if (!provider) throw new Error('No Aptos wallet detected. Install Petra or Martian.')
+  if (typeof provider.signAndSubmitTransaction !== 'function') {
+    throw new Error('This Aptos wallet cannot submit transactions.')
+  }
+
+  const payer = from ?? getAddress() ?? (await connect()).address
+  if (!payer) throw new Error('No wallet account available')
+
+  const pending = await provider.signAndSubmitTransaction({
+    type: 'entry_function_payload',
+    function: '0x1::aptos_account::transfer',
+    type_arguments: [],
+    arguments: [to, octas.toString()],
+  })
+  // Petra returns { hash }; a few wallets return the hash itself.
+  const txHash = pending?.hash ?? pending
+  if (!txHash) throw new Error('Aptos wallet returned no transaction hash')
+  return { txHash: String(txHash), from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && Boolean(getProvider())
+}
+
 // ── NFT mint (stubbed until a Move module is deployed) ───────────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

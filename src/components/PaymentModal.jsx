@@ -24,6 +24,54 @@ const CURRENCIES = [
 ]
 
 const STEPS = ['select', 'payment', 'confirming', 'confirmed']
+
+/**
+ * Pay in the chain's own token, from the user's own wallet.
+ *
+ * Shown FIRST and styled as the primary action, because on a chain-native build
+ * it is the native thing to do: on base.xono.ai you pay ETH on Base. The
+ * currency grid below stays for everyone without a wallet — this replaces
+ * nothing.
+ *
+ * Renders nothing at all when the path is unavailable (no treasury configured,
+ * no verifier for the family, no wallet installed). A disabled button the user
+ * cannot explain is worse than no button, and every visitor without a wallet
+ * would see one.
+ */
+function NativePayOption() {
+  const nativePay          = useGameStore(s => s.nativePay)
+  const checkNativePay     = useGameStore(s => s.checkNativePay)
+  const startNativePayment = useGameStore(s => s.startNativePayment)
+
+  useEffect(() => { checkNativePay?.() }, [checkNativePay])
+
+  if (!nativePay?.available) return null
+  const { chain_name: chainName, symbol } = nativePay.server ?? {}
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <button
+        onClick={startNativePayment}
+        style={{
+          width: '100%', padding: '14px 16px', borderRadius: 7,
+          background: 'var(--chain-accent)', color: 'var(--chain-accent-ink)',
+          border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14,
+          letterSpacing: '-0.01em', WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        Pay with wallet on {chainName}
+      </button>
+      <div style={{ fontSize: 11, color: 'var(--t3)', textAlign: 'center' }}>
+        Sends {symbol} on {chainName} straight from your wallet — no exchange, no bridge.
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '2px 0' }}>
+        <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
+        <div className="label" style={{ color: 'var(--t4)' }}>or pay another way</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--b1)' }} />
+      </div>
+    </div>
+  )
+}
 const STEP_LABELS = { select: 'Currency', payment: 'Pay', confirming: 'Confirm', confirmed: 'Done' }
 
 function fmt(s) {
@@ -166,6 +214,8 @@ function CurrencySelect() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <NativePayOption email={email} />
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
         {CURRENCIES.map(c => {
           const tooLow  = price < c.minUsd
@@ -237,6 +287,7 @@ function CurrencySelect() {
 }
 
 function Loading() {
+  const nativeStatus = useGameStore(s => s.nativeStatus)
   return (
     <div style={{ padding: '52px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
       <div style={{
@@ -246,8 +297,16 @@ function Loading() {
         animation: 'spin 0.9s linear infinite',
       }} />
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginBottom: 5 }}>Generating Payment</div>
-        <div style={{ fontSize: 12, color: 'var(--t3)' }}>Fetching live rate & deposit address…</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', marginBottom: 5 }}>
+          {nativeStatus ? 'Paying from your wallet' : 'Generating Payment'}
+        </div>
+        {/* The wallet rail reports what it is actually doing — connecting,
+            pricing, waiting for an approval the user has to act on. A generic
+            spinner there reads as frozen at exactly the moment the user needs
+            to be told to check their wallet. */}
+        <div style={{ fontSize: 12, color: 'var(--t3)' }}>
+          {nativeStatus ?? 'Fetching live rate & deposit address…'}
+        </div>
       </div>
     </div>
   )
@@ -358,6 +417,8 @@ function Pay({ data, timeLeft, copied, onCopy }) {
 }
 
 function Confirming({ status }) {
+  const nativeStatus = useGameStore(s => s.nativeStatus)
+  const nativeTxHash = useGameStore(s => s.nativeTxHash)
   return (
     <div style={{ padding: '48px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
       <div style={{
@@ -371,8 +432,16 @@ function Confirming({ status }) {
           Awaiting Confirmation
         </div>
         <div style={{ fontSize: 13, color: 'var(--t3)', lineHeight: 1.6 }}>
-          {status ? statusLabel(status) : 'Scanning blockchain for your transaction…'}
+          {nativeStatus ?? (status ? statusLabel(status) : 'Scanning blockchain for your transaction…')}
         </div>
+        {/* Once the wallet has broadcast, the buyer's money has already left.
+            Showing the hash here means they hold proof of that before the tile
+            settles — the one thing they need if anything goes wrong next. */}
+        {nativeTxHash && (
+          <div style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--t4)', marginTop: 8 }}>
+            {nativeTxHash.slice(0, 18)}…
+          </div>
+        )}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         {[0,1,2].map(i => (

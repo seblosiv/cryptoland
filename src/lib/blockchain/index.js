@@ -50,6 +50,8 @@ export const {
   switchChain,
   signMessage,
   signPurchase,
+  payNative,
+  supportsNativePay,
   mintTile,
   listForSale,
   unlistTile,

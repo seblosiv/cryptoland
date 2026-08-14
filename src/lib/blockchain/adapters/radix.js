@@ -295,6 +295,131 @@ export async function signPurchase({ tileKey, price }) {
   }
 }
 
+// ── Native payment (a plain XRD transfer — no Scrypto component involved) ─────
+
+// XRD's own resource address is protocol-defined, not deployed, and encodes the
+// network like every other Radix address. These are exactly what
+// RadixEngineToolkit.Utils.knownAddresses(<network>).resourceAddresses.xrd
+// returns; hardcoded because that toolkit is not a dependency of this bundle and
+// a Gateway round-trip would add a failure mode to the payment path itself.
+const XRD_RESOURCE = ACTIVE_CHAIN.testnet
+  ? 'resource_tdx_2_1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxtfd2jc'
+  : 'resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd'
+
+// A manifest Decimal is 18-decimal fixed point and XRD has 18 decimals, so one
+// atto is exactly the last decimal place: the conversion is a string shift and
+// must never be arithmetic. attos / 1e18 in floating point silently loses the
+// low digits of any realistic tile price — and quotes routinely exceed
+// Number.MAX_SAFE_INTEGER long before that.
+const XRD_DECIMALS = 18
+
+function attosToXrd(attos) {
+  // padStart guarantees a whole-number digit, so 1 atto renders as
+  // "0.000000000000000001" rather than ".000000000000000001".
+  const digits = attos.toString().padStart(XRD_DECIMALS + 1, '0')
+  const whole  = digits.slice(0, -XRD_DECIMALS)
+  // Trailing zeros are meaningless to the engine but the wallet shows this
+  // string to the user, and "3.7" reads as a price where "3.700000000000000000"
+  // reads as a bug. Dropping them is a pure string op — the value is unchanged.
+  const frac   = digits.slice(-XRD_DECIMALS).replace(/0+$/, '')
+  return frac ? `${whole}.${frac}` : whole
+}
+
+/**
+ * Pay for a tile in XRD, from the user's own wallet.
+ *
+ * Deliberately NOT a call into the CryptoLandTile component: claim_tile charges
+ * one flat `tile_price` for every tile on Earth, which cannot express a $12 ocean
+ * tile and a $76 Tokyo tile. A resource transfer carries the exact quoted amount
+ * and needs no package published at all — so this works on a build with
+ * VITE_CONTRACT_RADIX unset.
+ *
+ * `amount` is a decimal STRING of attos (1e-18 XRD) straight from the server's
+ * quote, and stays a BigInt end to end for the reason above.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const attos = BigInt(amount)          // throws on a malformed quote
+  if (attos <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  // A Radix address encodes its network in the bech32 prefix, so this one check
+  // catches both "that is not an account" and "that treasury belongs to the
+  // other network" — the second being how funds get sent into a void.
+  if (typeof to !== 'string' || !to.startsWith(ACCOUNT_PREFIX)) {
+    throw new Error(
+      `Treasury "${to}" is not a ${ACTIVE_CHAIN.name} account address (expected prefix "${ACCOUNT_PREFIX}").`
+    )
+  }
+
+  const payer = from ?? _address
+  if (!payer) throw new Error('Connect a Radix wallet before paying.')
+  assertAccountAddress(payer)
+
+  const rdt   = await getToolkit()
+  const value = attosToXrd(attos)
+
+  // The whole transfer, with no on-ledger code of ours: withdraw the resource
+  // from the payer's account, take the bucket the withdrawal put on the worktop,
+  // deposit it into the treasury account.
+  //   • try_deposit_or_abort, not deposit: an account can be configured to
+  //     reject resources it does not already hold, and only the try_ variants
+  //     surface that as a clean abort instead of an opaque auth failure. Its
+  //     second argument is the optional badge that would authorise a bypass —
+  //     Enum<0u8>() is None.
+  //   • no lock_fee instruction: the Radix Wallet picks the fee-paying account
+  //     itself during review. Hardcoding one here would force the user to pay
+  //     fees from an account they may not have chosen.
+  const transactionManifest = `
+CALL_METHOD
+    Address("${payer}")
+    "withdraw"
+    Address("${XRD_RESOURCE}")
+    Decimal("${value}")
+;
+TAKE_FROM_WORKTOP
+    Address("${XRD_RESOURCE}")
+    Decimal("${value}")
+    Bucket("payment")
+;
+CALL_METHOD
+    Address("${to}")
+    "try_deposit_or_abort"
+    Bucket("payment")
+    Enum<0u8>()
+;
+`
+
+  // Same asymmetry as mintTile(): onTransactionId fires at submission, while
+  // sendTransaction resolves only after COMMIT — and resolves for a committed
+  // failure too, as an err Result. unwrap() is what turns that into a throw.
+  let intentHash = null
+  const result = await rdt.walletApi.sendTransaction({
+    transactionManifest,
+    version: 1,
+    message: 'CryptoLand tile payment',   // on-ledger and public — keep it short
+    onTransactionId: id => { intentHash = id },
+  })
+  const out = unwrap(result, 'payment')
+
+  const txHash = out?.transactionIntentHash ?? intentHash
+  if (!txHash) throw new Error('Radix wallet returned no transaction intent hash for the payment.')
+  return { txHash, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Mirrors detectWallets(): there is nothing to feature-detect — no injected
+  // object, and the Connector extension exposes no detection hook. What is worth
+  // checking is whether the toolkit can be constructed at all, because without a
+  // dApp Definition address getToolkit() throws and no request ever reaches a
+  // wallet, so offering the button would only produce an error.
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  if (typeof window === 'undefined') return false
+  return Boolean(import.meta.env.VITE_RADIX_DAPP_DEFINITION)
+}
+
 // ── NFT mint (stubbed until a resource address is configured) ─────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

@@ -264,10 +264,34 @@ def row_to_dict(row):
 
 ---
 
+### Native wallet payments
+
+`GET /chain/pay-info` · `POST /chain/quote` · `POST /chain/verify`, plus the
+`chain_quotes` table. Pay for a tile in the chain's own token from the user's
+own wallet, verified against that chain's RPC before the tile is written.
+
+Full write-up, invariants and per-chain status:
+**[native-payments.md](native-payments.md)**. Two things to know here:
+
+- The price is computed **server-side** from `tile_pricing.py`. The rail below
+  does not do this — see the warning on `POST /np/payment`.
+- Only the `evm` family has a verifier today (21 chains). Other families report
+  `enabled: false` from `/chain/pay-info` and fall back to NOWPayments.
+
+---
+
 ### NOWPayments Integration
 
 #### `POST /np/payment`
 Creates a NOWPayments payment intent and stores metadata for IPN fulfillment.
+
+> ⚠️ **`price_usd` originates from the client.** `req.usd_amount` is stored as
+> the authoritative price that `/np/finalize` and `/np/ipn` later validate
+> against. The binding is real, but the number is whatever the browser sent, so
+> a crafted request can create a payment for a $76 tile at $0.50. The native
+> rail deliberately does not repeat this — it prices tiles from
+> `tile_pricing.py` and ignores client price fields entirely. Closing this here
+> means calling the same function.
 
 **Rate limit:** 10 requests/minute per IP.
 

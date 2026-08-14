@@ -475,7 +475,17 @@ Three env vars are load-bearing per chain and the audit checks all three:
 |---|---|
 | `SERVER_URL` | IPN callback unreachable — payments never confirm |
 | `CRYPTOLAND_SITE_HOST` | share cards print the wrong chain's host |
-| `CRYPTOLAND_CHAIN` | `viral.py` defaults to `polygon` on every chain |
+| `CRYPTOLAND_CHAIN` | `viral.py` defaults to `polygon` on every chain; native pay prices the wrong chain |
+| `CRYPTOLAND_TREASURY_*` | native wallet payment stays off — see [native-payments.md](native-payments.md) |
+
+> 🔴 **How they got unset in the first place, and why it could recur.**
+> `deploy/server/push.sh` wrote each per-chain env with `printf … > env`, which
+> **truncates the file** — so every deploy silently deleted all four of the vars
+> above and left only `PORT` and `ALLOWED_ORIGINS`. That is the mechanism behind
+> the `SERVER_URL` outage; setting the vars by hand fixes a symptom that the
+> next push undoes. **Fixed 2026-08-14**: push.sh now rewrites only the two
+> variables it owns and preserves the rest. If you ever re-add a per-chain env
+> var, verify a dry-run push does not eat it.
 
 ## `xono.ai/dossier` — the internal board
 

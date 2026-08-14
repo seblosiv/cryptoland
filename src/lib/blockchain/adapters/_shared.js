@@ -34,6 +34,25 @@ export function hasContract() {
 }
 
 /**
+ * For a family whose native-payment path is not implemented yet.
+ *
+ * Every adapter must export `payNative` — src/test/chains.test.js enforces the
+ * interface, and a missing export destructures to `undefined` in index.js and
+ * only explodes at call time, on that one chain's build. Exporting this instead
+ * keeps the interface whole and fails loudly and legibly if it is ever reached.
+ * The UI asks `supportsNativePay()` first, so users see the off-chain rail
+ * rather than an error.
+ */
+export function payNativeUnsupported(family) {
+  return async () => {
+    throw new Error(
+      `Native wallet payment is not implemented for ${family} yet. ` +
+      `Use the off-chain payment option on this chain.`,
+    )
+  }
+}
+
+/**
  * Uniform "mint not live yet" result. Adapters return this from mintTile() when
  * no contract is deployed, so the purchase flow completes cleanly and the NFT
  * layer activates automatically the moment you set the contract address.

@@ -95,19 +95,23 @@ const CHAIN_DEFS = {
   // ══ EVM chains ════════════════════════════════════════════════════════════
   // One adapter (adapters/evm.js) serves every entry in this section.
 
+  // POL, not MATIC. The gas token migrated and MATIC is the OLD ticker — they
+  // are separately priced assets on every feed (~42% apart), so a build that
+  // says MATIC while charging POL quotes a wallet payment in a token the user
+  // is not sending. `wallet_addEthereumChain` also shows this symbol.
   polygon: {
-    id: 137, name: 'Polygon', shortName: 'MATIC', family: 'evm',
+    id: 137, name: 'Polygon', shortName: 'POL', family: 'evm',
     rpcUrl: 'https://polygon-bor-rpc.publicnode.com', rpcUrlFallback: 'https://polygon.drpc.org',
     explorerUrl: 'https://polygonscan.com',
-    nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+    nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
     blockTime: 2, confirmations: 3, color: '#8247e5', logo: '⬡',
     grant: 'Polygon Community Grants S2 (35M POL)',
   },
   'polygon-amoy': {
-    id: 80002, name: 'Polygon Amoy', shortName: 'MATIC', family: 'evm',
+    id: 80002, name: 'Polygon Amoy', shortName: 'POL', family: 'evm',
     rpcUrl: 'https://rpc-amoy.polygon.technology', rpcUrlFallback: 'https://polygon-amoy.drpc.org',
     explorerUrl: 'https://amoy.polygonscan.com',
-    nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+    nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
     blockTime: 2, confirmations: 2, color: '#8247e5', logo: '⬡', testnet: true,
   },
 

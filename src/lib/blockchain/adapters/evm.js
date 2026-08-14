@@ -433,4 +433,48 @@ export function detectWallets() {
   return wallets
 }
 
+/**
+ * Pay for a tile with the chain's own token, from the user's own wallet.
+ *
+ * A plain value transfer to the treasury — NOT contract.claimTile(). claimTile
+ * charges one flat `tilePriceWei` for every tile on Earth and refunds the
+ * difference, which cannot express a $12 ocean tile and a $76 Tokyo tile; the
+ * deployed contracts also have tilePriceWei = 0, which disables it outright.
+ * A transfer carries the exact per-tile price and needs no redeployment.
+ *
+ * `amount` is a decimal STRING of base units (wei), straight from the server's
+ * quote. It must never be a Number: 18-decimal wei exceeds Number.MAX_SAFE_INTEGER,
+ * so JSON.parse of a numeric literal would silently round the price.
+ *
+ * The server re-derives everything that matters from the chain afterwards, so a
+ * tampered `to` or `amount` here just fails verification and settles nothing.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const value = BigInt(amount)          // throws on a malformed quote
+  if (value <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  // The wallet may be sitting on a different network; sending there would put
+  // real money on the wrong chain, so switch (and add, if unknown) first.
+  await switchChain(ACTIVE_CHAIN)
+
+  const payer = from ?? await requestAccounts()
+  if (!payer) throw new Error('No wallet account available')
+
+  const txHash = await walletCall('eth_sendTransaction', [{
+    from:  payer,
+    to,
+    value: toHex(value),
+  }])
+
+  return { txHash, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && Boolean(getProvider())
+}
+
 export const ADAPTER_TYPE = 'evm'

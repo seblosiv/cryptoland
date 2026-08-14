@@ -202,6 +202,82 @@ export async function signPurchase({ tileKey, price }) {
   return { signature, key, message: text }
 }
 
+// ── Native payment (pay for a tile in ADA) ───────────────────────────────────
+
+/**
+ * Pay for a tile with the chain's own token, from the user's own wallet.
+ *
+ * CIP-30 has NO "send X to Y". A wallet signs and submits; it does not build.
+ * Building a payment needs protocol parameters, a tip slot and coin selection
+ * over the wallet's UTxOs, and Koios — the only full API configured for this
+ * chain — sends no Access-Control-Allow-Origin (see config.js), so the browser
+ * cannot fetch any of that itself. So this is the same three-step shape as
+ * mintTile(): the backend builds, the wallet witnesses, we assemble and submit.
+ *
+ * `amount` is a decimal STRING of base units (lovelace, 6 decimals) from the
+ * server's quote, and it stays a string all the way to the backend — a JSON
+ * number is an IEEE double and would round a large payment.
+ *
+ * NOT IMPLEMENTED SERVER-SIDE YET: /cardano/build-payment is the counterpart of
+ * /cardano/build-mint, and neither route exists in server/main.py today. Until
+ * one does, this path fails on the fetch with the message below rather than
+ * pretending to pay.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const lovelace = BigInt(amount)       // throws on a malformed quote
+  if (lovelace <= 0n) throw new Error('Refusing to send a non-positive amount')
+  if (!_api) throw new Error('Connect a Cardano wallet first.')
+
+  // The wallet signs with the account it currently has open, so a `from` that no
+  // longer matches means the quote was bound to a different payer — the ADA
+  // would move and only then fail verification.
+  const payer = getAddress()
+  if (from && from !== payer) {
+    throw new Error(`Wallet is on ${payer}, but this payment was quoted for ${from}. Switch accounts and retry.`)
+  }
+
+  // Coin selection happens server-side, so it needs the spendable set. An empty
+  // list here is not a build error to discover later — it is an empty wallet.
+  const utxos = await _api.getUtxos().catch(() => [])
+  if (!utxos.length) throw new Error('This Cardano wallet has no spendable UTxOs to pay from')
+
+  const BASE = import.meta.env.VITE_API_BASE ?? ''
+  const res = await fetch(`${BASE}/cardano/build-payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to, amount: lovelace.toString(), changeAddress: _addressHex, utxos,
+    }),
+  })
+  if (!res.ok) throw new Error(`Could not build the Cardano payment transaction (HTTP ${res.status})`)
+  const { txCbor } = await res.json()
+  if (!txCbor) throw new Error('Backend returned no Cardano transaction')
+
+  // Same trap as the mint path: signTx returns ONLY a witness set, never a full
+  // transaction, and never submits. partialSign stays true so the call keeps
+  // working if the backend ever attaches a witness of its own (a sponsored fee
+  // input); assembleTx merges the vkeys either way.
+  const witnessHex = await _api.signTx(txCbor, true)
+  const signedHex  = await assembleTx(txCbor, witnessHex)
+  const txHash     = await _api.submitTx(signedHex)
+  if (!txHash) throw new Error('Cardano wallet returned no transaction hash')
+
+  return { txHash, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  // The same evidence detectWallets() uses. It deliberately does not try to
+  // answer the other two preconditions — the optional serialization lib and the
+  // backend builder — because both are async; payNative() surfaces each with its
+  // own specific reason instead of hiding the button for the wrong one.
+  return Boolean(_api) || listProviders().length > 0
+}
+
 // ── NFT mint (stubbed until a minting policy id is configured) ────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

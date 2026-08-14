@@ -84,6 +84,77 @@ export async function signPurchase({ tileKey, price }) {
   return { signature: sigB64, message: text }
 }
 
+// ── Native payment (plain SOL transfer to the treasury) ──────────────────────
+
+/**
+ * Pay for a tile in SOL, from the user's own wallet.
+ *
+ * A System Program transfer to the treasury — NOT an instruction on our program.
+ * Tiles are priced per tile (a Tokyo tile is ~$76, an ocean tile $12), so the
+ * price has to ride on the transaction rather than live in program state, and a
+ * transfer works on a cluster where nothing of ours is deployed.
+ *
+ * `amount` is a decimal STRING of lamports, straight from the server's quote.
+ * It must never become a Number: the quote is authoritative down to the last
+ * lamport, and the server re-reads the transfer from the chain afterwards, so a
+ * rounded amount is a rejected payment.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const lamports = BigInt(amount)       // throws on a malformed quote
+  if (lamports <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  const provider = getProvider()
+  if (!provider) throw new Error('No Solana wallet detected. Install Phantom or Solflare.')
+
+  const payer = from ?? getAddress() ?? (await connect()).address
+  if (!payer) throw new Error('No wallet account available')
+
+  const { Connection, PublicKey, SystemProgram, Transaction } =
+    await import('@solana/web3.js').catch(() => {
+      throw new Error('Solana SDK not available — ensure @solana/web3.js is installed')
+    })
+
+  // A Solana transaction expires with its blockhash, so one must be attached
+  // before signing even when the wallet does the broadcasting.
+  const connection = new Connection(ACTIVE_CHAIN.rpcUrl, 'confirmed')
+  const { blockhash } = await connection.getLatestBlockhash()
+
+  const tx = new Transaction()
+  tx.feePayer        = new PublicKey(payer)
+  tx.recentBlockhash = blockhash
+  tx.add(SystemProgram.transfer({
+    fromPubkey: new PublicKey(payer),
+    toPubkey:   new PublicKey(to),
+    lamports,                           // web3.js takes a bigint here — no Number round-trip
+  }))
+
+  // Phantom, Solflare and Backpack sign AND broadcast in one prompt, through
+  // their own RPC, which sidesteps a rate-limited public endpoint. Falling back
+  // to sign-then-send keeps wallets that only expose signTransaction working.
+  if (typeof provider.signAndSendTransaction === 'function') {
+    const res       = await provider.signAndSendTransaction(tx)
+    const signature = res?.signature ?? res
+    if (!signature) throw new Error('Solana wallet returned no transaction signature')
+    return { txHash: String(signature), from: payer }
+  }
+
+  if (typeof provider.signTransaction !== 'function') {
+    throw new Error('This Solana wallet cannot sign transactions.')
+  }
+  const signed = await provider.signTransaction(tx)
+  return { txHash: await connection.sendRawTransaction(signed.serialize()), from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Gated on the provider payNative would actually use — a wallet detectWallets()
+  // can name but getProvider() cannot reach could not sign the transfer.
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && Boolean(getProvider())
+}
+
 // ── NFT minting (server-side) ─────────────────────────────────────────────────
 // Solana minting is complex (Metaplex, metadata accounts, etc.).
 // We ask the backend to build + serialize the transaction, then sign it here.

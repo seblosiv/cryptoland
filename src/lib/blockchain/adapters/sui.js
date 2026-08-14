@@ -97,6 +97,63 @@ export async function signPurchase({ tileKey, price }) {
   return { signature: res?.signature ?? res, message: text }
 }
 
+// ── Native payment (plain SUI transfer to the treasury) ──────────────────────
+
+/**
+ * Pay for a tile in SUI, from the user's own wallet.
+ *
+ * A transfer on Sui is a programmable transaction block — split `amount` MIST
+ * off the gas coin, transfer the resulting coin to the treasury — and building
+ * one means BCS-encoding it, which needs a Sui SDK this adapter deliberately
+ * does not ship (vite marks every chain SDK external; a Sui deployment installs
+ * only what it uses, and this file otherwise speaks nothing but Wallet Standard
+ * and raw HTTP). So the backend assembles the bytes, exactly as it already does
+ * for mintTile, and the wallet signs and executes them. Nothing about the money
+ * is decided here: the server fixed `to` and `amount` when it issued the quote,
+ * and reads the transfer back off the chain before it writes the tile.
+ *
+ * `amount` is a decimal STRING of MIST (1 SUI = 1e9) from that quote, forwarded
+ * as a string — never parsed as a Number.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const mist = BigInt(amount)          // throws on a malformed quote
+  if (mist <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  if (!_wallet) await connect()
+  const payer = from ?? getAddress()
+  if (!payer) throw new Error('No wallet account available')
+
+  const feature = _wallet?.features?.['sui:signAndExecuteTransactionBlock']
+  if (!feature) throw new Error('This Sui wallet cannot execute transactions.')
+
+  const BASE = import.meta.env.VITE_API_BASE ?? ''
+  const res  = await fetch(`${BASE}/sui/build-transfer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ to, amount: mist.toString(), from: payer }),
+  })
+  if (!res.ok) throw new Error('Failed to build the Sui payment transaction')
+  const { transactionBlock } = await res.json()
+  if (!transactionBlock) throw new Error('Failed to build the Sui payment transaction')
+
+  const out = await feature.signAndExecuteTransactionBlock({
+    transactionBlock,
+    account: { address: payer },
+  })
+  // The digest is the handle both an explorer and the server's verifier take.
+  const digest = out?.digest ?? null
+  if (!digest) throw new Error('Sui wallet returned no transaction digest')
+  return { txHash: digest, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && getWallets().length > 0
+}
+
 // ── NFT mint (stubbed until a Move package is deployed) ───────────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

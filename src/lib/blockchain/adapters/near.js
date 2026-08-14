@@ -303,6 +303,81 @@ export async function signPurchase({ tileKey, price }) {
   return { ...res, message: text }
 }
 
+// ── Native payment (pay for a tile in NEAR) ──────────────────────────────────
+
+/**
+ * Pay for a tile with the chain's own token, from the user's own wallet.
+ *
+ * A Transfer ACTION with a yoctoNEAR deposit, down the same
+ * signAndSendTransaction path mintTile() uses — actionCreators.transfer(deposit)
+ * instead of a functionCall, and the treasury account as receiverId. No contract
+ * call, no mint: the tile's price is per-tile, and a contract charging one flat
+ * price cannot express it.
+ *
+ * `amount` is a decimal STRING of base units from the server's quote. yoctoNEAR
+ * is 24 decimals — 1 NEAR is 1e24 — so it stays BigInt from here into the
+ * action. A Number would round away real money silently.
+ *
+ * A Transfer CANNOT be authorised by a function-call access key, which is the
+ * only kind loginScope() lets a wallet issue us. So unlike a mint this always
+ * needs a full-access signature: extension wallets prompt, and browser wallets
+ * (MyNearWallet) REDIRECT the page exactly as signMessage documents. We never
+ * fabricate a hash to paper over that.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const deposit = BigInt(amount)        // throws on a malformed quote
+  if (deposit <= 0n) throw new Error('Refusing to send a non-positive amount')
+  // A typo'd receiver is not rejected by the network — NEAR CREATES an implicit
+  // account for any 64-hex id, so an unvalidated recipient burns the payment.
+  if (!isAccountId(to)) {
+    throw new Error(`"${to}" is not a NEAR account id — refusing to send NEAR to it`)
+  }
+
+  const wallet   = await requireWallet()
+  const signerId = getAddress()
+  if (!signerId) throw new Error('No NEAR account connected')
+  // The wallet signs as whoever is signed in, so a `from` that no longer matches
+  // means the quote was bound to a different payer: the NEAR would move and only
+  // then fail verification.
+  if (from && from !== signerId) {
+    throw new Error(`Wallet is signed in as ${signerId}, but this payment was quoted for ${from}. Switch accounts and retry.`)
+  }
+
+  // Same v10 rule as mintTile: actions must be actionCreators objects, never the
+  // literal { type: 'Transfer' } shape, which is silently rejected.
+  const { actionCreators } = await loadCore()
+  if (typeof actionCreators?.transfer !== 'function') {
+    throw new Error('NEAR SDK is too old for actionCreators.transfer — reinstall @near-wallet-selector/core@10.')
+  }
+
+  const outcome = await wallet.signAndSendTransaction({
+    signerId,
+    receiverId: to,
+    actions: [actionCreators.transfer(deposit)],
+  })
+
+  const txHash = outcome?.transaction?.hash ?? outcome?.transaction_outcome?.id ?? null
+  if (!txHash) {
+    // Reached only if a redirect wallet resolves without navigating; when it does
+    // navigate, this line never runs and the payment is confirmed on the way back.
+    throw new Error('NEAR wallet redirected to approve the payment — it settles when the page returns.')
+  }
+  return { txHash, from: signerId }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  // detectWallets() always offers the selector modal, and its one hard
+  // precondition is a browser — NEAR's wallets are web wallets that need a page
+  // to redirect. Whether the optional SDK is installed is an async question, so
+  // payNative()/loadCore() answers that one with an install hint.
+  return typeof window !== 'undefined'
+}
+
 // ── NFT mint (stubbed until a NEP-171 contract is deployed) ──────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

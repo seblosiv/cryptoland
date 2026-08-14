@@ -37,6 +37,7 @@ const HORIZON            = ACTIVE_CHAIN.rpcUrl          // https://horizon…
 const SOROBAN_RPC        = ACTIVE_CHAIN.rpcUrlFallback  // https://…sorobanrpc…
 
 let _api     = null   // cached @stellar/freighter-api module namespace
+let _sdk     = null   // cached @stellar/stellar-sdk module namespace
 let _address = null
 let _watcher = null
 
@@ -62,6 +63,29 @@ async function freighter() {
   // Some bundler/interop paths land the named exports on `.default`.
   _api = mod?.requestAccess ? mod : (mod?.default ?? mod)
   return _api
+}
+
+/**
+ * Freighter SIGNS an XDR, it cannot BUILD one — and a Stellar transaction
+ * envelope is length-prefixed binary XDR, not JSON, so there is no hand-rolled
+ * shortcut the way there is on MultiversX. Building a payment therefore needs
+ * the SDK (already declared external in vite.config.js, alongside the other
+ * optional per-chain wallet packages).
+ */
+async function stellarSdk() {
+  if (_sdk) return _sdk
+  let mod
+  try {
+    mod = await import('@stellar/stellar-sdk')
+  } catch {
+    throw new Error(
+      'Stellar SDK not available — install it with: npm i @stellar/stellar-sdk ' +
+      '(Freighter signs a transaction envelope, it cannot build one).'
+    )
+  }
+  _sdk = mod?.TransactionBuilder ? mod : (mod?.default ?? mod)
+  if (!_sdk?.TransactionBuilder) throw new Error('@stellar/stellar-sdk loaded without TransactionBuilder — wrong package or a broken install.')
+  return _sdk
 }
 
 /**
@@ -245,6 +269,120 @@ async function submitXdr(signedTxXdr) {
   const hash = body?.hash
   if (!hash) throw new Error('Stellar submission returned no transaction hash.')
   return hash
+}
+
+// ── Native XLM payment (wallet → treasury) ──────────────────────────────────
+
+// A Stellar transaction's fee is a MAX BID, not a charge: every transaction in
+// a ledger pays the lowest bid that made it in, so overbidding costs nothing and
+// is the only thing that survives surge pricing. 10× base is 1000 stroops
+// (0.0001 XLM) — invisible next to a tile price, and it stops a busy ledger from
+// silently dropping a paid purchase.
+const FEE_BID_MULTIPLIER = 10n
+
+/**
+ * Stroops → the decimal XLM string a Payment operation takes.
+ *
+ * The whole rail quotes prices in integer base units, but the Stellar SDK's
+ * `amount` field is whole XLM as a decimal string and re-multiplies by 10^7
+ * itself. The conversion is BigInt divide + remainder, never `Number()`:
+ * a float round-trip is exact only up to 2^53 stroops (~900M XLM) and is wrong
+ * in the last digit well before that — and the last digit here is money.
+ */
+function stroopsToXlm(stroops) {
+  const v = BigInt(stroops)
+  const whole = v / 10_000_000n
+  // Pad to the full 7 places first (so 1 stroop is 0.0000001, not 0.1), then
+  // drop the trailing zeros the SDK does not need.
+  const frac = (v % 10_000_000n).toString().padStart(7, '0').replace(/0+$/, '')
+  return frac ? `${whole}.${frac}` : String(whole)
+}
+
+/**
+ * The account's CURRENT sequence number, straight from Horizon.
+ * TransactionBuilder increments it for us, so this must be the last sequence the
+ * network has seen, not the next one.
+ */
+async function accountSequence(address) {
+  const res = await fetch(`${HORIZON}/accounts/${address}`)
+  // 404 is the "account does not exist yet" case, which on Stellar means it has
+  // never received the 1 XLM base reserve — it cannot pay for anything.
+  if (res.status === 404) {
+    throw new Error(`Stellar account ${address} is not funded yet — it needs at least the 1 XLM base reserve before it can send a payment.`)
+  }
+  if (!res.ok) throw new Error(`Could not read the Stellar account sequence (Horizon ${res.status}).`)
+  const body = await res.json().catch(() => null)
+  if (body?.sequence === undefined || body?.sequence === null) {
+    throw new Error('Horizon returned no sequence number for this account.')
+  }
+  return String(body.sequence)
+}
+
+/**
+ * Pay for a tile in XLM, from the user's own wallet.
+ *
+ * A classic Payment operation to the treasury — NOT a Soroban invocation. It
+ * needs no deployed contract, carries the exact per-tile price, and the backend
+ * re-reads the transaction from the chain afterwards, so a tampered `to` or
+ * `amount` here simply fails verification and settles nothing.
+ *
+ * `amount` is a decimal STRING of stroops (1 XLM = 10,000,000). See
+ * stroopsToXlm() for why it never becomes a Number.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const stroops = BigInt(amount)          // throws on a malformed quote
+  if (stroops <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  assertPublicAddress(to)
+  // A C… contract address cannot receive a classic payment — the funds would be
+  // rejected at submit, after the user has already approved the popup.
+  if (to[0] === 'C') throw new Error('The treasury address must be a G… account — a C… contract cannot receive a classic XLM payment.')
+
+  const api   = await freighter()
+  const payer = from ?? await currentAddress(api)
+  assertPublicAddress(payer)
+  // Account (unlike MuxedAccount) rejects an M… source, and Freighter hands back
+  // a G… address, so this only trips on a caller-supplied `from`.
+  if (payer[0] !== 'G') throw new Error(`Stellar payments must be sent from a G… account, got ${payer}`)
+  // Signing on the wrong network is not a failed payment, it is money sent on a
+  // ledger nobody is watching — check before the popup, not after.
+  await assertNetwork(api)
+
+  const { TransactionBuilder, Account, Operation, Asset, BASE_FEE } = await stellarSdk()
+
+  const tx = new TransactionBuilder(new Account(payer, await accountSequence(payer)), {
+    fee: String(BigInt(BASE_FEE) * FEE_BID_MULTIPLIER),
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(Operation.payment({
+      destination: to,
+      asset:       Asset.native(),
+      amount:      stroopsToXlm(stroops),
+    }))
+    // build() THROWS without timebounds. 3 minutes is long enough to approve in
+    // the extension and short enough that an abandoned signature expires instead
+    // of landing hours later against a quote that has already gone stale.
+    .setTimeout(180)
+    .build()
+
+  const signed = unwrap(
+    await api.signTransaction(tx.toXDR(), { networkPassphrase: NETWORK_PASSPHRASE, address: payer }),
+    'signTransaction'
+  )
+  // submitXdr returns the hash the network assigned, which is what an explorer
+  // (and the backend verifier) will look up.
+  return { txHash: await submitXdr(signed.signedTxXdr), from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Freighter exposes no window global (see detectWallets), so "is a wallet
+  // there" cannot be answered synchronously — being in a browser is the only
+  // honest precondition, and connect() is where a missing extension surfaces.
+  return typeof window !== 'undefined' && !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted
 }
 
 // ── NFT mint (stubbed until a Soroban contract is deployed) ──────────────────

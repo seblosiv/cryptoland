@@ -26,6 +26,11 @@ const ADAPTER_DIR = join(process.cwd(), 'src/lib/blockchain/adapters')
 const REQUIRED_ADAPTER_EXPORTS = [
   'connect', 'disconnect', 'getAddress', 'getChainId', 'switchChain',
   'signMessage', 'signPurchase',
+  // Native wallet purchase: pay for a tile in the chain's own token. Every
+  // family must expose both — supportsNativePay() is what the purchase UI asks
+  // before offering the path, so a missing export would offer a button that
+  // throws rather than falling back to the off-chain rail.
+  'payNative', 'supportsNativePay',
   'mintTile', 'listForSale', 'unlistTile', 'buyTile',
   'ownerOf', 'getTileData', 'getOwnedTokenIds', 'totalSupply', 'waitForTx',
   'onAccountsChanged', 'onChainChanged', 'onDisconnect', 'removeListeners',

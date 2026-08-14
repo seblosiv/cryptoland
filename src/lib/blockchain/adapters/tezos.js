@@ -267,6 +267,79 @@ export async function signPurchase({ tileKey, price }) {
   return { signature, message: text, payload, publicKey, address }
 }
 
+// ── Native payment (a plain XTZ transfer — no contract involved) ─────────────
+
+/**
+ * Pay for a tile in XTZ, from the user's own wallet.
+ *
+ * A bare transaction operation to the treasury, NOT a call into the FA2
+ * contract: minting is gated on an originated KT1 that most builds do not have,
+ * and the price is per-tile anyway, which no fixed on-chain price can express.
+ * This path therefore works with VITE_CONTRACT_TEZOS unset.
+ *
+ * `amount` is a decimal STRING of MUTEZ (1 XTZ = 1,000,000 mutez) straight from
+ * the server's quote. It stays a string/BigInt end to end — Beacon wants a
+ * string here, and a Number would round large quotes rather than fail loudly.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const mutez = BigInt(amount)          // throws on a malformed quote
+  if (mutez <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  // tz1-4 (implicit) and KT1 (originated) are both legitimate treasuries — a KT1
+  // just runs its default entrypoint on receipt.
+  assertAddress(to)
+
+  const c = await client()
+  const account = await c.getActiveAccount().catch(() => null)
+  const payer = account?.address ?? from ?? _address
+  if (!payer) throw new Error('Connect a Tezos wallet before paying.')
+
+  // Beacon signs with the wallet's ACTIVE account and an operation request
+  // carries no per-operation source override. If the user switched accounts
+  // since connecting, the payment would leave an address the backend never
+  // associated with this purchase — say so rather than paying from the wrong tz1.
+  if (from && from !== payer) {
+    throw new Error(
+      `The Tezos wallet's active account is ${payer}, not ${from}. ` +
+      'Switch back in the wallet (or reconnect) and retry the payment.'
+    )
+  }
+
+  // A wallet left on the wrong network signs happily and only fails at injection,
+  // after the user has approved — and on mainnet that is a real payment.
+  assertNetwork(account)
+
+  const out = await c.requestOperation({
+    operationDetails: [{
+      kind:        'transaction',
+      destination: to,
+      // MUTEZ, as a string — Beacon takes no numbers here. fee/gas_limit/
+      // storage_limit are deliberately omitted: the wallet simulates the
+      // operation and fills them, and hand-set limits are the usual cause of a
+      // "gas exhausted" rejection.
+      amount:      mutez.toString(),
+    }],
+  })
+
+  const txHash = out?.transactionHash ?? out?.opHash ?? null
+  if (!txHash) throw new Error('Tezos wallet returned no operation hash for the payment.')
+  return { txHash, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Beacon injects nothing into window — as detectWallets() notes, extensions
+  // answer an async postMessage handshake and mobile wallets pair over a relay,
+  // so there is no wallet to feature-detect synchronously. The one real gate is
+  // the runtime: DAppClient needs postMessage / a P2P relay / localStorage, none
+  // of which exist under SSR or in the test runner.
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  return typeof window !== 'undefined'
+}
+
 // ── NFT mint (stubbed until an FA2 contract is originated) ───────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

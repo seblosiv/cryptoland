@@ -74,6 +74,16 @@ export const useGameStore = create((set, get) => ({
   purchaseEmail:    null,       // optional email entered during purchase (for guest account creation)
   _pollTimer:       null,       // internal polling interval ref
 
+  // ── Native wallet purchase ──
+  // Paying in the chain's own token from the user's own wallet, as opposed to
+  // the off-chain NOWPayments rail above. Kept as separate state rather than
+  // overloading paymentData: the two rails fail in different ways and the UI
+  // has to tell a buyer whose money is already on-chain from one whose is not.
+  nativePay:        null,       // { available, reason, server } from /chain/pay-info
+  nativeQuote:      null,       // the server's signed price for this tile
+  nativeTxHash:     null,       // set the moment the wallet returns — money has moved
+  nativeStatus:     null,       // human-readable progress line while confirming
+
   // ── Server stats ──
   stats: { sold: 0, volume: 0, owners: 0 },
 
@@ -227,6 +237,153 @@ export const useGameStore = create((set, get) => ({
       console.error('[Store] createPayment failed:', err)
       set({ purchaseStep: 'error', purchaseError: err.message })
     }
+  },
+
+  /**
+   * Ask, once per session, whether this build can take a wallet payment.
+   * Cheap and cached in state — the purchase panel calls it on open.
+   */
+  checkNativePay: async () => {
+    if (get().nativePay) return get().nativePay
+    try {
+      const { nativePayAvailability } = await import('../lib/chainPay.js')
+      const info = await nativePayAvailability()
+      set({ nativePay: info })
+      return info
+    } catch (err) {
+      const info = { available: false, reason: err.message, server: null, wallet: false }
+      set({ nativePay: info })
+      return info
+    }
+  },
+
+  /**
+   * Buy the selected tile with the chain's own token, from the user's wallet.
+   *
+   * The ordering here is the whole design. Everything before `payNative` is
+   * reversible — the user can reject the wallet prompt and nothing happened.
+   * The moment `payNative` returns, real money has moved and the flow must
+   * NEVER report failure in a way that suggests it did not: from that point on
+   * we hold the hash, keep polling, and any error we surface says the payment
+   * is on-chain and safe.
+   */
+  startNativePayment: async () => {
+    const { purchasingKey, blocks } = get()
+    if (!purchasingKey) return
+
+    const [tx, ty] = purchasingKey.split(':').map(Number)
+    const existing = blocks.get(purchasingKey)
+
+    // No purchasingPrice here on purpose: the off-chain rail sends the panel's
+    // price to the server, but this rail asks the server to price the tile and
+    // never offers a number of its own.
+    set({ purchaseStep: 'loading', purchaseError: null, nativeStatus: 'Preparing…', nativeTxHash: null })
+
+    try {
+      const { quoteTile, payQuote, waitForSettlement } = await import('../lib/chainPay.js')
+      const bc = await import('../lib/blockchain/index.js')
+      const { useAffiliateStore: _as } = await import('./affiliateStore.js')
+      const _affState = _as.getState()
+
+      // Connect first: the quote records who is paying, and a user who declines
+      // the wallet prompt should never have produced a quote at all.
+      set({ nativeStatus: 'Connecting wallet…' })
+      const connection = await bc.connect()
+      const payer = connection?.address ?? await bc.getAddress()
+      if (!payer) throw new Error('Could not read an address from your wallet')
+
+      set({ nativeStatus: 'Getting a price…' })
+      const quote = await quoteTile({
+        tx, ty,
+        tileKey:   purchasingKey,
+        country:   existing?.country ?? get().selectedCountry ?? 'Unknown',
+        color:     existing?.color ?? null,
+        payer,
+        refCode:   _affState.landingRef ?? null,
+        sessionId: _affState.sessionId  ?? null,
+      })
+      // Deliberately NOT the 'payment' step: that screen renders a deposit
+      // address and QR for the off-chain rail, which has no meaning here — the
+      // wallet's own prompt is the payment UI. Stay on 'loading' until the
+      // transaction is actually broadcast.
+      set({ nativeQuote: quote, nativeStatus: `Approve ${quote.native_display} ${quote.symbol} in your wallet…` })
+
+      analytics.paymentStart(purchasingKey, quote.symbol)
+
+      // ── Point of no return ──────────────────────────────────────────────
+      const { txHash } = await payQuote(quote, payer)
+      set({
+        nativeTxHash:  txHash,
+        purchaseStep:  'confirming',
+        nativeStatus:  'Waiting for the network…',
+      })
+
+      const result = await waitForSettlement({
+        quoteId: quote.quote_id,
+        txHash,
+        onProgress: ({ confirmations, required, message }) => {
+          set({
+            nativeStatus: required
+              ? `Confirming — ${confirmations}/${required}`
+              : (message ?? 'Confirming…'),
+          })
+        },
+      })
+
+      await get()._applySettledBlock(result.block, quote)
+
+    } catch (err) {
+      const paidHash = get().nativeTxHash
+      console.error('[Store] native payment failed:', err)
+      set({
+        purchaseStep: 'error',
+        nativeStatus: null,
+        // If the wallet already broadcast, the user's money is gone and saying
+        // "payment failed" would be a lie that costs them their money twice.
+        purchaseError: paidHash
+          ? `${err.message} — your payment is on-chain (${paidHash.slice(0, 12)}…) and is safe. ` +
+            `Reopen this tile to finish, or contact support with that hash.`
+          : err.message,
+      })
+    }
+  },
+
+  /**
+   * Fold a settled block into local state. Shared by the native path so the map,
+   * stats and "my blocks" update exactly as they do after an off-chain purchase.
+   */
+  _applySettledBlock: async (block, quote) => {
+    if (!block) return
+    const { blocks, myBlocks } = get()
+    const newBlocks = new Map(blocks)
+    newBlocks.set(block.tile_key, rowToBlock(block))
+
+    const nextMine = new Set(myBlocks)
+    nextMine.add(block.tile_key)
+    saveMyBlocks(nextMine)
+
+    let stats = get().stats
+    try { stats = await api.fetchStats() } catch { /* stats are cosmetic here */ }
+
+    set({
+      blocks:       newBlocks,
+      myBlocks:     nextMine,
+      stats,
+      purchaseStep: 'confirmed',
+      nativeStatus: null,
+      paymentData: {
+        ...(get().paymentData ?? {}),
+        tileKey:      block.tile_key,
+        txHash:       get().nativeTxHash,
+        explorerUrl:  block.explorer_url ?? null,
+        paidNative:   block.paid_native ?? null,
+        currency:     quote?.symbol ?? block.symbol ?? null,
+        usdAmount:    block.price,
+        nativeRail:   true,
+      },
+    })
+
+    analytics.paymentConfirmed(block.tile_key, quote?.symbol ?? 'native')
   },
 
   /**

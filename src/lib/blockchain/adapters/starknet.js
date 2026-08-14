@@ -247,6 +247,88 @@ export async function signPurchase({ tileKey, price }) {
   return { signature: normalizeSignature(sig), message: JSON.stringify(typedData) }
 }
 
+// ── Native payment (pay for a tile in STRK) ─────────────────────────────────
+
+/**
+ * STRK is an ERC-20 CONTRACT, not a balance field on the transaction. Starknet
+ * has no `value` — every transfer of the fee token is an invoke of
+ * transfer(recipient, amount) on that contract, so "send STRK" and "call a
+ * contract" are the same operation here.
+ *
+ * This is the address the live CryptoLandTile was constructed with as its
+ * pay_token (contracts/starknet/deploy.mjs) and the one the deploy paid its own
+ * v3 fees in. It is the SAME on SN_MAIN and SN_SEPOLIA — both were queried
+ * directly and both answer symbol() = 'STRK', decimals() = 18 — so it needs no
+ * per-network branch. Not read from ACTIVE_CHAIN.tokenAddress: that field is
+ * reserved for $CLND (see config.js), and overloading it would mean a build
+ * that ships $CLND silently pays in the wrong token.
+ */
+const STRK_FEE_TOKEN = '0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d'
+
+/**
+ * Pay for a tile with the chain's own token, from the user's own wallet.
+ *
+ * A plain transfer to the treasury — NOT a call into CryptoLandTile. The
+ * contract charges one flat price for every tile on Earth, which cannot express
+ * a $12 ocean tile and a $76 Tokyo tile; a transfer carries the exact per-tile
+ * price and needs no redeployment.
+ *
+ * `amount` is a decimal STRING of base units (STRK has 18 decimals, same as
+ * wei), straight from the server's quote. It must never become a Number — the
+ * value exceeds Number.MAX_SAFE_INTEGER and would silently round.
+ *
+ * SERVER-SIDE NOTE: because this is an ERC-20 transfer, verification cannot read
+ * a tx `value` the way the EVM verifier does — it has to match the STRK
+ * contract's Transfer event (from, to, amount) in the receipt.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const value = BigInt(amount)          // throws on a malformed quote
+  if (value <= 0n) throw new Error('Refusing to send a non-positive amount')
+  if (!_swo) throw new Error('Connect a Starknet wallet first.')
+
+  const recipient = normalizeAddress(to)
+  if (!recipient) throw new Error(`"${to}" is not a valid Starknet address`)
+
+  // The wallet signs with whatever account IT has selected, so a `from` that no
+  // longer matches means the quote was bound to a different payer: the money
+  // would move and only then fail verification. Refuse before signing.
+  const payer = normalizeAddress(from) ?? _address
+  if (!payer) throw new Error('No wallet account available')
+  if (payer !== _address) {
+    throw new Error(`Wallet is on ${_address}, but this payment was quoted for ${payer}. Switch accounts and retry.`)
+  }
+
+  // Same wire rules as mintTile: snake_case keys for the v2 wallet API, a
+  // human-readable entry_point the wallet turns into a selector, and every felt
+  // as a STRING. u256 is TWO felts — passing one corrupts the amount.
+  const { low, high } = toU256(value)
+  const res = await request('wallet_addInvokeTransaction', {
+    calls: [{
+      contract_address: STRK_FEE_TOKEN,
+      entry_point: 'transfer',
+      calldata: [recipient, low, high],
+    }],
+  })
+
+  const txHash = res?.transaction_hash ?? res?.transactionHash ?? null
+  if (!txHash) throw new Error('Starknet wallet returned no transaction hash')
+  return { txHash, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  // The same evidence detectWallets() uses: a live session, or an injected
+  // wallet. get-starknet's own discovery is async and cannot be consulted from a
+  // synchronous method, so a wallet reachable only through it reads as
+  // unsupported here — which shows the off-chain rail rather than a button that
+  // throws, the safe direction to be wrong in.
+  return Boolean(_swo) || detectWallets().length > 0
+}
+
 // ── NFT mint (stubbed until the Cairo ERC-721 is declared + deployed) ───────
 // Bringing this live is two on-chain steps, not one: DECLARE the Cairo class
 // (OpenZeppelin erc721 + SRC-5), then DEPLOY it through the OZ v2 Universal

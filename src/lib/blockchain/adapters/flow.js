@@ -113,6 +113,118 @@ export async function signPurchase({ tileKey, price }) {
   return { signature, message }
 }
 
+// ── Native payment (a plain FLOW transfer — no CryptoLand contract involved) ─
+
+// FungibleToken and FlowToken are core contracts at fixed, network-specific
+// addresses — the same aliases contracts/flow/flow.json pins for the Cadence
+// build. FCL can resolve `0xFungibleToken` placeholders, but only for addresses
+// registered in config(); interpolating keeps the transaction self-contained,
+// exactly as mintTile() does with the CryptoLandTile address.
+const CORE = ACTIVE_CHAIN.testnet
+  ? { fungibleToken: '0x9a0766d93b6608b7', flowToken: '0x7e60df042a9c0868' }
+  : { fungibleToken: '0xf233dcee88fe0abe', flowToken: '0x1654653399040a61' }
+
+// UFix64 is fixed-point with EXACTLY 8 decimal places, which is also FLOW's base
+// unit — so a base-unit integer maps onto the last decimal place with a pure
+// string shift. Never divide: 1e-8 arithmetic on a Number rounds, and Cadence
+// rejects "12", "1.5" and "1.5e1" alike — it wants "12.00000000".
+const UFIX64_DECIMALS = 8
+
+function baseUnitsToUFix64(units) {
+  // padStart guarantees a whole-number digit, so 1 base unit renders as
+  // "0.00000001" rather than ".00000001", which does not parse.
+  const digits = units.toString().padStart(UFIX64_DECIMALS + 1, '0')
+  return `${digits.slice(0, -UFIX64_DECIMALS)}.${digits.slice(-UFIX64_DECIMALS)}`
+}
+
+/** Flow addresses are 8 bytes; FCL hands them back 0x-prefixed and expects the same. */
+function normalizeAddress(addr) {
+  const hex = String(addr ?? '').replace(/^0x/, '')
+  if (!/^[0-9a-fA-F]{16}$/.test(hex)) throw new Error(`Not a Flow address: ${addr}`)
+  return `0x${hex.toLowerCase()}`
+}
+
+/**
+ * Pay for a tile in FLOW, from the user's own wallet.
+ *
+ * A vault-to-vault transfer, NOT CryptoLandTile.claimTile(): claiming is gated on
+ * a deployed contract most builds do not have, and the price is per-tile, which
+ * no fixed on-chain price expresses. This path works with VITE_CONTRACT_FLOW unset.
+ *
+ * `amount` is a decimal STRING of base units (1e-8 FLOW) straight from the
+ * server's quote — kept as a BigInt so a large quote can never be rounded by the
+ * Number conversion an accidental arithmetic operation would force.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const units = BigInt(amount)          // throws on a malformed quote
+  if (units <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  // FCL signs as whoever is authenticated; there is no way to nominate a
+  // different payer, so a missing session is a hard stop rather than a prompt.
+  const payer = from ?? _address
+  if (!payer) throw new Error('Connect a Flow wallet before paying.')
+
+  const recipient = normalizeAddress(to)
+  const value     = baseUnitsToUFix64(units)
+  const f         = await fcl()
+
+  // The canonical FLOW transfer. Cadence's resource model forces the shape: the
+  // withdrawn vault is a linear value, so it is moved into a transaction field in
+  // prepare (the only phase with access to the signer's storage) and deposited in
+  // execute. Both entitlements are load-bearing under Cadence 1.0 —
+  // auth(BorrowValue) to reach storage at all, auth(FungibleToken.Withdraw) to
+  // get a reference that can withdraw — and an unentitled borrow will not
+  // type-check rather than failing at runtime.
+  const cadence = `
+import FungibleToken from ${CORE.fungibleToken}
+import FlowToken from ${CORE.flowToken}
+
+transaction(amount: UFix64, to: Address) {
+  let sentVault: @{FungibleToken.Vault}
+
+  prepare(signer: auth(BorrowValue) &Account) {
+    let vault = signer.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(
+      from: /storage/flowTokenVault
+    ) ?? panic("Signer has no FlowToken vault")
+    self.sentVault <- vault.withdraw(amount: amount)
+  }
+
+  execute {
+    let receiver = getAccount(to).capabilities
+      .borrow<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
+      ?? panic("Recipient has no public FlowToken receiver")
+    receiver.deposit(from: <-self.sentVault)
+  }
+}`
+
+  const txId = await f.mutate({
+    cadence,
+    args: (arg, t) => [
+      // "12.34000000" — t.UFix64 passes the string through as-is, so a bare
+      // integer or a trimmed fraction is rejected by the execution node.
+      arg(value, t.UFix64),
+      arg(recipient, t.Address),
+    ],
+    limit: 999,
+  })
+  if (!txId) throw new Error('Flow wallet returned no transaction id for the payment.')
+  return { txHash: txId, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Unlike every other family there is no injected provider to probe, so — as
+  // detectWallets() notes — availability is a property of the runtime, not of
+  // what the user has installed: FCL Discovery is always reachable, and which
+  // wallets it offers is decided at connect time. What it does need is a browser
+  // (the authn popup / iframe protocol), which SSR and the test runner lack.
+  if (ACTIVE_CHAIN.gasless || ACTIVE_CHAIN.halted) return false
+  return typeof window !== 'undefined'
+}
+
 // ── NFT mint (stubbed until the Cadence contract is deployed) ────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

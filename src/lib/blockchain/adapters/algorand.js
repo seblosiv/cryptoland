@@ -306,6 +306,69 @@ export async function signPurchase({ tileKey, price }) {
   return { signature: res.signature, message: text, method: res.method }
 }
 
+// ── Native ALGO payment (wallet → treasury) ─────────────────────────────────
+
+/**
+ * Pay for a tile in ALGO, from the user's own wallet.
+ *
+ * A plain payment transaction to the treasury — no app call, no ASA, nothing
+ * that needs a deployed contract. It carries the exact per-tile price, and the
+ * backend re-reads the transaction from the chain afterwards, so a tampered `to`
+ * or `amount` here just fails verification and settles nothing.
+ *
+ * `amount` is a decimal STRING of microAlgos (1 ALGO = 1,000,000). It stays a
+ * BigInt the whole way: µALGO would survive a Number, but every other chain on
+ * this rail quotes base units that would not, and one shared contract with one
+ * shared rule is what stops the exception from being forgotten.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const micro = BigInt(amount)            // throws on a malformed quote
+  if (micro <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  const payer = from ?? requireAddress()
+  if (!ADDR_RE.test(payer)) throw new Error(`Not a valid Algorand address: ${payer}`)
+
+  const algosdk = await loadAlgosdk()
+  // ADDR_RE only proves the shape. isValidAddress checks the 4-byte checksum,
+  // which is the part that actually catches a mistyped treasury — and on
+  // Algorand a payment to a well-formed address nobody holds is simply gone.
+  if (typeof algosdk.isValidAddress === 'function' && !algosdk.isValidAddress(to)) {
+    throw new Error(`Not a valid Algorand address: ${to}`)
+  }
+
+  const client = await getAlgod()
+  // Suggested params carry the current fee, the round window and the genesis
+  // hash — the last of which is what binds the signature to THIS network.
+  const sp = await client.getTransactionParams().do()
+
+  const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+    // algosdk v3 field names — v2's `from`/`to` silently build an invalid txn.
+    sender:   payer,
+    receiver: to,
+    amount:   micro,
+    suggestedParams: sp,
+  })
+
+  const [signed] = await signTxns([txn])
+  // The wallet only signs; nothing reaches the network until we post it.
+  const sent = await client.sendRawTransaction(signed).do()
+  // v3 renamed txId → txid. txn.txID() is the same value computed locally, so
+  // it is a safe fallback when a node answers with an empty body.
+  const txid = sent?.txid ?? sent?.txId ?? txn.txID()
+  if (!txid) throw new Error('Algorand node accepted the payment but returned no transaction id.')
+  return { txHash: txid, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Same rule as detectWallets(): Pera needs no extension, so a browser alone is
+  // enough — outside one there is no wallet of any kind.
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && detectWallets().length > 0
+}
+
 // ── NFT mint (an ASA — no smart contract required on Algorand) ───────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

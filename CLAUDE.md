@@ -164,7 +164,22 @@ cd contracts/algorand && python3 cryptoland_tile.py                       # self
 for d in solana/programs/cryptoland-tile near stellar multiversx radix; do
   (cd contracts/$d && cargo test)                # 6 / 5 / 5 / 4 / 5
 done
-python3 -m pytest server/tests -q                # backend §4 invariants, 23
+python3 -m pytest server/tests -q                # backend §4 invariants + native pay, 48
+# No system pytest/aiohttp on this laptop — make a venv once, then use it:
+#   python3 -m venv server/.venv && server/.venv/bin/pip install -r server/requirements.txt pytest
+#   server/.venv/bin/python -m pytest server/tests -q
+
+# Regenerate the two files the server prices and verifies payments with, after
+# editing src/lib/tiles.js or src/lib/blockchain/config.js. Their tests fail if
+# you forget — the browser would quote one price and the server charge another.
+node scripts/gen-tile-pricing.mjs                # → server/tile_pricing.py + vectors
+node scripts/gen-chain-registry.mjs              # → server/chain_registry.py
+
+# Is native wallet payment actually ready per chain? Spends nothing; hits live
+# price feeds, so it is NOT in pytest. Run before enabling it and before every
+# submission round. Exits 1 if a chain advertises native pay but would fail.
+server/.venv/bin/python scripts/check-native-pay.py            # all chains
+server/.venv/bin/python scripts/check-native-pay.py base solana
 
 # Backend (from server/)
 pip install -r requirements.txt
@@ -475,7 +490,19 @@ Done and working:
   build time from `config.js` / `profiles.js`.
 - `LICENSE` (MIT) and `public/{terms,privacy}.html` — the latter two are referenced by
   `tonconnect-manifest.json` and previously 404'd.
-- `npm test` green: 6 files, **250 tests**. All 27 chain build targets clean.
+- `npm test` green: 7 files, **358 tests** (this line said 250, and §2 said 335 —
+  measure it, don't read it). Backend: **48** pytest. All chain build targets clean.
+- **Native wallet purchases** (2026-08-14): `payNative()` in all 14 adapter
+  families, server-authoritative pricing, and on-chain verification for **9 of
+  14 families** (`evm` `solana` `ton` `starknet` `stellar` `algorand`
+  `multiversx` `radix` `tezos` — 29 chains). Missing: `aptos` `sui` `cardano`
+  `near` `flow`, which correctly report `enabled: false` and fall back to the
+  off-chain rail. Six verifiers were re-checked against live mainnet
+  transactions; `starknet`, `ton` and `radix` were not, and Radix has an
+  unresolved net-vs-gross discrepancy. **No treasury address is configured, so
+  the path is off everywhere until one is set.** Run
+  `server/.venv/bin/python scripts/check-native-pay.py` and read
+  `documentation/native-payments.md` §7 before claiming this works on a chain.
 - **Derived accent palette.** `applyProfileTheme()` writes `--chain-accent` (brand
   hex, for fills), `--chain-accent-ink` (a label readable ON it) and
   `--chain-accent-ui` (the accent lightened only as far as needed to clear 4.5:1
@@ -552,11 +579,20 @@ Known gaps — be honest about these, do not paper over them:
   only EVM faucet without a captcha, login, mainnet-balance or puzzle gate; NEAR's
   helper funds an account from a plain POST; Solana devnet is globally degraded.
   See `deploy/apex/deployments.mjs` for the per-chain reason.
-- **On-chain activity is ~1 tx per purchase**, which is structurally uncompetitive
-  for retroactive rounds (Retro9000 ranks by AVAX burned by your contracts; OP's
-  template wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days).
-  Competing needs recurring gameplay moved on-chain — a product decision, written up
-  in `documentation/grants.md` §7. Not a config change.
+- **On-chain activity is ZERO tx per purchase, not "~1" as this line used to
+  say.** `totalSupply()` is `0` on the Base contract and `/metrics/grant` reports
+  `nft_mints_onchain: 0` on the live box. The mint that was supposed to produce
+  that 1 tx calls `mint()`, which is `onlyOwnerOrMinter`, so a buyer's wallet
+  always reverted — and the failure is swallowed as non-fatal. Every tile ever
+  "sold" exists only as a SQLite row. Do not cite on-chain activity in an
+  application until this changes.
+  **Native wallet payment now exists** (2026-08-14, `documentation/native-payments.md`):
+  a buyer pays in the chain's own token from their own wallet and the server
+  verifies the transaction on-chain. That produces 1 real tx per purchase on the
+  21 EVM chains once a treasury is configured — still short of what retroactive
+  rounds score (Retro9000 ranks by AVAX burned by your contracts; OP's template
+  wanted ≥1,000 tx / ≥420 addresses / ≥10 active days over 180 days). Competing
+  still needs recurring gameplay on-chain — `documentation/grants.md` §7.
 - **Mainnet costs $134 for all 34 chains — and ~$111 of that is a REFUNDABLE
   DEPOSIT, so the real spend is ~$23.** `node scripts/funding-plan.mjs`. Solana is
   83% of the total: rent for the program account, returned by `solana program

@@ -289,6 +289,66 @@ export async function signPurchase({ tileKey, price }) {
   return { signature: await signText(text), message: text }
 }
 
+// ── Native EGLD payment (wallet → treasury) ─────────────────────────────────
+
+/**
+ * Pay for a tile in EGLD, from the user's own wallet.
+ *
+ * A move-balance transaction to the treasury — no ESDT call, no data field,
+ * nothing that needs the collection to be issued first. It carries the exact
+ * per-tile price, and the backend re-reads the transaction from the chain
+ * afterwards, so a tampered `to` or `amount` here fails verification and settles
+ * nothing.
+ *
+ * `amount` is a decimal STRING of base units. EGLD has 18 decimals, so a single
+ * whole EGLD is 10^18 — three orders of magnitude past Number.MAX_SAFE_INTEGER.
+ * Parsing it as a Number would round the price silently and irreversibly, so it
+ * goes BigInt → the SDK → `value.toString()` on the wire, never through a float.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const value = BigInt(amount)            // throws on a malformed quote
+  if (value <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  const provider = await getProvider()
+  const payer = from ?? _address
+  if (!payer) throw new Error('Connect a MultiversX wallet first.')
+
+  const { Transaction, Address } = await loadCore()
+  // Address() validates the bech32 checksum and the erd HRP, so a mistyped
+  // treasury throws here rather than after the user has approved the popup.
+  const receiver = new Address(to)
+
+  const transaction = new Transaction({
+    // The nonce comes from the network, not a local counter: the extension may
+    // have sent something else since connect(), and a stale nonce is rejected.
+    nonce:    await fetchNonce(payer),
+    value,
+    sender:   new Address(payer),
+    receiver,
+    gasPrice: MIN_GAS_PRICE,
+    // No data field means no GAS_PER_DATA_BYTE term and no execution cost — a
+    // move-balance is exactly the base, which is why mintTile's formula does not
+    // appear here.
+    gasLimit: GAS_MOVE_BALANCE,
+    data:     new Uint8Array(),
+    chainID:  ACTIVE_CHAIN.id,
+    version:  2,
+  })
+
+  const signed = await provider.signTransaction(transaction)
+  return { txHash: await broadcast(toNetworkTx(signed)), from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Same signal detectWallets() uses — the DeFi Wallet extension is the only
+  // provider this adapter speaks to, and it announces itself on window.
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && Boolean(extensionGlobal())
+}
+
 // ── NFT mint (native ESDT — no WASM contract) ────────────────────────────────
 /**
  * MultiversX mints NFTs through built-in ESDT calls, so no Move/Solidity/WASM

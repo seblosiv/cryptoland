@@ -96,7 +96,10 @@ export const MIN_TILE_PRICE_USD = 12.00
 //
 // Regions are checked in order; first match wins.
 
-const GEO_REGIONS = [
+// Exported so scripts/gen-tile-pricing.mjs can emit the Python port the server
+// prices native-wallet purchases with. The browser must never be the authority
+// on what a tile costs, and two hand-written copies of this table would drift.
+export const GEO_REGIONS = [
   // ── Tier 1 — Premium (~$45–75) ───────────────────────────────────────────
   // US West Coast (California, Pacific NW)
   { lngMin: -125, lngMax: -114, latMin:  32, latMax:  50, base: 48, spread: 28 },

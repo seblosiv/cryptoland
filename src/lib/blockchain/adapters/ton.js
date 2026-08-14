@@ -135,6 +135,62 @@ export async function signPurchase({ tileKey, price }) {
   throw new Error('TON wallet cannot sign the purchase intent.')
 }
 
+// ── Native payment (plain TON transfer to the treasury) ─────────────────────
+
+/**
+ * Pay for a tile in TON, from the user's own wallet.
+ *
+ * TON Connect's sendTransaction is the only write path a TON wallet gives a web
+ * app, and a message with no payload is a bare value transfer — the same shape
+ * signPurchase uses to anchor its comment, without the comment cell.
+ *
+ * `amount` is a decimal STRING of nanotons from the server's quote, which is
+ * also exactly what TON Connect wants: it takes amounts as strings, and 1 TON
+ * is 1e9 nanotons, so a Number would round a real payment.
+ */
+export async function payNative({ to, amount, from }) {
+  if (!to)     throw new Error('No treasury address for this chain')
+  if (!amount) throw new Error('No amount to pay')
+
+  const nanotons = BigInt(amount)      // throws on a malformed quote
+  if (nanotons <= 0n) throw new Error('Refusing to send a non-positive amount')
+
+  const connector = await getConnector()
+  if (!connector) {
+    throw new Error('TON Connect unavailable — install @tonconnect/sdk to pay from a wallet.')
+  }
+  await connector.restoreConnection().catch(() => {})
+  if (!connector.connected) {
+    throw new Error('Open the TON Connect wallet picker and connect a wallet to pay.')
+  }
+
+  const payer = from ?? getAddress()
+  if (!payer) throw new Error('No wallet account available')
+
+  // validUntil is a deadline the WALLET enforces: past it it refuses to send,
+  // rather than broadcasting later against a quote that has since expired.
+  const result = await connector.sendTransaction({
+    validUntil: Math.floor(Date.now() / 1000) + 300,
+    messages: [{ address: to, amount: nanotons.toString() }],
+  })
+
+  // TON Connect returns the signed external message (BOC), not a hash — the
+  // hash exists only once a validator includes it. The BOC is the transaction
+  // handle everywhere else in this adapter (mintTile, waitForTx), so it is the
+  // handle here too.
+  const boc = result?.boc ?? null
+  if (!boc) throw new Error('TON wallet returned no signed transaction')
+  return { txHash: boc, from: payer }
+}
+
+/** Whether this build can take a wallet payment at all. */
+export function supportsNativePay() {
+  // Nothing to sniff: TON Connect reaches a wallet by QR or deeplink, so there
+  // is no injected provider to require — the same reason detectWallets() always
+  // offers it. A missing SDK surfaces as a clear error from payNative instead.
+  return !ACTIVE_CHAIN.gasless && !ACTIVE_CHAIN.halted && typeof window !== 'undefined'
+}
+
 // ── NFT mint (stubbed until a TON NFT collection is deployed) ────────────────
 
 export async function mintTile({ tx, ty, country, toAddress }) {

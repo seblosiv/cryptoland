@@ -27,7 +27,7 @@ function _getToken() {
   try { return localStorage.getItem('cl-auth-token') } catch { return null }
 }
 
-async function req(method, path, body, opts = {}) {
+export async function req(method, path, body, opts = {}) {
   const headers = {}
   if (body) headers["Content-Type"] = "application/json"
   const token = opts.token ?? _getToken()
@@ -39,8 +39,18 @@ async function req(method, path, body, opts = {}) {
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
-    throw new Error(err.detail ?? `HTTP ${res.status}`)
+    // Carry the status: callers that poll need to tell a verdict (4xx — will
+    // never succeed, stop) from a transport blip (5xx — try again). Without it
+    // a polling loop either gives up on a hiccup or retries a hard rejection
+    // forever. Existing callers read `.message` and are unaffected.
+    const error = new Error(err.detail ?? `HTTP ${res.status}`)
+    error.status = res.status
+    throw error
   }
+  // `rawResponse` hands back the Response so a caller can distinguish 200 from
+  // 202. /chain/verify returns 202 while a transaction is still confirming,
+  // and that is not the same answer as "settled".
+  if (opts.rawResponse) return res
   return res.json()
 }
 
