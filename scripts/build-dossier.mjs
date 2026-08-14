@@ -304,61 +304,6 @@ programmes moved out of OPEN during this round on quoted evidence.</p>
     <td class="mono sm">${esc(p.verified ?? '')}</td>
   </tr>`).join('')}</tbody></table></div>`
 
-const appsPanel = `
-<p class="lede">How deep the research actually got on each actionable programme. A form whose questions were
-read and a URL nobody has confirmed are different things, and this is where that difference is stated.</p>
-<div class="legend">
-  <span><span class="chip t-good">Fields read</span> form confirmed, questions captured</span>
-  <span><span class="chip t-warn">Form located</span> URL right, fields behind a session</span>
-  <span><span class="chip t-dim">No route found</span> probably has no web form</span>
-  <span><span class="chip t-bad">Wrong / closed</span> verified as not an application</span>
-</div>
-<div class="tablewrap"><table>
-<thead><tr><th>Programme</th><th>Depth</th><th>Questions</th><th>Gate</th><th>Route</th></tr></thead>
-<tbody>${act.map((p) => `
-  <tr class="d-${p.depth}">
-    <td><span class="pname">${esc(p.name)}</span><span class="meta mono">#${p.n} · ${esc(p.chain)} · ${esc(p.amount ?? '')}</span></td>
-    <td><span class="chip t-${DEPTH[p.depth][1]}">${DEPTH[p.depth][0]}</span></td>
-    <td class="mono sm">${p.q ? `${p.q}<span class="dim"> / ${p.required} req</span>` : '—'}</td>
-    <td class="mono sm">${esc(p.gate)}</td>
-    <td class="sm">${p.depth === 'bad'
-        ? '<span class="dim">do not use</span>'
-        : p.url ? `<a class="ext mono" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(short(p.url.replace(/^https?:\/\//, ''), 30))} ↗</a>` : '—'}
-      ${p.emails.length ? `<span class="meta mono">${esc(p.emails[0])}</span>` : ''}</td>
-  </tr>`).join('')}</tbody></table></div>`
-
-const reqPanel = `
-<p class="lede">Every question we captured, per programme, exactly as the form presents it. Asterisk = the
-form marks it required.</p>
-${act.filter((p) => p.fields.length).map((p) => `
-<details class="req" ${p.q >= 20 ? 'open' : ''}>
-  <summary><span class="pname">${esc(p.name)}</span>
-    <span class="chip t-good">${p.q} questions</span>
-    <span class="chip t-warn">${p.required} required</span>
-    ${p.pages > 1 ? `<span class="chip t-dim">${p.pages} pages</span>` : ''}</summary>
-  <div class="fields">${p.fields.map((f) => `
-    <div class="f"><span class="ftype mono">${esc(f.t)}</span>
-      <span class="fl">${f.req ? '<b class="req-star">*</b>' : ''}${esc(f.l)}</span></div>`).join('')}</div>
-</details>`).join('')}`
-
-const readyPanel = `
-<p class="lede">Readiness scores the three things that decide whether we can submit today: is the chain live,
-do we have the form, and what blocks us. It is deliberately harsh — anything unverified scores low.</p>
-<div class="tablewrap"><table>
-<thead><tr><th>Programme</th><th>Ready</th><th>Chain</th><th>Form</th><th>What is needed</th></tr></thead>
-<tbody>${act.map((p) => `
-  <tr>
-    <td><span class="pname">${esc(p.name)}</span><span class="meta mono">#${p.n} · ${esc(p.amount ?? '')}</span></td>
-    <td><div class="rdy"><div class="bar"><i style="width:${p.score}%;background:${p.score >= 70 ? 'var(--good)' : p.score >= 45 ? '#c98a00' : 'var(--bad)'}"></i></div><span class="mono sm score">${p.score}</span></div></td>
-    <td>${p.chainLive ? '<span class="chip t-good xs">live</span>' : '<span class="chip t-bad xs">not deployed</span>'}</td>
-    <td><span class="chip t-${DEPTH[p.depth][1]} xs">${DEPTH[p.depth][0]}</span></td>
-    <td class="sm">${p.blockers.length
-      ? p.blockers.map((b) => `<span class="blk-chip">${esc(b)}</span>`).join('')
-      : '<span class="chip t-good xs">nothing — submit</span>'}</td>
-  </tr>`).join('')}</tbody></table></div>`
-
-/* ── document ───────────────────────────────────────────────────────────── */
-
 
 /* ── chain → programme matrix ──────────────────────────────────────────────
    Which programmes each deployed chain can actually apply to. Chain-agnostic
@@ -397,6 +342,162 @@ const chainSpecificOpen = PROGRAMS.filter((pr) => {
 })
 const chainsWithOpen = mainnetChains.filter((c) => byChain.get(c.key).open.length)
 const chainsIdle = mainnetChains.filter((c) => !byChain.get(c.key).open.length)
+
+
+/* ── odds + apply-with ──────────────────────────────────────────────────────
+   ODDS ARE A HEURISTIC. No foundation publishes an acceptance rate, so any
+   precise-looking percentage here would be invented. What we can honestly score
+   is fit: does this programme fund games, is the chain deployed, is the cheque
+   small (small cheques approve far more often), and does it demand traction we
+   do not have. The ONE measured figure in the repo — Tezos ~8%, recorded in
+   program-requirements.md §4 — is marked `measured` and everything else
+   `estimate`, so nobody mistakes a judgement for a statistic. */
+
+const MEASURED_ODDS = { 45: 8, 8: 8 }   // Tezos Foundation — the only published rate we found
+
+// Programmes whose stated mandate is games. Being the ideal candidate beats
+// every other factor in this scoring.
+const GAMES_NATIVE = new Set([12, 30, 47, 10, 7, 11, 14])
+// Programmes judged on traction/metrics we do not have (MAU, TVL, tx volume).
+const METRICS_GATED = new Set([21, 22, 33, 29, 24, 17, 44])
+
+function oddsFor(pr) {
+  if (MEASURED_ODDS[pr.n]) return { pct: MEASURED_ODDS[pr.n], kind: 'measured' }
+  let sc = 30                                    // base for a live, open programme
+  const amt = parseInt(String(pr.amount || '').replace(/[^0-9]/g, ''), 10) || 0
+  if (amt && amt <= 25) sc += 20                 // small cheque, fast decision
+  else if (amt && amt <= 100) sc += 8
+  else if (amt >= 500) sc -= 12                  // large cheque, heavy competition
+  if (GAMES_NATIVE.has(pr.n)) sc += 22           // we are their ICP
+  if (METRICS_GATED.has(pr.n)) sc -= 25          // judged on numbers that are zero
+  if (pr.status === 'ROLLING') sc += 6           // no window to miss
+  if ((pr.note || '').match(/invite|invitation/i)) sc -= 30
+  if ((pr.note || '').match(/KYC/i)) sc -= 8
+  // Programmes that exclude a project already live with users. Starknet Seed
+  // is the recorded case (program-requirements.md §1) — starknet.xono.ai being
+  // live is itself the disqualifier, so a "low bar" reads as high odds unless
+  // this is applied.
+  if ((pr.note || '').match(/disqualif|already live|excludes projects/i)) sc -= 35
+  return { pct: Math.max(5, Math.min(75, sc)), kind: 'estimate' }
+}
+
+// Which subdomain to pitch from. A programme funds ITS chain, so the pitch must
+// come from that chain's build — that is the whole point of per-chain builds.
+function applyFrom(pr) {
+  const k = progChainKey(pr.chain)
+  if (k === '__any__' || !k) return null
+  const c = mainnetChains.find((x) => x.key === k)
+  return c ? `${c.key}.xono.ai` : null
+}
+
+// What is missing ON OUR SIDE, ranked by how many programmes it unblocks.
+const GLOBAL_BLOCKERS = [
+  { id: 'repo',     label: 'Public GitHub repo',  fix: 'one command — code is pushed, licence in place, secret-swept clean' },
+  { id: 'x',        label: 'X / Twitter account', fix: 'create @cryptoland_xono (~15 min)' },
+  { id: 'tg',       label: 'Telegram handle',     fix: 'create t.me/cryptoland_xono (~10 min)' },
+  { id: 'traction', label: 'On-chain activity',   fix: 'buy one $12 tile — totalSupply() is 0 on all 27 contracts' },
+  { id: 'kyc',      label: 'KYC / entity',        fix: 'needed only by some programmes at payout' },
+]
+
+const appsPanel = `
+<p class="lede">How deep the research actually got on each actionable programme. A form whose questions were
+read and a URL nobody has confirmed are different things, and this is where that difference is stated.</p>
+<div class="legend">
+  <span><span class="chip t-good">Fields read</span> form confirmed, questions captured</span>
+  <span><span class="chip t-warn">Form located</span> URL right, fields behind a session</span>
+  <span><span class="chip t-dim">No route found</span> probably has no web form</span>
+  <span><span class="chip t-bad">Wrong / closed</span> verified as not an application</span>
+</div>
+<div class="tablewrap"><table>
+<thead><tr><th>Programme</th><th>Depth</th><th>Questions</th><th>Gate</th><th>Route</th></tr></thead>
+<tbody>${act.map((p) => `
+  <tr class="d-${p.depth}">
+    <td><span class="pname">${esc(p.name)}</span><span class="meta mono">#${p.n} · ${esc(p.chain)} · ${esc(p.amount ?? '')}</span></td>
+    <td><span class="chip t-${DEPTH[p.depth][1]}">${DEPTH[p.depth][0]}</span></td>
+    <td class="mono sm">${p.q ? `${p.q}<span class="dim"> / ${p.required} req</span>` : '—'}</td>
+    <td class="mono sm">${esc(p.gate)}</td>
+    <td class="sm">${p.depth === 'bad'
+        ? '<span class="dim">do not use</span>'
+        : p.url ? `<a class="ext mono" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(short(p.url.replace(/^https?:\/\//, ''), 30))} ↗</a>` : '—'}
+      ${p.emails.length ? `<span class="meta mono">${esc(p.emails[0])}</span>` : ''}</td>
+  </tr>`).join('')}</tbody></table></div>`
+
+const reqPanel = `
+<p class="lede">Every question we captured, per programme, exactly as the form presents it. Asterisk = the
+form marks it required.</p>
+${act.filter((p) => p.fields.length).map((p) => `
+<details class="req" ${p.q >= 20 ? 'open' : ''}>
+  <summary><span class="pname">${esc(p.name)}</span>
+    <span class="chip t-good">${p.q} questions</span>
+    <span class="chip t-warn">${p.required} required</span>
+    ${p.pages > 1 ? `<span class="chip t-dim">${p.pages} pages</span>` : ''}</summary>
+  <div class="fields">${p.fields.map((f) => `
+    <div class="f"><span class="ftype mono">${esc(f.t)}</span>
+      <span class="fl">${f.req ? '<b class="req-star">*</b>' : ''}${esc(f.l)}</span></div>`).join('')}</div>
+</details>`).join('')}`
+
+
+const applyRows = act.map((pr) => ({
+  ...pr,
+  odds: oddsFor(pr),
+  from: applyFrom(pr),
+})).sort((a, b) => (b.score - a.score) || (b.odds.pct - a.odds.pct))
+
+const applyPanel = `
+<div class="callout ok"><h3>How to read this</h3>
+<p>One row per live programme, sorted by how ready we are. <b>Apply from</b> is the subdomain to pitch —
+a programme funds its own chain, so the pitch must come from that chain's build.
+<b>Odds</b> is a <b>heuristic, not a published rate</b>: no foundation publishes acceptance
+figures, so anything precise here would be invented. It scores fit — games mandate, cheque size,
+whether the programme is judged on traction we do not have. The single measured figure
+(<b>Tezos ~8%</b>) is marked <span class="chip t-good xs">measured</span>; everything else is
+<span class="chip t-dim xs">estimate</span>.</p></div>
+
+<div class="callout bad"><h3>Fix these first — they unblock almost every application</h3>
+<table class="tbl"><thead><tr><th>Missing</th><th>What it takes</th></tr></thead><tbody>${
+  GLOBAL_BLOCKERS.map((b) => `<tr><td><b>${esc(b.label)}</b></td><td class="sm dim">${esc(b.fix)}</td></tr>`).join('')
+}</tbody></table>
+<p class="sm">Read off the live forms today: <b>both Arbitrum forms</b> require Telegram*, X/Twitter* and Github*.
+<b>SafePal</b> requires on-chain MAU*, unique wallets* and TVL*, each with proof links. Three of those
+fields do not exist and three are zero.</p></div>
+
+<div class="tablewrap"><table>
+<thead><tr><th>Programme</th><th>Apply from</th><th>Max</th><th>Odds</th><th>Ready</th><th>Still missing on our side</th><th>Route</th></tr></thead>
+<tbody>${applyRows.map((pr) => `
+  <tr>
+    <td><span class="pname">${esc(pr.name)}</span><span class="meta mono">#${pr.n} · ${esc(pr.chain)}</span></td>
+    <td class="mono sm">${pr.from ? `<b>${esc(pr.from)}</b>` : '<span class="dim">any chain</span>'}</td>
+    <td class="mono sm">${esc(pr.amount ?? '—')}</td>
+    <td><div class="rdy"><div class="bar"><i style="width:${pr.odds.pct}%;background:${pr.odds.pct >= 50 ? 'var(--good)' : pr.odds.pct >= 30 ? '#c98a00' : 'var(--bad)'}"></i></div>
+        <span class="mono sm score">${pr.odds.pct}%</span></div>
+        <span class="chip t-${pr.odds.kind === 'measured' ? 'good' : 'dim'} xs">${pr.odds.kind}</span></td>
+    <td><div class="rdy"><div class="bar"><i style="width:${pr.score}%;background:${pr.score >= 70 ? 'var(--good)' : pr.score >= 45 ? '#c98a00' : 'var(--bad)'}"></i></div><span class="mono sm score">${pr.score}</span></div></td>
+    <td class="sm">${pr.blockers.length
+      ? pr.blockers.map((b) => `<span class="blk-chip">${esc(b)}</span>`).join('')
+      : '<span class="chip t-good xs">nothing — submit</span>'}</td>
+    <td class="sm">${pr.depth === 'bad' ? '<span class="dim">do not use</span>'
+      : pr.url ? `<a class="ext mono" href="${esc(pr.url)}" target="_blank" rel="noopener">open ↗</a>` : '—'}
+      ${pr.emails.length ? `<span class="meta mono">${esc(pr.emails[0])}</span>` : ''}</td>
+  </tr>`).join('')}</tbody></table></div>`
+
+const readyPanel = `
+<p class="lede">Readiness scores the three things that decide whether we can submit today: is the chain live,
+do we have the form, and what blocks us. It is deliberately harsh — anything unverified scores low.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Programme</th><th>Ready</th><th>Chain</th><th>Form</th><th>What is needed</th></tr></thead>
+<tbody>${act.map((p) => `
+  <tr>
+    <td><span class="pname">${esc(p.name)}</span><span class="meta mono">#${p.n} · ${esc(p.amount ?? '')}</span></td>
+    <td><div class="rdy"><div class="bar"><i style="width:${p.score}%;background:${p.score >= 70 ? 'var(--good)' : p.score >= 45 ? '#c98a00' : 'var(--bad)'}"></i></div><span class="mono sm score">${p.score}</span></div></td>
+    <td>${p.chainLive ? '<span class="chip t-good xs">live</span>' : '<span class="chip t-bad xs">not deployed</span>'}</td>
+    <td><span class="chip t-${DEPTH[p.depth][1]} xs">${DEPTH[p.depth][0]}</span></td>
+    <td class="sm">${p.blockers.length
+      ? p.blockers.map((b) => `<span class="blk-chip">${esc(b)}</span>`).join('')
+      : '<span class="chip t-good xs">nothing — submit</span>'}</td>
+  </tr>`).join('')}</tbody></table></div>`
+
+/* ── document ───────────────────────────────────────────────────────────── */
+
 
 const matrixPanel = `
 <div class="callout ok"><h3>Coverage: ${chainSpecificOpen.length}/${chainSpecificOpen.length} — every live chain-specific programme has its chain deployed</h3>
@@ -438,9 +539,9 @@ const TABS = [
   ['wallets', 'Keys', WALLETS.length, walletsPanel],
   ['progs', 'Programmes', PROGRAMS.length, programmesPanel],
   ['matrix', 'Chain × Programme', chainsWithOpen.length, matrixPanel],
-  ['apps', 'Applications', act.length, appsPanel],
-  ['reqs', 'Requirements', act.filter((p) => p.fields.length).length, reqPanel],
-  ['ready', 'Readiness', act.length, readyPanel],
+  ['apply', 'Apply', act.length, applyPanel],
+  ['reqs', 'Form questions', act.filter((p) => p.fields.length).length, reqPanel],
+  ['apps', 'Research depth', act.length, appsPanel],
 ]
 
 const html = `<link rel="icon" href="/favicon.ico" sizes="any">
