@@ -163,6 +163,17 @@ CRYPTOLAND_TREASURY=…             # last resort
 | `CRYPTOLAND_QUOTE_TTL` | `900` | Seconds a quote is honoured. |
 | `CRYPTOLAND_RATE_TTL` | `120` | Seconds a token price is cached. |
 
+> 🔴 **Hedera needs its own treasury — the EVM fallback is wrong there.**
+> Hedera runs an EVM adapter, so `CRYPTOLAND_TREASURY_EVM` would apply to it by
+> family fallback. It must not: **Hedera requires the recipient account to
+> already exist**, and a transfer to an unknown address fails rather than
+> creating one. The EVM treasury `0xB8156b85…` returns "Not found" from the
+> Hedera mirror node, so every Hedera purchase would have failed at payment.
+> Hedera accounts have two equivalent forms — `0.0.10802769` and the "long-zero"
+> EVM address `0x0000…a4d651`, which is just the account number in hex. Use the
+> long-zero form in `CRYPTOLAND_TREASURY_HEDERA`, and confirm the account
+> resolves on `mainnet-public.mirrornode.hedera.com/api/v1/accounts/<id>` first.
+
 A chain with no treasury configured degrades to the off-chain rail — the same
 graceful pattern as a blank `VITE_CONTRACT_<CHAIN>` leaving minting stubbed.
 `GET /chain/pay-info` reports exactly why, and the UI renders no button rather
