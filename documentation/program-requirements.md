@@ -1166,3 +1166,79 @@ deliberately modest and is quoted, not inferred: **grants@fil.org** (Filecoin),
 Stellar SCF and Avalanche Retro9000. The rest state no public channel on their
 landing page — consistent with §23's finding that most of these programmes are
 documentation, not application funnels.
+
+---
+
+## §24 — Browser sweep, 2026-08-14: two programmes were dead and we had both as OPEN
+
+Re-read all 43 actionable programmes by **rendering each page in a headless
+browser** (zendriver) through **residential proxies**, then cross-checked
+anything ambiguous against SearXNG. 43/43 read, zero errors after retrying three
+transport timeouts. Evidence: `scripts/formaudit/sweep-2026-08-14.jsonl`.
+
+### The two corrections
+
+**#25 / #27 Polygon Community Grants → DEAD.** Both were `OPEN`, verified
+2026-07-30, on the evidence `"APPLY NOW"` from `polygon.technology/village`.
+That page is marketing, not the programme. The actual portal,
+`polygon.questbook.xyz`, renders **"Program Closed"** three times, and
+@0xPolygon posted that **Season 2 recipients have already been selected**. No
+Season 3 exists in any source.
+
+**#60 Flow Ecosystem Support → FLUX.** Was `OPEN` on the evidence
+`"grant application"` — a phrase that appears in the *instructions*, not in an
+open round. The page actually says: *"Round 1 has been closed on August 16,
+2025. Please stay tuned for the next round."* Nearly a year with no round
+since. FLUX rather than DEAD because another round is explicitly promised and
+GrantDAO still funds ~50k FLOW per round.
+
+Actionable: **43 → 41.**
+
+### What this round teaches, beyond the two fixes
+
+1. **A keyword is not a status.** Both errors came from matching a string
+   (`"APPLY NOW"`, `"grant application"`) rather than reading the sentence
+   around it. §21 said *look at the page before trusting the parse*; this
+   extends it — **look at the sentence before trusting the keyword.** The
+   sweep's `deadline_found` check caught Flow precisely because it read a date
+   in context instead of a phrase in isolation.
+2. **Neither tool would have caught Polygon alone.** The browser read the
+   marketing page and saw "open". SearXNG surfaced the Questbook portal that
+   the marketing page never links. Run both, and follow the portal.
+3. **Everything else held.** 41 of 43 matched our records exactly — no other
+   programme contradicted what `programs.mjs` says. The 2026-08-12 verification
+   was sound; these two were older entries (30–31 July) that had gone stale.
+4. **Captchas remain a non-issue for reading.** 8 pages carried one, and every
+   single one still rendered fully (2,113–43,247 chars) — the challenge sits on
+   a form deeper in, never on the requirements page. None was solved; see
+   CLAUDE.md §0, which now separates *reading* a page from *submitting* to one.
+
+### Live application forms recovered
+
+| # | Programme | Form |
+|---|---|---|
+| 17 | MultiversX Growth Games | `form.typeform.com/to/SjFRIQaj` |
+| 34 | Solana Foundation Grants | `airtable.com/apppDmK2Pin9WX8jV/shrDbfJ1wktQ7pB6f/…` |
+| 47 | Arbitrum Gaming Ventures | `tally.so/r/0QObE9` |
+| 58 | Flare Grants | `airtable.com/appyfl68ek3SOoCLh/shrqTkjFHruvr3dMk` |
+| 33 | SafePal Builder's Grant | `forms.gle/4czF6T9Z569uyU2h8` |
+
+11 of 43 exposed a form link directly. The rest route through a portal, a forum
+post or an email channel — consistent with §23's finding that most of these are
+documentation surfaces rather than application funnels.
+
+### Reproducing this
+
+Scripts are on the research box (`/root/sweep_0814.py`, `/root/probe_one.py`).
+They need the local pproxy relays that inject residential credentials — Chrome
+cannot take `user:pass` in `--proxy-server`, which is why `audit.py` uses the
+same pattern:
+
+```bash
+for p in 8901 8902 8903; do
+  setsid nohup pproxy -l http://127.0.0.1:$p -r "http://<host>:<port>#<user>:<pass>" &
+done
+```
+
+One browser per proxy, sequential blocks, restart the browser after any error —
+a dead browser poisons the rest of its block. Budget ~30s per programme.

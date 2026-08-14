@@ -90,12 +90,20 @@ export const PROGRAMS = [
   { n: 24, name: 'Aptos Foundation Grants', chain: 'Aptos', amount: '~$100K', equity: '0%',
     status: 'OPEN', verified: '2026-07-30', url: 'https://aptosfoundation.org/grants',
     evidence: 'probe: OPEN', note: 'Requires live product + traction.' },
+  // 🔴 Both Polygon entries were OPEN on the strength of "APPLY NOW" on the
+  // marketing page. The marketing page is not the programme. Rendering the
+  // actual grant portal (polygon.questbook.xyz) on 2026-08-14 shows
+  // "Program Closed" three times, and @0xPolygon posted that Season 2
+  // recipients have already been SELECTED. No Season 3 exists in any source.
+  // This is §21's lesson again: read the portal, not the landing page.
   { n: 25, name: 'Polygon Community Grants', chain: 'Polygon', amount: '~$100K', equity: '0%',
-    status: 'OPEN', verified: '2026-07-30', url: 'https://polygon.technology/village',
-    evidence: '"APPLY NOW"', note: 'The AI hook (Guardian agents) helps.' },
+    status: 'DEAD', verified: '2026-08-14', url: 'https://polygon.questbook.xyz/',
+    evidence: '"Program Closed" on the Questbook portal; S2 recipients already selected',
+    note: 'polygon.technology/village still says APPLY NOW — stale marketing surface. Watch for a Season 3 announcement rather than applying.' },
   { n: 27, name: 'Polygon Community Grants S2/S3', chain: 'Polygon', amount: '~$50K', equity: '0%',
-    status: 'OPEN', verified: '2026-07-30', url: 'https://polygon.technology/village',
-    evidence: 'same programme surface as #25', note: 'Questbook, season-based.' },
+    status: 'DEAD', verified: '2026-08-14', url: 'https://polygon.questbook.xyz/',
+    evidence: 'same closed portal as #25; no Season 3 announced anywhere',
+    note: 'Duplicate surface of #25. Both dead until a new season opens.' },
   { n: 28, name: 'Prezenti — Celo Community Grants', chain: 'Celo', amount: '~$50K', equity: '0%',
     status: 'OPEN', verified: '2026-07-31', url: 'https://www.prezenti.xyz',
     evidence: 'Season 3 funded (forum.celo.org, 23 Jul 2026)',
@@ -263,10 +271,15 @@ export const PROGRAMS = [
     status: 'DEAD', verified: '2026-08-12', url: 'https://thegraph.com/grants',
     evidence: '"The Graph Foundation is pausing applications to the Grants Program … we made the decision to pause the Grants Program to reassess our ecosystem strategic priorities."',
     note: 'PAUSED. Announced on forum.thegraph.com 2026-07-06, corroborated by the application Typeform returning "Hey :) This typeform is now closed." Do not submit.' },
+  // Marked OPEN on the evidence '"grant application"' — but that string is in
+  // the *instructions*, not an open round. Rendering the page on 2026-08-14:
+  // "Round 1 has been closed on August 16, 2025. Please stay tuned for the next
+  // round." No round since, almost a year on. A keyword match is not a status.
   { n: 60, name: 'Flow Ecosystem Support', chain: 'Flow', amount: '~$100K', equity: '0%',
-    status: 'OPEN', verified: '2026-07-31', url: 'https://developers.flow.com/ecosystem/grants',
-    evidence: '"grant application"',
-    note: 'CHAIN NOW CONFIGURED (2026-07-31): 14th adapter family, Cadence contract written. NFT-native — the chain NBA Top Shot runs on, so a land NFT is what it was designed for. Ready to apply.' },
+    status: 'FLUX', verified: '2026-08-14',
+    url: 'https://developers.flow.com/ecosystem/developer-support-hub/grants',
+    evidence: '"Round 1 has been closed on August 16, 2025. Please stay tuned for the next round."',
+    note: 'FLUX not DEAD: the programme explicitly promises another round, and GrantDAO still funds ~50k FLOW per round. Watch for Round 2 rather than applying. Chain is configured (14th adapter family, Cadence contract) so we can move the day it opens. bd@flowfoundation.org is the direct channel meanwhile.' },
 ];
 
 export const STATUS_META = {

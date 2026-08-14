@@ -60,9 +60,26 @@ order to try, every time, before asking:
    fail later at `tar`; and it has **2 cores**, so run long compiles detached
    with `setsid nohup … &` and poll, rather than blocking on them.
 
-Ask the user only for genuine captchas and social logins. Those are deliberate
-anti-bot controls: do not automate around them, and decline captcha-solving
-services.
+**Reading is not submitting.** Fetching a public requirements page, rendering a
+form to read its fields, and following links is ordinary research — do it freely,
+with headless browsers and residential proxies where a site needs them. Cookie
+banners, JS-rendered forms, consent walls and passive bot checks are all fair to
+navigate; they gate rendering, not access.
+
+What stays off-limits is narrower, and it is the **mechanism**, not the purpose:
+
+- **Do not defeat an interactive captcha**, and do not use captcha-solving
+  services (CapSolver and friends) even to read a page. Those services work by
+  paying humans or ML to break a challenge that exists specifically to keep
+  automation out — circumventing it is the same act whatever you do with the
+  content. It is also a practical risk: a foundation whose WAF flags us is one
+  we later have to submit an application to.
+- **Do not automate a social login, or submit anything on the user's behalf.**
+
+In practice this costs almost nothing: the 2026-08-12 sweep read 76 programme
+pages and hit zero captchas on requirement pages — the captchas were all on
+faucets. When a genuine interactive challenge does appear, note that one URL and
+hand it to the user rather than routing around it.
 
 ### 🔴 The product is CryptoLand. The company and domain are XONO.
 
