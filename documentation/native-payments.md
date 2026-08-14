@@ -181,6 +181,28 @@ purchase), and exits 1 on any BROKEN. It builds a real quote, so it exercises
 the pricing port, the USD→base-unit maths and the live rate together. Hits live
 price feeds, so it is deliberately not part of `pytest`.
 
+### Live status (2026-08-14)
+
+**24 of 32 subdomains take wallet payments.** Treasuries are configured in each
+chain's `/srv/cryptoland/<chain>/env`; every address was checksum-validated
+before being wired (see `scripts/` history — Cardano in particular was verified
+as mainnet `addr1`, since an earlier keystore held a `addr_test1` address that
+would have lost any ADA sent to it).
+
+| State | Chains |
+|---|---|
+| ✅ Live (24) | base polygon arbitrum optimism avalanche bnb celo scroll ronin beam oasys hedera injective mantle taiko rootstock flare · solana ton aptos near stellar algorand tezos |
+| ⬜ Needs a treasury address (4) | starknet multiversx radix flow |
+| ⬜ Needs a server-side tx builder (2) | cardano sui — verifiers are written and proven; `/cardano/build-payment` and `/sui/build-transfer` do not exist |
+| ⬜ Not applicable (2) | skale (sFUEL is valueless), moonbeam (halted) |
+
+`ethereum` has no subdomain by design — a general EVM target with no named
+grant, and L1 gas would dwarf a $12 tile.
+
+⚠️ **No wallet has completed a purchase on any chain yet.** Enabled means the
+server will quote and verify; it does not mean the browser flow has been
+exercised with real money. NEAR's verifier in particular is unproven — see §7.
+
 ### Turning it on in production
 
 Each chain's backend is a `cryptoland@<chain>` systemd instance reading
