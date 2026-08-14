@@ -1481,8 +1481,12 @@ async def chain_pay_info():
     if not chain.native_pay:
         return {"enabled": False, "reason": chain.native_pay_note}
     if not _chain_pay.family_supported(chain.family):
+        # Distinguish "no verifier" from "verifier exists but the client cannot
+        # build the transaction" — otherwise the reason is misleading and the
+        # missing work looks like the wrong thing.
+        blocked = _chain_pay.family_blocked_reason(chain.family)
         return {"enabled": False,
-                "reason": f"On-chain verification not implemented for {chain.family}"}
+                "reason": blocked or f"On-chain verification not implemented for {chain.family}"}
     if not _chain_pay.treasury_for(chain):
         return {"enabled": False, "reason": "No treasury address configured"}
     return {

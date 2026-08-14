@@ -25,6 +25,28 @@ final status — NOT the receipts alone, because:
 NEAR reports success as `status.SuccessValue` and failure as `status.Failure`.
 A transaction can also be `Unknown` while still propagating, which is pending,
 not failure.
+
+🔴 ── UNPROVEN. Do not enable NEAR payments until this is tested ───────────
+Every other verifier in this package was checked against a real mainnet
+transaction with four cases (exact, wrong treasury, underpaid, garbage hash).
+This one was NOT. Plain NEAR transfers turned out to be rare in recent blocks —
+several hundred transactions were scanned across ~400 blocks and every one was
+a `FunctionCall`, not a `Transfer`, and the public RPC rate-limited before a
+wider sweep finished. Two public indexers were also tried without success.
+
+So the logic below is reasoned from the protocol, not demonstrated. The two
+parts most likely to be wrong, and what to check first when you do test it:
+
+  1. **the gas-refund exclusion.** Every NEAR transaction refunds unspent gas
+     as a Transfer receipt from the `system` account. If that filter is wrong,
+     a buyer gets credited for their own refund and could underpay.
+  2. **the `EXPERIMENTAL_tx_status` account argument.** NEAR shards its index
+     by account, so the lookup needs one. This passes the treasury when no
+     payer is supplied, which SHOULD work for a transaction that paid the
+     treasury — but that behaviour is exactly what was never confirmed.
+
+To prove it: send a small real NEAR transfer to an account you control, then
+run this verifier against that hash with the four cases above.
 """
 from __future__ import annotations
 

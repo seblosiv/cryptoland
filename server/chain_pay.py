@@ -512,6 +512,26 @@ async def verify_payment(
             await session.close()
 
 
+# Families whose CLIENT half cannot complete a payment, whatever the verifier
+# says. Their adapters post to a backend route that has never been implemented
+# (`/cardano/build-payment`, `/sui/build-transfer`), because on those chains the
+# transaction must be built server-side — CIP-30 has no send primitive, and a
+# Sui PTB needs BCS encoding. Advertising native pay here would show a wallet
+# button that 404s halfway through, after the user has committed.
+#
+# The verifiers for these families ARE written and proven; only the build route
+# is missing. Remove a family from this set the moment its route exists.
+CLIENT_PATH_INCOMPLETE = {
+    "cardano": "the transaction-building endpoint (/cardano/build-payment) is not implemented",
+    "sui": "the transaction-building endpoint (/sui/build-transfer) is not implemented",
+}
+
+
 def family_supported(family: str) -> bool:
     _discover_verifiers()
-    return family in VERIFIERS
+    return family in VERIFIERS and family not in CLIENT_PATH_INCOMPLETE
+
+
+def family_blocked_reason(family: str) -> Optional[str]:
+    """Why a family with a working verifier still cannot take a payment."""
+    return CLIENT_PATH_INCOMPLETE.get(family)
