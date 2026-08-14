@@ -41,7 +41,7 @@ export function MapTooltip({ mousePos }) {
     >
       <div style={{
         background: 'var(--s1)',
-        borderRadius: 14,
+        borderRadius: 7,
         overflow: 'hidden',
         boxShadow: 'var(--sh-lg)',
       }}>
@@ -77,7 +77,7 @@ export function MapTooltip({ mousePos }) {
             </span>
             <span style={{
               fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-              padding: '2px 7px', borderRadius: 99,
+              padding: '2px 7px', borderRadius: 7,
               background: owned ? `${color}1a` : 'var(--green-d)',
               color: owned ? color : 'var(--green)',
             }}>
@@ -91,7 +91,7 @@ export function MapTooltip({ mousePos }) {
           {/* Info */}
           <div style={{
             background: 'var(--s2)',
-            borderRadius: 8, padding: '8px 10px',
+            borderRadius: 4, padding: '8px 10px',
             display: 'flex', flexDirection: 'column', gap: 5,
           }}>
             {block && <TRow l="Owner" v={shortAddr(block.owner)} title={block.owner} />}

@@ -31,12 +31,12 @@ export default function CustomizeModal() {
   }
 
   const sheetStyle = isMobile ? {
-    width: '100%', borderRadius: '20px 20px 0 0',
+    width: '100%', borderRadius: '10px 10px 0 0',
     maxHeight: '88dvh', overflowY: 'auto',
     paddingBottom: 'max(0px, var(--sab))',
     animation: 'sheet-up 0.28s cubic-bezier(0.34,1.2,0.64,1)',
   } : {
-    width: '100%', maxWidth: 420, borderRadius: 20,
+    width: '100%', maxWidth: 420, borderRadius: 10,
     animation: 'scale-in 0.24s cubic-bezier(0.34,1.3,0.64,1)',
   }
 
@@ -61,7 +61,7 @@ export default function CustomizeModal() {
             </span>
           </div>
           <button onClick={closeCustomizeModal} style={{
-            width: 30, height: 30, borderRadius: 8,
+            width: 30, height: 30, borderRadius: 4,
             background: 'var(--s3)', border: 'none',
             color: 'var(--t2)', cursor: 'pointer', fontSize: 18,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -74,11 +74,11 @@ export default function CustomizeModal() {
           {/* Block info card */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 12,
-            padding: '12px 14px', borderRadius: 12,
+            padding: '12px 14px', borderRadius: 6,
             background: 'var(--s2)',
           }}>
             <div style={{
-              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+              width: 36, height: 36, borderRadius: 5, flexShrink: 0,
               background: color,
             }} />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -92,7 +92,7 @@ export default function CustomizeModal() {
 
           {/* Image preview */}
           {imageUrl && (
-            <div style={{ height: 110, borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
+            <div style={{ height: 110, borderRadius: 6, overflow: 'hidden', position: 'relative' }}>
               <img
                 src={imageUrl} alt=""
                 style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.75)' }}
@@ -134,7 +134,7 @@ export default function CustomizeModal() {
 
           {error && (
             <div style={{
-              padding: '10px 13px', borderRadius: 10,
+              padding: '10px 13px', borderRadius: 5,
               background: 'rgba(248,113,113,0.07)',
               fontSize: 12, color: 'var(--red)', lineHeight: 1.5,
             }}>

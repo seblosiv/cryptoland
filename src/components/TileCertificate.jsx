@@ -248,7 +248,7 @@ export default function TileCertificate({ block, shareUrl, onClose }) {
           height={H}
           style={{
             width: '100%', height: 'auto',
-            borderRadius: 14,
+            borderRadius: 7,
             display: 'block',
             boxShadow: `0 0 60px ${accent}30, 0 24px 80px rgba(0,0,0,0.8)`,
           }}
@@ -260,7 +260,7 @@ export default function TileCertificate({ block, shareUrl, onClose }) {
         <button
           onClick={download}
           style={{
-            padding: '10px 22px', borderRadius: 10, border: 'none',
+            padding: '10px 22px', borderRadius: 5, border: 'none',
             background: accent, color: '#000',
             fontWeight: 800, fontSize: 12, cursor: 'pointer',
             fontFamily: 'var(--mono)', letterSpacing: '0.05em',
@@ -271,7 +271,7 @@ export default function TileCertificate({ block, shareUrl, onClose }) {
         <button
           onClick={copyLink}
           style={{
-            padding: '10px 22px', borderRadius: 10,
+            padding: '10px 22px', borderRadius: 5,
             background: 'rgba(255,255,255,0.08)',
             border: '1px solid rgba(255,255,255,0.15)',
             color: copied ? accent : 'rgba(255,255,255,0.8)',
@@ -285,7 +285,7 @@ export default function TileCertificate({ block, shareUrl, onClose }) {
         <button
           onClick={onClose}
           style={{
-            padding: '10px 16px', borderRadius: 10,
+            padding: '10px 16px', borderRadius: 5,
             background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.08)',
             color: 'rgba(255,255,255,0.4)',
@@ -466,7 +466,7 @@ export function MiniCertificate({ block, shareUrl }) {
           onClick={() => setShowFull(true)}
           style={{
             width: '100%', height: 'auto',
-            borderRadius: 12, display: 'block',
+            borderRadius: 6, display: 'block',
             cursor: 'pointer',
             border: `1px solid ${accent}28`,
             transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -482,7 +482,7 @@ export function MiniCertificate({ block, shareUrl }) {
           <button
             onClick={() => setShowFull(true)}
             style={{
-              flex: 1, padding: '8px 0', borderRadius: 8, border: 'none',
+              flex: 1, padding: '8px 0', borderRadius: 4, border: 'none',
               background: accent, color: '#000',
               fontWeight: 800, fontSize: 10, cursor: 'pointer',
               fontFamily: 'var(--mono)', letterSpacing: '0.05em',
@@ -493,7 +493,7 @@ export function MiniCertificate({ block, shareUrl }) {
           <button
             onClick={() => { navigator.clipboard.writeText(shareUrl); setCopied(true); setTimeout(() => setCopied(false), 1800) }}
             style={{
-              flex: 1, padding: '8px 0', borderRadius: 8,
+              flex: 1, padding: '8px 0', borderRadius: 4,
               background: 'var(--s3)', border: '1px solid var(--b0)',
               color: copied ? accent : 'var(--t2)',
               fontWeight: 700, fontSize: 10, cursor: 'pointer',

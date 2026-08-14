@@ -121,13 +121,13 @@ export default function PublicEmpire({ handle }) {
             <div style={{
               padding: 'clamp(28px, 5vw, 48px)',
               background: 'var(--s1)',
-              borderRadius: 24,
+              borderRadius: 10,
               boxShadow: 'var(--sh-md)',
               marginBottom: 24,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
                 <div style={{
-                  width: 64, height: 64, borderRadius: 16,
+                  width: 64, height: 64, borderRadius: 8,
                   background: 'var(--s2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 32, flexShrink: 0,
@@ -158,7 +158,7 @@ export default function PublicEmpire({ handle }) {
                     padding: '8px 14px',
                     background: 'rgba(251, 146, 60, 0.12)',
                     border: '1px solid #fb923c',
-                    borderRadius: 20,
+                    borderRadius: 10,
                     fontSize: 13, fontWeight: 700, color: '#fb923c',
                     flexShrink: 0,
                   }}>
@@ -183,7 +183,7 @@ export default function PublicEmpire({ handle }) {
               {/* Mini map */}
               <div style={{
                 background: SEA,
-                borderRadius: 16,
+                borderRadius: 8,
                 overflow: 'hidden',
                 aspectRatio: `${W} / ${H}`,
                 marginBottom: 24,
@@ -227,7 +227,7 @@ export default function PublicEmpire({ handle }) {
                         display: 'flex', alignItems: 'center', gap: 6,
                         padding: '8px 12px',
                         background: 'var(--s2)',
-                        borderRadius: 12,
+                        borderRadius: 6,
                         fontSize: 13, color: 'var(--t1)',
                       }}>
                         <span style={{ fontSize: 18 }}>{t.icon}</span>
@@ -244,7 +244,7 @@ export default function PublicEmpire({ handle }) {
               <div style={{
                 padding: 'clamp(20px, 4vw, 32px)',
                 background: 'var(--s1)',
-                borderRadius: 24,
+                borderRadius: 10,
                 marginBottom: 24,
               }}>
                 <div style={{
@@ -259,7 +259,7 @@ export default function PublicEmpire({ handle }) {
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '10px 14px',
                       background: 'var(--s2)',
-                      borderRadius: 10,
+                      borderRadius: 5,
                     }}>
                       <span style={{ fontSize: 18 }}>
                         {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🌍'}
@@ -280,7 +280,7 @@ export default function PublicEmpire({ handle }) {
             <div style={{
               padding: 'clamp(28px, 5vw, 40px)',
               background: 'var(--s1)',
-              borderRadius: 24,
+              borderRadius: 10,
               textAlign: 'center',
               border: '1px solid rgba(74, 222, 128, 0.18)',
             }}>
@@ -310,7 +310,7 @@ function Stat({ label, value }) {
     <div style={{
       padding: '14px 12px',
       background: 'var(--s2)',
-      borderRadius: 12,
+      borderRadius: 6,
       textAlign: 'center',
     }}>
       <div style={{

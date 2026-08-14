@@ -31,10 +31,13 @@
 
   /* Layout */
   --feed-h: 44px;
-  --r-sm:   8px;
-  --r-md:   12px;
-  --r-lg:   20px;
-  --r-pill: 999px;
+  /* Squarer by design. Every step roughly halved, and the "pill" is now a
+     soft rectangle rather than a capsule — a 999px capsule is the single
+     roundest thing in a UI and it set the tone for everything beside it. */
+  --r-sm:   4px;
+  --r-md:   6px;
+  --r-lg:   10px;
+  --r-pill: 7px;
 
   /* Fonts */
   --font:   'Inter', system-ui, -apple-system, sans-serif;

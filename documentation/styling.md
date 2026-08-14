@@ -223,6 +223,39 @@ by reading 32 near-identical titles.
 > `apple-touch-icon.png`, and a per-chain `manifest.json` carrying the accent as
 > `theme_color`.
 
+### Squarer by design
+
+The radius scale was roughly halved end to end — `--r-sm` 8→4, `--r-md` 12→6,
+`--r-lg` 20→10 — and the ~290 hardcoded `borderRadius` values in the components
+were swept with the same mapping, so nothing is squarer than its neighbours.
+
+**`--r-pill` went from 999px to 7px.** A 999px capsule is the single roundest
+thing a UI can contain, and it set the tone for everything beside it: the HUD
+strip, the logo cluster, every top-bar button and the primary CTA were all
+capsules. Measured on the rendered page afterwards: **zero elements with a
+radius ≥100px**, down from fourteen.
+
+Two categories are deliberately untouched. `50%` stays `50%` — the live dot, the
+loading spinner and the small status marks are circles because they are dots,
+not panels; five remain in the DOM. And radii of 2px or less are already
+hairline-scale.
+
+> Sweep only the `borderRadius` value, bounded to the comma that ends the
+> property. A first attempt matched any quoted `Npx` and rewrote **padding**
+> as well — `'10px 16px'` became `'5px 8px'` — while leaving ternaries
+> half-converted (`'7px 14px 0 0'`). Both were invisible in a diff summary and
+> obvious in the rendered page.
+
+### The onboarding scrim
+
+The overlay behind the first-run card was `rgba(0,0,0,0.90)` at the centre, so a
+**geospatial** game opened on near-black. Nothing on the card depends on that
+scrim for legibility — the card is an opaque `--s1` surface — so the scrim only
+governs how much of the world you can see around it. It is 0.58 at the centre
+and 0.03 at the edge now, and the planet is the first thing you see. The chain
+badge above the wordmark is a rounded square rather than a disc for the same
+reason the rest is: the product is a grid of square tiles.
+
 ### What was deliberately left alone
 
 90 of the 96 accent references in `src/components/` are a hardcoded

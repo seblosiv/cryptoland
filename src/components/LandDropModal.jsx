@@ -104,7 +104,7 @@ export default function LandDropModal() {
         style={{
           width: '100%', maxWidth: 440,
           background: '#0f0f0f',
-          borderRadius: 22,
+          borderRadius: 10,
           padding: 28,
           animation: 'scale-in 0.32s cubic-bezier(0.34,1.05,0.64,1)',
         }}
@@ -135,7 +135,7 @@ export default function LandDropModal() {
             onClick={close}
             aria-label="Close"
             style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: 32, height: 32, borderRadius: 4,
               background: '#1a1a1a', border: 'none',
               color: '#9ca3af', fontSize: 18, cursor: 'pointer',
             }}
@@ -146,7 +146,7 @@ export default function LandDropModal() {
         {authUser && (
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            padding: '4px 10px', borderRadius: 999,
+            padding: '4px 10px', borderRadius: 7,
             background: '#141414', marginBottom: 16,
             fontSize: 10, fontWeight: 700, letterSpacing: '0.14em',
             color: tier === 'founder' ? '#facc15' : tier === 'pioneer' ? '#60a5fa' : '#9ca3af',
@@ -206,7 +206,7 @@ function PickerView({ secondsLeft, onClaim, claiming, error, authed, onLogin }) 
     <div>
       <div style={{
         background: '#141414',
-        borderRadius: 14, padding: '12px 16px',
+        borderRadius: 7, padding: '12px 16px',
         marginBottom: 16,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
@@ -235,7 +235,7 @@ function PickerView({ secondsLeft, onClaim, claiming, error, authed, onLogin }) 
               aspectRatio: '3 / 4',
               background: '#141414',
               border: '1px solid #1f1f1f',
-              borderRadius: 14,
+              borderRadius: 7,
               cursor: claiming ? 'wait' : 'pointer',
               transition: 'all 0.18s ease',
               display: 'flex', flexDirection: 'column',
@@ -262,7 +262,7 @@ function PickerView({ secondsLeft, onClaim, claiming, error, authed, onLogin }) 
           style={{
             width: '100%', height: 48,
             background: '#fafafa', color: '#0a0a0a',
-            border: 'none', borderRadius: 12,
+            border: 'none', borderRadius: 6,
             fontSize: 14, fontWeight: 700, cursor: 'pointer',
             marginBottom: 8,
           }}
@@ -275,7 +275,7 @@ function PickerView({ secondsLeft, onClaim, claiming, error, authed, onLogin }) 
         <div style={{
           padding: '10px 14px', background: 'rgba(248,113,113,0.08)',
           border: '1px solid rgba(248,113,113,0.2)',
-          borderRadius: 10, fontSize: 12, color: '#fca5a5',
+          borderRadius: 5, fontSize: 12, color: '#fca5a5',
         }}>
           {error}
         </div>
@@ -307,7 +307,7 @@ function ResultView({ result, onShare, copied, onClose }) {
       <pre style={{
         background: '#141414',
         border: '1px solid #1f1f1f',
-        borderRadius: 12,
+        borderRadius: 6,
         padding: '14px 16px',
         fontFamily: 'ui-monospace, monospace',
         fontSize: 26, lineHeight: 1.35, letterSpacing: '0.08em',
@@ -320,7 +320,7 @@ function ResultView({ result, onShare, copied, onClose }) {
         style={{
           width: '100%', height: 48,
           background: '#fafafa', color: '#0a0a0a',
-          border: 'none', borderRadius: 12,
+          border: 'none', borderRadius: 6,
           fontSize: 14, fontWeight: 700, cursor: 'pointer',
           marginBottom: 8,
         }}
@@ -332,7 +332,7 @@ function ResultView({ result, onShare, copied, onClose }) {
         style={{
           width: '100%', height: 44,
           background: '#1a1a1a', color: '#e5e5e5',
-          border: 'none', borderRadius: 12,
+          border: 'none', borderRadius: 6,
           fontSize: 13, fontWeight: 500, cursor: 'pointer',
         }}
       >
@@ -367,7 +367,7 @@ function ClaimedView({ claimed, onShare, copied }) {
         style={{
           width: '100%', height: 44,
           background: '#1a1a1a', color: '#e5e5e5',
-          border: 'none', borderRadius: 12,
+          border: 'none', borderRadius: 6,
           fontSize: 13, fontWeight: 600, cursor: 'pointer',
         }}
       >
@@ -381,7 +381,7 @@ function UpcomingView({ seconds }) {
   return (
     <div style={{ padding: '16px 0' }}>
       <div style={{
-        background: '#141414', borderRadius: 14, padding: '18px 18px',
+        background: '#141414', borderRadius: 7, padding: '18px 18px',
         textAlign: 'center', marginBottom: 14,
       }}>
         <div style={{ fontSize: 10, color: '#9ca3af', letterSpacing: '0.18em', marginBottom: 8 }}>

@@ -66,7 +66,7 @@ function ListForm({ tileKey, tileData, onClose }) {
           onChange={e => setPrice(e.target.value)}
           placeholder="e.g. 150"
           style={{
-            flex: 1, padding: '9px 12px', borderRadius: 8,
+            flex: 1, padding: '9px 12px', borderRadius: 4,
             background: 'var(--s3)', border: '1px solid var(--b0)',
             color: 'var(--t1)', fontSize: 13, fontFamily: 'var(--mono)',
             outline: 'none',
@@ -74,14 +74,14 @@ function ListForm({ tileKey, tileData, onClose }) {
         />
         <span style={{
           padding: '9px 12px', background: 'var(--s3)',
-          border: '1px solid var(--b0)', borderRadius: 8,
+          border: '1px solid var(--b0)', borderRadius: 4,
           fontSize: 11, color: 'var(--t3)', display: 'flex', alignItems: 'center',
         }}>USD</span>
       </div>
 
       {price && !isNaN(price) && Number(price) > 0 && (
         <div style={{
-          padding: '8px 10px', borderRadius: 7, background: 'var(--s2)',
+          padding: '8px 10px', borderRadius: 4, background: 'var(--s2)',
           fontSize: 10, color: 'var(--t3)', marginBottom: 12, lineHeight: 1.6,
         }}>
           You receive: <strong style={{ color: C_UP }}>${(Number(price) * 0.975).toFixed(2)}</strong>
@@ -90,7 +90,7 @@ function ListForm({ tileKey, tileData, onClose }) {
       )}
 
       {error && (
-        <div style={{ padding: '8px 10px', borderRadius: 7, background: C_DN + '12', fontSize: 10, color: C_DN, marginBottom: 10 }}>{error}</div>
+        <div style={{ padding: '8px 10px', borderRadius: 4, background: C_DN + '12', fontSize: 10, color: C_DN, marginBottom: 10 }}>{error}</div>
       )}
 
       <button
@@ -114,7 +114,7 @@ function ListingCard({ listing, onBuy }) {
 
   return (
     <div style={{
-      padding: '12px 14px', borderRadius: 10,
+      padding: '12px 14px', borderRadius: 5,
       background: 'var(--s2)', border: '1px solid var(--b0)',
       display: 'flex', flexDirection: 'column', gap: 8,
     }}>
@@ -142,7 +142,7 @@ function ListingCard({ listing, onBuy }) {
         </span>
         <span style={{
           fontSize: 8, fontWeight: 700, color: C_AC, background: C_AC + '18',
-          padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mono)',
+          padding: '1px 5px', borderRadius: 2, fontFamily: 'var(--mono)',
         }}>NFT · {listing.chain ?? ACTIVE_CHAIN.name}</span>
       </div>
 
@@ -152,7 +152,7 @@ function ListingCard({ listing, onBuy }) {
           <button
             onClick={() => remove(listing.tile_key, address)}
             style={{
-              flex: 1, padding: '7px 0', borderRadius: 7,
+              flex: 1, padding: '7px 0', borderRadius: 4,
               background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)',
               color: C_DN, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font)',
             }}
@@ -161,7 +161,7 @@ function ListingCard({ listing, onBuy }) {
           <button
             onClick={() => onBuy(listing)}
             style={{
-              flex: 1, padding: '7px 0', borderRadius: 7,
+              flex: 1, padding: '7px 0', borderRadius: 4,
               background: C_AC + '18', border: `1px solid ${C_AC}30`,
               color: C_AC, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
             }}
@@ -206,7 +206,7 @@ function BuyConfirm({ listing, onClose }) {
           { l: 'Chain', v: listing.chain ?? ACTIVE_CHAIN.name },
           { l: 'NFT Standard', v: 'ERC-721' },
         ].map(({ l, v }) => (
-          <div key={l} style={{ padding: '8px 10px', borderRadius: 7, background: 'var(--s2)' }}>
+          <div key={l} style={{ padding: '8px 10px', borderRadius: 4, background: 'var(--s2)' }}>
             <div style={{ fontSize: 9, color: 'var(--t4)', marginBottom: 2 }}>{l}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--mono)' }}>{v}</div>
           </div>
@@ -214,7 +214,7 @@ function BuyConfirm({ listing, onClose }) {
       </div>
 
       <div style={{
-        padding: '10px 12px', borderRadius: 8, marginBottom: 12,
+        padding: '10px 12px', borderRadius: 4, marginBottom: 12,
         background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)',
         fontSize: 10, color: '#fbbf24', lineHeight: 1.6,
       }}>
@@ -255,7 +255,7 @@ export default function MarketplaceModal() {
 
   const panelStyle = isMobile ? {
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
-    background: 'var(--s1)', borderRadius: '20px 20px 0 0',
+    background: 'var(--s1)', borderRadius: '10px 10px 0 0',
     maxHeight: '85dvh', overflowY: 'auto',
     paddingBottom: 'max(20px, var(--sab))',
     animation: 'sheet-up 0.26s cubic-bezier(0.34,1.2,0.64,1)',
@@ -264,7 +264,7 @@ export default function MarketplaceModal() {
     top: '50%', left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 50,
-    background: 'var(--s1)', borderRadius: 20,
+    background: 'var(--s1)', borderRadius: 10,
     width: 'min(540px, calc(100vw - 32px))',
     maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
     boxShadow: 'var(--sh-lg)',
@@ -298,7 +298,7 @@ export default function MarketplaceModal() {
           <span style={{
             fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
             color: 'var(--green)', background: 'rgba(74,222,128,0.15)',
-            borderRadius: 4, padding: '1px 5px',
+            borderRadius: 2, padding: '1px 5px',
           }}>{stats.listings}</span>
         )}
       </button>
@@ -339,7 +339,7 @@ export default function MarketplaceModal() {
               padding: '16px 18px 12px',
               borderBottom: '1px solid var(--b0)',
               position: 'sticky', top: 0, background: 'var(--s1)', zIndex: 1,
-              borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0',
+              borderRadius: isMobile ? '10px 10px 0 0' : '10px 10px 0 0',
             }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--t1)' }}>Tile Marketplace</div>
@@ -361,7 +361,7 @@ export default function MarketplaceModal() {
                   { l: 'Total Value', v: `$${(stats.total_value || 0).toLocaleString('en', { maximumFractionDigits: 0 })}` },
                   { l: 'Avg Price',   v: `$${(stats.avg_price || 0).toFixed(0)}` },
                 ].map(({ l, v }) => (
-                  <div key={l} style={{ padding: '10px 8px', borderRadius: 9, background: 'var(--s2)', textAlign: 'center' }}>
+                  <div key={l} style={{ padding: '10px 8px', borderRadius: 4, background: 'var(--s2)', textAlign: 'center' }}>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1, marginBottom: 3 }}>{v}</div>
                     <div className="label">{l}</div>
                   </div>

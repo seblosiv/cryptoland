@@ -6,7 +6,7 @@ const inp = {
   width: '100%',
   background: '#0d0d0d',
   border: '1px solid #333',
-  borderRadius: 8,
+  borderRadius: 4,
   padding: '10px 14px',
   color: '#e8e8e8',
   fontSize: 14,
@@ -16,7 +16,7 @@ const inp = {
 const btn = (primary) => ({
   width: '100%',
   padding: '11px 0',
-  borderRadius: 8,
+  borderRadius: 4,
   border: primary ? 'none' : '1px solid #333',
   background: primary ? '#4ade80' : 'transparent',
   color: primary ? '#000' : '#aaa',
@@ -187,7 +187,7 @@ export default function AuthModal() {
           width: '100%', maxWidth: 380,
           background: '#141414',
           border: '1px solid #222',
-          borderRadius: 16,
+          borderRadius: 8,
           padding: '28px 28px 24px',
         }}
       >
@@ -203,13 +203,13 @@ export default function AuthModal() {
         </div>
 
         {/* Tab switcher */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#0d0d0d', borderRadius: 8, padding: 4 }}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#0d0d0d', borderRadius: 4, padding: 4 }}>
           {['login', 'register'].map(t => (
             <button
               key={t}
               onClick={() => switchTab(t)}
               style={{
-                flex: 1, padding: '7px 0', borderRadius: 6, border: 'none',
+                flex: 1, padding: '7px 0', borderRadius: 3, border: 'none',
                 background: tab === t ? '#1e1e1e' : 'transparent',
                 color: tab === t ? '#e8e8e8' : '#666',
                 fontWeight: tab === t ? 600 : 400,
@@ -251,7 +251,7 @@ export function GuestClaimModal({ userId, email, onDone, onSkip }) {
           width: '100%', maxWidth: 380,
           background: '#141414',
           border: '1px solid #222',
-          borderRadius: 16,
+          borderRadius: 8,
           padding: '28px 28px 24px',
         }}
       >

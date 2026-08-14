@@ -451,7 +451,7 @@ function makeMarkerEl(block, guardian) {
       width: '30%', height: '30%',
       minWidth: '8px', minHeight: '8px',
       maxWidth: '16px', maxHeight: '16px',
-      borderRadius: '3px',
+      borderRadius: '2px',
       background: `${shieldColor}cc`,
       border: `1px solid ${shieldColor}`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',

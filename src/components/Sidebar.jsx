@@ -79,7 +79,7 @@ export default function Sidebar() {
         <div className="panel" style={isMobile ? {
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 25,
           maxHeight: '72dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-          borderRadius: '20px 20px 0 0',
+          borderRadius: '10px 10px 0 0',
           paddingBottom: 'max(0px, var(--sab))',
           animation: 'sheet-up 0.28s cubic-bezier(0.34,1.2,0.64,1)',
         } : {
@@ -88,7 +88,7 @@ export default function Sidebar() {
           bottom: 'calc(var(--feed-h) + 60px)',
           zIndex: 25,
           width: 280, maxHeight: 460, overflowY: 'auto',
-          borderRadius: 18,
+          borderRadius: 8,
           animation: 'fade-up 0.2s ease',
         }}>
           {isMobile && <div className="drag-handle" />}
@@ -100,7 +100,7 @@ export default function Sidebar() {
             borderBottom: '1px solid var(--b0)',
             position: 'sticky', top: 0, zIndex: 1,
             background: 'var(--s1)',
-            borderRadius: isMobile ? '20px 20px 0 0' : '18px 18px 0 0',
+            borderRadius: isMobile ? '10px 10px 0 0' : '8px 8px 0 0',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div className="live-dot" />
@@ -158,7 +158,7 @@ export default function Sidebar() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{
-                      width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                      width: 20, height: 20, borderRadius: 3, flexShrink: 0,
                       background: 'var(--s3)',
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                       fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 800,
@@ -173,9 +173,9 @@ export default function Sidebar() {
                     flexShrink: 0,
                   }}>{c.blocks}</span>
                 </div>
-                <div style={{ height: 3, borderRadius: 3, background: 'var(--s4)', overflow: 'hidden' }}>
+                <div style={{ height: 3, borderRadius: 2, background: 'var(--s4)', overflow: 'hidden' }}>
                   <div style={{
-                    height: '100%', borderRadius: 3,
+                    height: '100%', borderRadius: 2,
                     width: `${(c.blocks / maxBlocks) * 100}%`,
                     background: color, opacity: 0.7,
                     transition: 'width 0.5s ease',

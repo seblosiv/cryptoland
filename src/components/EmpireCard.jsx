@@ -279,7 +279,7 @@ export default function EmpireCard() {
         style={{
           width: '100%', maxWidth: 540,
           background: 'var(--s1)',
-          borderRadius: 24,
+          borderRadius: 10,
           padding: 'clamp(20px, 4vw, 32px)',
           boxShadow: 'var(--sh-lg)',
           animation: 'scale-in 0.3s cubic-bezier(0.34,1.05,0.64,1)',
@@ -316,7 +316,7 @@ export default function EmpireCard() {
         {card && !loading && (
           <>
             <div style={{
-              borderRadius: 16, overflow: 'hidden',
+              borderRadius: 8, overflow: 'hidden',
               boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
               marginBottom: 16,
               background: '#000',
@@ -329,17 +329,17 @@ export default function EmpireCard() {
               <button onClick={shareNative} className="btn-hero" style={{ flex: 1, fontSize: 13, height: 44 }}>
                 Share
               </button>
-              <button onClick={downloadPNG} className="btn-ghost" style={{ flex: 1, fontSize: 13, height: 44, borderRadius: 10 }}>
+              <button onClick={downloadPNG} className="btn-ghost" style={{ flex: 1, fontSize: 13, height: 44, borderRadius: 5 }}>
                 Download PNG
               </button>
-              <button onClick={copyLink} className="btn-ghost" style={{ flex: 1, fontSize: 13, height: 44, borderRadius: 10 }}>
+              <button onClick={copyLink} className="btn-ghost" style={{ flex: 1, fontSize: 13, height: 44, borderRadius: 5 }}>
                 {copied ? '✓ Copied' : 'Copy Link'}
               </button>
             </div>
 
             <div style={{
               fontSize: 11, color: 'var(--t3)', textAlign: 'center',
-              padding: '10px 12px', background: 'var(--s2)', borderRadius: 10,
+              padding: '10px 12px', background: 'var(--s2)', borderRadius: 5,
               fontFamily: 'var(--mono)', wordBreak: 'break-all',
             }}>
               {shareUrl}

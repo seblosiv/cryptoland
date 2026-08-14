@@ -102,7 +102,7 @@ export default function AgentFeedPanel() {
             onClick={close}
             aria-label="Close feed"
             style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: 32, height: 32, borderRadius: 4,
               background: '#1a1a1a', border: 'none',
               color: '#9ca3af', fontSize: 18, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -141,7 +141,7 @@ export default function AgentFeedPanel() {
               <div key={p.id} style={{
                 background: '#141414',
                 border: '1px solid #1a1a1a',
-                borderRadius: 14,
+                borderRadius: 7,
                 padding: '14px 16px',
                 marginBottom: 8,
               }}>
@@ -152,7 +152,7 @@ export default function AgentFeedPanel() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{
                       fontSize: 13,
-                      width: 24, height: 24, borderRadius: 6,
+                      width: 24, height: 24, borderRadius: 3,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: `${meta.color}1f`,
                     }}>{meta.icon}</span>
@@ -245,7 +245,7 @@ export function AgentFeedChip() {
       <span style={{
         background: 'var(--s3)',
         color: 'var(--t3)',
-        borderRadius: 6,
+        borderRadius: 3,
         padding: '2px 6px',
         fontSize: 10,
         fontFamily: 'var(--mono)',

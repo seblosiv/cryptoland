@@ -44,7 +44,7 @@ function Delta({ value }) {
       color: up ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)',
       background: up ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
       border: `1px solid ${up ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)'}`,
-      borderRadius: 3, padding: '1px 5px', flexShrink: 0,
+      borderRadius: 2, padding: '1px 5px', flexShrink: 0,
       letterSpacing: '-0.01em',
     }}>
       {up ? '▲' : '▼'} {Math.abs(value).toFixed(0)}%
@@ -99,7 +99,7 @@ function WarCard({ signals }) {
     // signal this is; it just no longer floods the panel to say it. inset
     // box-shadow rather than border-left so the row metrics are untouched.
     <div style={{
-      borderRadius: 10, overflow: 'hidden',
+      borderRadius: 5, overflow: 'hidden',
       border: '1px solid var(--b1)',
       background: 'var(--s2)',
       boxShadow: `inset 2px 0 0 ${SIG_COLOR.country_war}`,
@@ -131,7 +131,7 @@ function ScarcityAlarm({ sig, onBuyNow }) {
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '9px 11px',
         marginBottom: 4,
-        borderRadius: 10,
+        borderRadius: 5,
         // Same move as the war card: neutral ground, hairline, and the red
         // reduced to one rule. Red text on a red wash was the loudest thing
         // in the panel and it is not the most important thing in it.
@@ -533,7 +533,7 @@ function MobileMarket({ alerts, gameSignals, loading, loadEvents, fetchAlerts, r
         <div style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 25,
           maxHeight: '78dvh', display: 'flex', flexDirection: 'column',
-          borderRadius: '16px 16px 0 0', background: '#0b0d10',
+          borderRadius: '8px 8px 0 0', background: '#0b0d10',
           animation: 'sheet-up 0.24s cubic-bezier(0.34,1.2,0.64,1)',
         }}>
           <div className="drag-handle" style={{ paddingTop: 8, flexShrink: 0 }} />

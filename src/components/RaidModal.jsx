@@ -62,7 +62,7 @@ export default function RaidModal() {
         style={{
           width: '100%', maxWidth: 480,
           background: 'var(--s1)',
-          borderRadius: '20px 20px 0 0',
+          borderRadius: '10px 10px 0 0',
           padding: '0 0 max(24px, env(safe-area-inset-bottom))',
           animation: 'sheet-up 0.28s cubic-bezier(0.34,1.2,0.64,1)',
         }}
@@ -142,7 +142,7 @@ function SelectStep({ attackerBlock, attackerKey, defenderBlock, defenderKey, ra
       </div>
 
       {error && (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(248,113,113,0.08)', fontSize: 12, color: 'var(--red)' }}>
+        <div style={{ padding: '10px 12px', borderRadius: 4, background: 'rgba(248,113,113,0.08)', fontSize: 12, color: 'var(--red)' }}>
           {error}
         </div>
       )}
@@ -166,7 +166,7 @@ function SelectStep({ attackerBlock, attackerKey, defenderBlock, defenderKey, ra
 function TileCard({ label, tileKey, block, color }) {
   return (
     <div style={{
-      padding: '10px', borderRadius: 10,
+      padding: '10px', borderRadius: 5,
       background: 'var(--s2)',
       border: `1px solid ${color}20`,
       textAlign: 'center',
@@ -209,7 +209,7 @@ function ResultStep({ result, onClose }) {
       {/* Outcome banner */}
       <div style={{
         padding: '20px 16px',
-        borderRadius: 14,
+        borderRadius: 7,
         background: won ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.08)',
         border: `1px solid ${won ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.2)'}`,
         textAlign: 'center',
@@ -241,7 +241,7 @@ function ResultStep({ result, onClose }) {
 
 function StatBox({ label, value, color }) {
   return (
-    <div style={{ padding: '11px 12px', borderRadius: 10, background: 'var(--s2)' }}>
+    <div style={{ padding: '11px 12px', borderRadius: 5, background: 'var(--s2)' }}>
       <div className="label" style={{ marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 15, fontWeight: 700, color, fontFamily: 'var(--mono)', letterSpacing: '-0.02em' }}>{value}</div>
     </div>

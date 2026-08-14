@@ -25,7 +25,7 @@ function WalletOption({ id, name, icon, onClick, disabled }) {
       disabled={disabled}
       style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-        padding: '12px 14px', borderRadius: 10,
+        padding: '12px 14px', borderRadius: 5,
         background: disabled ? 'var(--s2)' : 'var(--s2)',
         border: '1px solid var(--b0)',
         cursor: disabled ? 'default' : 'pointer',
@@ -59,7 +59,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
     <div>
       {/* Wallet address card */}
       <div style={{
-        padding: '14px', borderRadius: 12,
+        padding: '14px', borderRadius: 6,
         background: 'var(--s2)', border: '1px solid var(--b0)',
         marginBottom: 14,
       }}>
@@ -73,7 +73,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
           </div>
           <div style={{
             fontSize: 9, fontWeight: 700, color: ACTIVE_CHAIN.color,
-            background: ACTIVE_CHAIN.color + '18', padding: '2px 7px', borderRadius: 4,
+            background: ACTIVE_CHAIN.color + '18', padding: '2px 7px', borderRadius: 2,
             fontFamily: 'var(--mono)',
           }}>
             {ACTIVE_CHAIN.logo} {chainName || ACTIVE_CHAIN.name}
@@ -95,7 +95,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
               onClick={() => navigator.clipboard?.writeText(address)}
               style={{
                 fontSize: 10, color: 'var(--t3)', background: 'var(--s3)',
-                border: 'none', borderRadius: 5, padding: '3px 8px', cursor: 'pointer',
+                border: 'none', borderRadius: 3, padding: '3px 8px', cursor: 'pointer',
                 fontFamily: 'var(--font)',
               }}
             >Copy</button>
@@ -103,7 +103,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
               onClick={onDisconnect}
               style={{
                 fontSize: 10, color: C_DN, background: 'rgba(248,113,113,0.1)',
-                border: 'none', borderRadius: 5, padding: '3px 8px', cursor: 'pointer',
+                border: 'none', borderRadius: 3, padding: '3px 8px', cursor: 'pointer',
                 fontFamily: 'var(--font)',
               }}
             >Disconnect</button>
@@ -118,7 +118,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
           { id: 'history',   label: `History (${txHistory.length})` },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flex: 1, padding: '6px 0', borderRadius: 7,
+            flex: 1, padding: '6px 0', borderRadius: 4,
             background:  tab === t.id ? 'var(--s3)' : 'none',
             border:      tab === t.id ? '1px solid var(--b0)' : '1px solid transparent',
             color:       tab === t.id ? 'var(--t1)' : 'var(--t3)',
@@ -140,14 +140,14 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
               {ownedTiles.map(key => (
                 <div key={key} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 10px', borderRadius: 8, background: 'var(--s2)',
+                  padding: '8px 10px', borderRadius: 4, background: 'var(--s2)',
                 }}>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--t2)' }}>
                     Tile {key}
                   </span>
                   <span style={{
                     fontSize: 8, color: C_UP, background: C_UP + '18',
-                    padding: '1px 5px', borderRadius: 3, fontWeight: 700,
+                    padding: '1px 5px', borderRadius: 2, fontWeight: 700,
                   }}>NFT</span>
                 </div>
               ))}
@@ -167,7 +167,7 @@ function ConnectedView({ address, chainId, chainName, balance, ownedTiles, txHis
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {txHistory.slice(0, 20).map((tx, i) => (
                 <div key={i} style={{
-                  padding: '8px 10px', borderRadius: 8, background: 'var(--s2)',
+                  padding: '8px 10px', borderRadius: 4, background: 'var(--s2)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
                     <span style={{
@@ -245,7 +245,7 @@ export default function WalletModal() {
   const panelStyle = isMobile ? {
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200,
     background: 'var(--s1)',
-    borderRadius: '20px 20px 0 0',
+    borderRadius: '10px 10px 0 0',
     padding: '0 0 max(20px, var(--sab))',
     animation: 'sheet-up 0.26s cubic-bezier(0.34,1.2,0.64,1)',
     maxHeight: '90dvh', overflowY: 'auto',
@@ -255,7 +255,7 @@ export default function WalletModal() {
     transform: 'translate(-50%, -50%)',
     zIndex: 200,
     background: 'var(--s1)',
-    borderRadius: 20,
+    borderRadius: 10,
     width: 'min(420px, calc(100vw - 32px))',
     maxHeight: 'calc(100vh - 80px)',
     overflowY: 'auto',
@@ -284,7 +284,7 @@ export default function WalletModal() {
           padding: '16px 18px 12px',
           borderBottom: '1px solid var(--b0)',
           position: 'sticky', top: 0, background: 'var(--s1)', zIndex: 1,
-          borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0',
+          borderRadius: isMobile ? '10px 10px 0 0' : '10px 10px 0 0',
         }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--t1)' }}>
@@ -324,7 +324,7 @@ export default function WalletModal() {
               {/* Chain info */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 12px', borderRadius: 8,
+                padding: '8px 12px', borderRadius: 4,
                 background: ACTIVE_CHAIN.color + '12',
                 border: `1px solid ${ACTIVE_CHAIN.color}25`,
                 marginBottom: 14,
@@ -337,7 +337,7 @@ export default function WalletModal() {
                       <span style={{
                         marginLeft: 6, fontSize: 8, fontWeight: 800,
                         color: C_DN, background: C_DN + '18',
-                        padding: '1px 5px', borderRadius: 3,
+                        padding: '1px 5px', borderRadius: 2,
                       }}>TESTNET</span>
                     )}
                   </div>
@@ -366,7 +366,7 @@ export default function WalletModal() {
               {/* Error */}
               {error && (
                 <div style={{
-                  padding: '10px 12px', borderRadius: 8, marginBottom: 10,
+                  padding: '10px 12px', borderRadius: 4, marginBottom: 10,
                   background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)',
                   fontSize: 11, color: C_DN, lineHeight: 1.5,
                 }}>{error}</div>
@@ -387,7 +387,7 @@ export default function WalletModal() {
               {/* No wallet detected */}
               {detectedWallets.length === 0 && !connecting && (
                 <div style={{
-                  padding: '10px 12px', borderRadius: 8,
+                  padding: '10px 12px', borderRadius: 4,
                   background: 'var(--s2)', border: '1px solid var(--b0)',
                   fontSize: 11, color: 'var(--t3)', lineHeight: 1.6,
                   textAlign: 'center',

@@ -53,7 +53,7 @@ export default function SearchBar({ onFlyTo }) {
         // surface rather than two stacked boxes.
         border: '1px solid var(--b0)',
         borderBottom: hasDropdown ? 'none' : '1px solid var(--b0)',
-        borderRadius: hasDropdown ? '14px 14px 0 0' : 14,
+        borderRadius: hasDropdown ? '7px 7px 0 0' : 7,
         padding: '0 14px', height: 42,
         boxShadow: 'var(--sh-sm)',
       }}>
@@ -102,7 +102,7 @@ export default function SearchBar({ onFlyTo }) {
           background: 'var(--s2)',
           border: '1px solid var(--b0)',
           borderTop: 'none',
-          borderRadius: '0 0 14px 14px',
+          borderRadius: '0 0 7px 7px',
           overflow: 'hidden',
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
         }}>

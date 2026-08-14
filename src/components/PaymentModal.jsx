@@ -58,12 +58,12 @@ export default function PaymentModal() {
   const stepIdx = STEPS.indexOf(vStep)
 
   const sheetStyle = isMobile ? {
-    width: '100%', borderRadius: '20px 20px 0 0',
+    width: '100%', borderRadius: '10px 10px 0 0',
     maxHeight: '93dvh', overflowY: 'auto',
     paddingBottom: 'max(0px, var(--sab))',
     animation: 'sheet-up 0.3s cubic-bezier(0.34,1.2,0.64,1)',
   } : {
-    width: '100%', maxWidth: 440, borderRadius: 20,
+    width: '100%', maxWidth: 440, borderRadius: 10,
     animation: 'scale-in 0.24s cubic-bezier(0.34,1.3,0.64,1)',
     maxHeight: '92vh', overflowY: 'auto',
   }
@@ -177,7 +177,7 @@ function CurrencySelect() {
               disabled={tooLow}
               title={tooLow ? `Min $${c.minUsd.toFixed(2)}` : c.name}
               style={{
-                padding: '12px 8px', borderRadius: 12, textAlign: 'center',
+                padding: '12px 8px', borderRadius: 6, textAlign: 'center',
                 cursor: tooLow ? 'not-allowed' : 'pointer',
                 opacity: tooLow ? 0.22 : 1,
                 background: active ? `${c.color}14` : 'var(--s2)',
@@ -199,7 +199,7 @@ function CurrencySelect() {
       {/* Price display */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '13px 16px', borderRadius: 12,
+        padding: '13px 16px', borderRadius: 6,
         background: 'var(--s2)',
       }}>
         <span className="label">Block price</span>
@@ -222,7 +222,7 @@ function CurrencySelect() {
             style={{
               width: '100%', boxSizing: 'border-box',
               background: '#0d0d0d', border: '1px solid #333',
-              borderRadius: 8, padding: '10px 14px',
+              borderRadius: 4, padding: '10px 14px',
               color: '#e8e8e8', fontSize: 13, outline: 'none',
             }}
           />
@@ -288,7 +288,7 @@ function Pay({ data, timeLeft, copied, onCopy }) {
             fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 14,
             color: urgent ? 'var(--red)' : 'var(--t1)',
             background: urgent ? 'rgba(248,113,113,0.08)' : 'var(--s3)',
-            padding: '4px 10px', borderRadius: 7,
+            padding: '4px 10px', borderRadius: 4,
           }}>
             {fmt(timeLeft)}
           </span>
@@ -299,7 +299,7 @@ function Pay({ data, timeLeft, copied, onCopy }) {
 
       {/* Amount */}
       <div style={{
-        textAlign: 'center', padding: '18px 14px', borderRadius: 14,
+        textAlign: 'center', padding: '18px 14px', borderRadius: 7,
         background: 'var(--s2)',
       }}>
         <div className="label" style={{ marginBottom: 7 }}>Send exactly</div>
@@ -312,7 +312,7 @@ function Pay({ data, timeLeft, copied, onCopy }) {
 
       {/* QR */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ padding: 12, background: '#ffffff', borderRadius: 14, boxShadow: 'var(--sh-md)' }}>
+        <div style={{ padding: 12, background: '#ffffff', borderRadius: 7, boxShadow: 'var(--sh-md)' }}>
           <QRCodeSVG value={qrVal} size={136} level="M" />
         </div>
       </div>
@@ -323,7 +323,7 @@ function Pay({ data, timeLeft, copied, onCopy }) {
         <div
           onClick={() => onCopy(data.address)}
           style={{
-            padding: '11px 13px', borderRadius: 10, cursor: 'pointer',
+            padding: '11px 13px', borderRadius: 5, cursor: 'pointer',
             background: 'var(--s2)',
             display: 'flex', gap: 10, alignItems: 'flex-start',
             transition: 'background 0.1s',
@@ -343,7 +343,7 @@ function Pay({ data, timeLeft, copied, onCopy }) {
       {/* Payment ID */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '8px 12px', borderRadius: 8,
+        padding: '8px 12px', borderRadius: 4,
         background: 'var(--s2)',
       }}>
         <span className="label">Payment ID</span>
@@ -470,7 +470,7 @@ function Confirmed({ onClose }) {
       {/* Block info */}
       <div style={{
         width: '100%', background: 'var(--s2)',
-        borderRadius: 12, padding: '12px 14px',
+        borderRadius: 6, padding: '12px 14px',
         display: 'flex', flexDirection: 'column', gap: 7, textAlign: 'left',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -489,7 +489,7 @@ function Confirmed({ onClose }) {
           <div className="label" style={{ marginBottom: 7 }}>Payment Receipt</div>
           <div
             onClick={() => { navigator.clipboard.writeText(paymentId); setCopiedR(true); setTimeout(()=>setCopiedR(false),1800) }}
-            style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '10px 13px', borderRadius: 10, cursor: 'pointer', background: 'var(--s2)' }}
+            style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '10px 13px', borderRadius: 5, cursor: 'pointer', background: 'var(--s2)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--s3)'}
             onMouseLeave={e => e.currentTarget.style.background = 'var(--s2)'}
           >
@@ -510,7 +510,7 @@ function Confirmed({ onClose }) {
             <div
               onClick={() => setShowCert(true)}
               style={{
-                background: 'var(--s2)', borderRadius: 12, padding: '13px 14px',
+                background: 'var(--s2)', borderRadius: 6, padding: '13px 14px',
                 cursor: 'pointer', border: `1px solid ${block.color || 'var(--b0)'}40`,
                 transition: 'border-color 0.2s',
                 display: 'flex', alignItems: 'center', gap: 14,
@@ -519,7 +519,7 @@ function Confirmed({ onClose }) {
               onMouseLeave={e => e.currentTarget.style.borderColor = (block.color || '#00ff88') + '40'}
             >
               {/* Mini QR */}
-              <div style={{ background: '#fff', padding: 5, borderRadius: 7, flexShrink: 0 }}>
+              <div style={{ background: '#fff', padding: 5, borderRadius: 4, flexShrink: 0 }}>
                 <QRCodeSVG value={shareUrl} size={54} level="M" bgColor="#ffffff" fgColor="#000000" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -537,7 +537,7 @@ function Confirmed({ onClose }) {
             {/* Copy link row */}
             <div
               onClick={() => { navigator.clipboard.writeText(shareUrl); setCopiedS(true); setTimeout(() => setCopiedS(false), 1800) }}
-              style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '9px 13px', borderRadius: 10, cursor: 'pointer', background: 'var(--s2)', marginTop: 6 }}
+              style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '9px 13px', borderRadius: 5, cursor: 'pointer', background: 'var(--s2)', marginTop: 6 }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--s3)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--s2)'}
             >
@@ -551,7 +551,7 @@ function Confirmed({ onClose }) {
       {/* Account prompt — shown when no account after purchase */}
       {!authUser && (
         <div style={{
-          width: '100%', padding: '14px', borderRadius: 12,
+          width: '100%', padding: '14px', borderRadius: 6,
           background: 'rgba(74,222,128,0.07)', border: '1px solid rgba(74,222,128,0.2)',
           textAlign: 'left',
         }}>
@@ -586,7 +586,7 @@ function Confirmed({ onClose }) {
           <div className="label" style={{ marginBottom: 7 }}>Earn 30% — Share Your Referral Link</div>
           <div
             onClick={() => { navigator.clipboard.writeText(referralUrl); setCopiedRef(true); setTimeout(() => setCopiedRef(false), 2000) }}
-            style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '10px 13px', borderRadius: 10, cursor: 'pointer', background: 'var(--s2)' }}
+            style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '10px 13px', borderRadius: 5, cursor: 'pointer', background: 'var(--s2)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--s3)'}
             onMouseLeave={e => e.currentTarget.style.background = 'var(--s2)'}
           >
@@ -613,7 +613,7 @@ function Confirmed({ onClose }) {
 }
 
 const closeBtnStyle = {
-  width: 30, height: 30, borderRadius: 8,
+  width: 30, height: 30, borderRadius: 4,
   background: 'var(--s3)', border: 'none',
   color: 'var(--t2)', cursor: 'pointer', fontSize: 18,
   display: 'flex', alignItems: 'center', justifyContent: 'center',

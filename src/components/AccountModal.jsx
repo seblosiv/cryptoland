@@ -67,7 +67,7 @@ function TilesTab({ tiles, wallet }) {
             }}
           >
             <div style={{
-              width: 10, height: 10, borderRadius: 3,
+              width: 10, height: 10, borderRadius: 2,
               background: tile.color ?? '#4ade80',
               flexShrink: 0, boxShadow: `0 0 4px ${tile.color ?? '#4ade80'}80`,
             }} />
@@ -77,7 +77,7 @@ function TilesTab({ tiles, wallet }) {
                 {tile.label && (
                   <span style={{
                     fontSize: 9, fontWeight: 700, color: 'var(--green)',
-                    background: 'rgba(74,222,128,0.12)', padding: '1px 5px', borderRadius: 3,
+                    background: 'rgba(74,222,128,0.12)', padding: '1px 5px', borderRadius: 2,
                   }}>{tile.label}</span>
                 )}
               </div>
@@ -91,7 +91,7 @@ function TilesTab({ tiles, wallet }) {
                 <img
                   src={tile.image_url}
                   alt=""
-                  style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }}
+                  style={{ width: 28, height: 28, borderRadius: 3, objectFit: 'cover' }}
                 />
               )}
               <button
@@ -163,7 +163,7 @@ function GuardiansTab({ guardians }) {
               fontSize: 9, fontWeight: 700,
               color: g.for_sale ? 'var(--green)' : 'var(--t4)',
               background: g.for_sale ? 'rgba(74,222,128,0.12)' : 'var(--s2)',
-              padding: '2px 7px', borderRadius: 4,
+              padding: '2px 7px', borderRadius: 2,
             }}>
               {g.for_sale ? 'For Sale' : 'Active'}
             </div>
@@ -237,7 +237,7 @@ function AffiliateTab({ wallet }) {
           <>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '10px 12px', borderRadius: 10,
+              padding: '10px 12px', borderRadius: 5,
               background: 'var(--s2)', border: '1px solid var(--b0)',
               marginBottom: 8,
             }}>
@@ -252,7 +252,7 @@ function AffiliateTab({ wallet }) {
             {referralUrl && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '8px 12px', borderRadius: 10,
+                padding: '8px 12px', borderRadius: 5,
                 background: 'var(--s2)', border: '1px solid var(--b0)',
                 marginBottom: 10,
               }}>
@@ -266,7 +266,7 @@ function AffiliateTab({ wallet }) {
                 <button
                   onClick={copy}
                   style={{
-                    flexShrink: 0, padding: '5px 12px', borderRadius: 7,
+                    flexShrink: 0, padding: '5px 12px', borderRadius: 4,
                     background: copied ? 'rgba(74,222,128,0.15)' : 'var(--s3)',
                     border: `1px solid ${copied ? 'rgba(74,222,128,0.3)' : 'var(--b0)'}`,
                     color: copied ? 'var(--green)' : 'var(--t2)',
@@ -301,7 +301,7 @@ function AffiliateTab({ wallet }) {
               { label: 'Referrals', value: stats.total_referrals ?? 0, color: 'var(--t1)' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{
-                padding: '10px 8px', borderRadius: 10, textAlign: 'center',
+                padding: '10px 8px', borderRadius: 5, textAlign: 'center',
                 background: 'var(--s2)', border: '1px solid var(--b0)',
               }}>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 4 }}>
@@ -320,7 +320,7 @@ function AffiliateTab({ wallet }) {
                 onClick={redeem}
                 disabled={redeeming}
                 style={{
-                  width: '100%', padding: '10px 0', borderRadius: 10,
+                  width: '100%', padding: '10px 0', borderRadius: 5,
                   background: redeeming ? 'var(--s2)' : 'rgba(74,222,128,0.15)',
                   border: '1px solid rgba(74,222,128,0.3)',
                   color: 'var(--green)', fontSize: 12, fontWeight: 700,
@@ -359,12 +359,12 @@ function AffiliateTab({ wallet }) {
               return (
                 <div key={entry.wallet} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 10px', borderRadius: 8,
+                  padding: '8px 10px', borderRadius: 4,
                   background: isMe ? 'rgba(74,222,128,0.08)' : 'var(--s2)',
                   border: `1px solid ${isMe ? 'rgba(74,222,128,0.2)' : 'var(--b0)'}`,
                 }}>
                   <div style={{
-                    width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                    width: 20, height: 20, borderRadius: 3, flexShrink: 0,
                     background: i === 0 ? 'rgba(250,204,21,0.15)' : i === 1 ? 'rgba(148,163,184,0.15)' : i === 2 ? 'rgba(180,83,9,0.15)' : 'var(--s3)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 800,
@@ -422,7 +422,7 @@ export default function AccountModal() {
   const panelStyle = isMobile ? {
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200,
     background: 'var(--s1)',
-    borderRadius: '20px 20px 0 0',
+    borderRadius: '10px 10px 0 0',
     maxHeight: '90dvh', overflowY: 'auto',
     animation: 'sheet-up 0.26s cubic-bezier(0.34,1.2,0.64,1)',
   } : {
@@ -431,7 +431,7 @@ export default function AccountModal() {
     transform: 'translate(-50%, -50%)',
     zIndex: 200,
     background: 'var(--s1)',
-    borderRadius: 20,
+    borderRadius: 10,
     width: 'min(520px, calc(100vw - 32px))',
     maxHeight: 'calc(100vh - 80px)',
     overflowY: 'auto',
@@ -453,7 +453,7 @@ export default function AccountModal() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '16px 18px 0',
           position: 'sticky', top: 0, background: 'var(--s1)', zIndex: 1,
-          borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0',
+          borderRadius: isMobile ? '10px 10px 0 0' : '10px 10px 0 0',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {authUser && (
@@ -471,7 +471,7 @@ export default function AccountModal() {
                   <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--mono)' }}>{shortAddress}</span>
                 )}
                 {authUser?.is_guest === 1 && (
-                  <span style={{ fontSize: 9, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>Guest</span>
+                  <span style={{ fontSize: 9, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '1px 6px', borderRadius: 2, fontWeight: 700 }}>Guest</span>
                 )}
               </div>
             </div>
@@ -483,7 +483,7 @@ export default function AccountModal() {
                 title="Sign out"
                 style={{
                   background: 'var(--s3)', border: 'none', color: 'var(--t3)',
-                  borderRadius: 8, padding: '4px 10px',
+                  borderRadius: 4, padding: '4px 10px',
                   cursor: 'pointer', fontSize: 10, fontWeight: 600,
                   fontFamily: 'var(--font)',
                 }}
@@ -513,7 +513,7 @@ export default function AccountModal() {
               { v: profile.tile_count > 0 ? `$${((tiles.reduce((s, t) => s + (t.price || 0), 0))).toFixed(0)}` : '$0', l: 'Invested' },
             ].map(({ v, l }) => (
               <div key={l} style={{
-                padding: '10px 8px', borderRadius: 10, textAlign: 'center',
+                padding: '10px 8px', borderRadius: 5, textAlign: 'center',
                 background: 'var(--s2)', border: '1px solid var(--b0)',
               }}>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 17, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 4 }}>
@@ -538,7 +538,7 @@ export default function AccountModal() {
               key={t.id}
               onClick={() => setTab(t.id)}
               style={{
-                flex: 1, padding: '7px 0', borderRadius: 8,
+                flex: 1, padding: '7px 0', borderRadius: 4,
                 background:  tab === t.id ? 'var(--s3)' : 'none',
                 border:      tab === t.id ? '1px solid var(--b0)' : '1px solid transparent',
                 color:       tab === t.id ? 'var(--t1)' : 'var(--t3)',
@@ -552,7 +552,7 @@ export default function AccountModal() {
                   marginLeft: 5, fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
                   color: tab === 'tiles' ? 'var(--green)' : 'var(--t4)',
                   background: tab === 'tiles' ? 'rgba(74,222,128,0.15)' : 'var(--s3)',
-                  padding: '1px 5px', borderRadius: 4,
+                  padding: '1px 5px', borderRadius: 2,
                 }}>{tiles.length}</span>
               )}
               {t.id === 'guardians' && guardians.length > 0 && (
@@ -560,7 +560,7 @@ export default function AccountModal() {
                   marginLeft: 5, fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
                   color: tab === 'guardians' ? 'var(--green)' : 'var(--t4)',
                   background: tab === 'guardians' ? 'rgba(74,222,128,0.15)' : 'var(--s3)',
-                  padding: '1px 5px', borderRadius: 4,
+                  padding: '1px 5px', borderRadius: 2,
                 }}>{guardians.length}</span>
               )}
             </button>
@@ -605,7 +605,7 @@ export default function AccountModal() {
 }
 
 const iconBtn = {
-  width: 28, height: 28, borderRadius: 8,
+  width: 28, height: 28, borderRadius: 4,
   background: 'var(--s3)', border: 'none',
   color: 'var(--t2)', cursor: 'pointer', fontSize: 12,
   display: 'flex', alignItems: 'center', justifyContent: 'center',

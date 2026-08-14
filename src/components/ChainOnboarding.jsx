@@ -52,7 +52,10 @@ function ChainMark({ size = 60 }) {
   return (
     <div style={{
       width: size, height: size, margin: '0 auto 16px',
-      borderRadius: '50%', background: 'var(--s2)',
+      // A rounded square, not a disc. It sits above the wordmark as the first
+      // thing you see, so a circle here set a rounder tone than anything else
+      // on screen — and the product is a grid of square tiles.
+      borderRadius: 10, background: 'var(--s2)',
       border: '1px solid var(--b1)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: `0 0 0 6px ${ACCENT_DIM}`,
@@ -100,7 +103,7 @@ function StepDots({ step, total, onGo }) {
         >
           <span style={{
             display: 'block',
-            width: i === step ? 20 : 6, height: 6, borderRadius: 3,
+            width: i === step ? 20 : 6, height: 6, borderRadius: 2,
             transition: 'width .2s, background .2s',
             background: i === step ? ACCENT : 'var(--b2)',
           }} />
@@ -144,7 +147,7 @@ function Row({ k, v }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '11px 14px', borderRadius: 10, background: 'var(--s2)',
+      padding: '11px 14px', borderRadius: 5, background: 'var(--s2)',
       border: '1px solid var(--b0)',
     }}>
       <span style={{ fontSize: 12, color: 'var(--t3)' }}>{k}</span>
@@ -229,7 +232,7 @@ export default function ChainOnboarding({ onEnter }) {
                 // "TRANSACTIONS" — the longest unbreakable word any chain puts
                 // in this slot — needs ~79px. 8px left exactly 79px and the
                 // word grazed the border on Radix; 6px leaves 81px.
-                padding: '14px 6px', borderRadius: 12, textAlign: 'center',
+                padding: '14px 6px', borderRadius: 6, textAlign: 'center',
                 background: 'var(--s2)', border: '1px solid var(--b0)',
               }}>
                 <div className="figure" style={{
@@ -333,7 +336,7 @@ export default function ChainOnboarding({ onEnter }) {
                 {wallets.map(w => (
                   <span key={w.id} style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
-                    padding: '7px 11px', borderRadius: 999,
+                    padding: '7px 11px', borderRadius: 7,
                     background: 'var(--s2)', border: '1px solid var(--b0)',
                     fontSize: 12, color: 'var(--t2)',
                   }}>
@@ -372,7 +375,7 @@ export default function ChainOnboarding({ onEnter }) {
           ].map(([n, t, d]) => (
             <div key={n} style={{
               display: 'flex', gap: 12, alignItems: 'flex-start',
-              padding: '12px 14px', borderRadius: 12, background: 'var(--s2)',
+              padding: '12px 14px', borderRadius: 6, background: 'var(--s2)',
             }}>
               <span style={{
                 flexShrink: 0, width: 22, height: 22, borderRadius: '50%',
@@ -391,7 +394,7 @@ export default function ChainOnboarding({ onEnter }) {
               derived from the grant programme this build targets. */}
           {ob.grantAngle && (
             <div style={{
-              marginTop: 4, padding: '12px 14px', borderRadius: 12,
+              marginTop: 4, padding: '12px 14px', borderRadius: 6,
               background: ACCENT_DIM, border: '1px solid var(--b0)',
             }}>
               <div className="label" style={{ color: ACCENT_UI, marginBottom: 4 }}>
@@ -426,9 +429,9 @@ export default function ChainOnboarding({ onEnter }) {
       // documentation/styling.md; frosted panels are out of contract here.
       background:
         'radial-gradient(ellipse 78% 68% at 50% 50%,' +
-        ' rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.86) 30%,' +
-        ' rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.34) 82%,' +
-        ' rgba(0,0,0,0.20) 100%)',
+        ' rgba(0,0,0,0.58) 0%, rgba(0,0,0,0.52) 30%,' +
+        ' rgba(0,0,0,0.30) 58%, rgba(0,0,0,0.12) 82%,' +
+        ' rgba(0,0,0,0.03) 100%)',
       padding: 'max(20px, var(--sat)) 20px max(20px, var(--sab))',
       overflowY: 'auto',
     }}>
@@ -436,14 +439,14 @@ export default function ChainOnboarding({ onEnter }) {
         position: 'relative',
         width: '100%', maxWidth: 440,
         background: 'var(--s1)',
-        borderRadius: 24,
+        borderRadius: 10,
         padding: 'clamp(28px,5vw,40px) clamp(24px,4vw,36px)',
         animation: 'scale-in 0.4s cubic-bezier(0.34,1.05,0.64,1)',
         boxShadow: 'var(--sh-lg)',
         overflow: 'hidden',
       }}>
         {/* Per-chain motif — decorative, sits behind the content */}
-        <ChainHero height={210} radius={24} />
+        <ChainHero height={210} radius={10} />
 
         <div style={{ position: 'relative' }}>
           {/* Chips */}

@@ -24,7 +24,7 @@ function ProposalCard({ proposal, onVote, voterAddress }) {
 
   return (
     <div style={{
-      padding: '14px', borderRadius: 12,
+      padding: '14px', borderRadius: 6,
       background: 'var(--s2)', border: '1px solid var(--b0)',
       display: 'flex', flexDirection: 'column', gap: 10,
     }}>
@@ -37,7 +37,7 @@ function ProposalCard({ proposal, onVote, voterAddress }) {
           fontSize: 8, fontWeight: 800, flexShrink: 0,
           color: proposal.status === 'active' ? C_UP : 'var(--t4)',
           background: proposal.status === 'active' ? C_UP + '18' : 'var(--s3)',
-          padding: '2px 6px', borderRadius: 3, textTransform: 'uppercase',
+          padding: '2px 6px', borderRadius: 2, textTransform: 'uppercase',
           fontFamily: 'var(--mono)',
         }}>{proposal.status}</span>
       </div>
@@ -59,9 +59,9 @@ function ProposalCard({ proposal, onVote, voterAddress }) {
             AGAINST {proposal.votes_against} ({against}%)
           </span>
         </div>
-        <div style={{ height: 5, borderRadius: 5, background: 'var(--s4)', overflow: 'hidden' }}>
+        <div style={{ height: 5, borderRadius: 3, background: 'var(--s4)', overflow: 'hidden' }}>
           <div style={{
-            height: '100%', borderRadius: 5,
+            height: '100%', borderRadius: 3,
             width: `${forPct}%`,
             background: `linear-gradient(90deg, ${C_UP}, ${C_NE})`,
             transition: 'width 0.4s ease',
@@ -85,7 +85,7 @@ function ProposalCard({ proposal, onVote, voterAddress }) {
           <button
             onClick={() => onVote(proposal.id, 'for')}
             style={{
-              flex: 1, padding: '7px 0', borderRadius: 7,
+              flex: 1, padding: '7px 0', borderRadius: 4,
               background: C_UP + '15', border: `1px solid ${C_UP}30`,
               color: C_UP, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
             }}
@@ -93,7 +93,7 @@ function ProposalCard({ proposal, onVote, voterAddress }) {
           <button
             onClick={() => onVote(proposal.id, 'against')}
             style={{
-              flex: 1, padding: '7px 0', borderRadius: 7,
+              flex: 1, padding: '7px 0', borderRadius: 4,
               background: C_DN + '12', border: `1px solid ${C_DN}25`,
               color: C_DN, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
             }}
@@ -150,7 +150,7 @@ function CreateProposalForm({ onClose, author }) {
           onChange={e => setTitle(e.target.value)}
           placeholder="e.g. Reduce marketplace fee to 2%"
           style={{
-            width: '100%', padding: '9px 12px', borderRadius: 8, boxSizing: 'border-box',
+            width: '100%', padding: '9px 12px', borderRadius: 4, boxSizing: 'border-box',
             background: 'var(--s3)', border: '1px solid var(--b0)',
             color: 'var(--t1)', fontSize: 12, fontFamily: 'var(--font)', outline: 'none',
           }}
@@ -165,7 +165,7 @@ function CreateProposalForm({ onClose, author }) {
           placeholder="Explain the reasoning…"
           rows={4}
           style={{
-            width: '100%', padding: '9px 12px', borderRadius: 8, boxSizing: 'border-box',
+            width: '100%', padding: '9px 12px', borderRadius: 4, boxSizing: 'border-box',
             background: 'var(--s3)', border: '1px solid var(--b0)',
             color: 'var(--t1)', fontSize: 12, fontFamily: 'var(--font)',
             outline: 'none', resize: 'vertical',
@@ -178,7 +178,7 @@ function CreateProposalForm({ onClose, author }) {
         <div style={{ display: 'flex', gap: 6 }}>
           {[3, 7, 14].map(d => (
             <button key={d} onClick={() => setDays(d)} style={{
-              flex: 1, padding: '7px 0', borderRadius: 7,
+              flex: 1, padding: '7px 0', borderRadius: 4,
               background: days === d ? 'var(--green-d)' : 'var(--s3)',
               border: `1px solid ${days === d ? 'rgba(74,222,128,0.3)' : 'var(--b0)'}`,
               color: days === d ? 'var(--green)' : 'var(--t3)',
@@ -189,7 +189,7 @@ function CreateProposalForm({ onClose, author }) {
       </div>
 
       {error && (
-        <div style={{ padding: '8px', borderRadius: 7, background: C_DN + '12', fontSize: 10, color: C_DN }}>{error}</div>
+        <div style={{ padding: '8px', borderRadius: 4, background: C_DN + '12', fontSize: 10, color: C_DN }}>{error}</div>
       )}
 
       <button className="btn-hero" onClick={submit} disabled={saving} style={{ height: 40, fontSize: 12 }}>
@@ -220,7 +220,7 @@ export default function DAOModal() {
 
   const panelStyle = isMobile ? {
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200,
-    background: 'var(--s1)', borderRadius: '20px 20px 0 0',
+    background: 'var(--s1)', borderRadius: '10px 10px 0 0',
     maxHeight: '90dvh', overflowY: 'auto',
     paddingBottom: 'max(20px, var(--sab))',
     animation: 'sheet-up 0.26s cubic-bezier(0.34,1.2,0.64,1)',
@@ -229,7 +229,7 @@ export default function DAOModal() {
     top: '50%', left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 200,
-    background: 'var(--s1)', borderRadius: 20,
+    background: 'var(--s1)', borderRadius: 10,
     width: 'min(500px, calc(100vw - 32px))',
     maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
     boxShadow: 'var(--sh-lg)',
@@ -248,7 +248,7 @@ export default function DAOModal() {
           padding: '16px 18px 12px',
           borderBottom: '1px solid var(--b0)',
           position: 'sticky', top: 0, background: 'var(--s1)', zIndex: 1,
-          borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0',
+          borderRadius: isMobile ? '10px 10px 0 0' : '10px 10px 0 0',
         }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--t1)' }}>DAO Governance</div>
@@ -261,7 +261,7 @@ export default function DAOModal() {
               <button
                 onClick={() => setCreating(true)}
                 style={{
-                  padding: '5px 10px', borderRadius: 7,
+                  padding: '5px 10px', borderRadius: 4,
                   background: 'var(--green-d)', border: '1px solid rgba(74,222,128,0.3)',
                   color: 'var(--green)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
                 }}
@@ -281,7 +281,7 @@ export default function DAOModal() {
             <>
               {/* How it works */}
               <div style={{
-                padding: '10px 12px', borderRadius: 9,
+                padding: '10px 12px', borderRadius: 4,
                 background: C_NE + '08', border: `1px solid ${C_NE}20`,
                 marginBottom: 16, fontSize: 10, color: 'var(--t3)', lineHeight: 1.7,
               }}>

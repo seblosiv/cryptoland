@@ -125,7 +125,7 @@ export default function GuardianModal() {
         style={{
           width: '100%', maxWidth: 480,
           background: 'var(--s1)',
-          borderRadius: '20px 20px 0 0',
+          borderRadius: '10px 10px 0 0',
           maxHeight: '90dvh',
           display: 'flex', flexDirection: 'column',
           animation: 'sheet-up 0.28s cubic-bezier(0.34,1.2,0.64,1)',
@@ -144,7 +144,7 @@ export default function GuardianModal() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 10,
+              width: 34, height: 34, borderRadius: 5,
               background: hasGuard ? `${selectedP.color ?? 'var(--green)'}20` : 'var(--s3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 16,
@@ -171,7 +171,7 @@ export default function GuardianModal() {
           <div style={{ padding: '10px 18px 0', flexShrink: 0 }}>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', borderRadius: 10,
+              padding: '8px 12px', borderRadius: 5,
               background: `${selectedP.color ?? 'var(--green)'}12`,
               border: `1px solid ${selectedP.color ?? 'var(--green)'}25`,
             }}>
@@ -203,7 +203,7 @@ export default function GuardianModal() {
               onClick={() => setTab(t.id)}
               style={{
                 padding: '7px 14px',
-                borderRadius: '8px 8px 0 0',
+                borderRadius: '4px 4px 0 0',
                 border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: 600, fontFamily: 'var(--font)',
                 background: tab === t.id ? 'var(--s2)' : 'transparent',
@@ -273,7 +273,7 @@ function DeployTab({
             ['$/day', guardian.daily_yield?.toFixed(3) ?? '—', '#4ade80'],
           ].map(([l, v, c]) => (
             <div key={l} style={{
-              padding: '12px 8px', borderRadius: 10, textAlign: 'center',
+              padding: '12px 8px', borderRadius: 5, textAlign: 'center',
               background: 'var(--s2)',
             }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 17, fontWeight: 700, color: c, letterSpacing: '-0.02em', lineHeight: 1 }}>{v}</div>
@@ -293,7 +293,7 @@ function DeployTab({
               onClick={() => isMine && setPersonality(key)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '11px 14px', borderRadius: 12,
+                padding: '11px 14px', borderRadius: 6,
                 border: `1px solid ${personality === key ? `${p.color}40` : 'var(--b0)'}`,
                 background: personality === key ? `${p.color}10` : 'var(--s2)',
                 cursor: isMine ? 'pointer' : 'default',
@@ -340,7 +340,7 @@ function DeployTab({
       )}
 
       {deployError && (
-        <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(248,113,113,0.08)', fontSize: 12, color: 'var(--red)' }}>
+        <div style={{ padding: '10px 12px', borderRadius: 4, background: 'rgba(248,113,113,0.08)', fontSize: 12, color: 'var(--red)' }}>
           {deployError}
         </div>
       )}
@@ -360,7 +360,7 @@ function DeployTab({
               onClick={onRemove}
               disabled={removing}
               style={{
-                padding: '0 14px', borderRadius: 12,
+                padding: '0 14px', borderRadius: 6,
                 background: 'rgba(248,113,113,0.08)',
                 border: '1px solid rgba(248,113,113,0.15)',
                 color: 'var(--red)', cursor: 'pointer', fontSize: 12, fontWeight: 600,
@@ -372,7 +372,7 @@ function DeployTab({
           )}
         </div>
       ) : (
-        <div style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--s2)', textAlign: 'center', fontSize: 13, color: 'var(--t3)' }}>
+        <div style={{ padding: '12px 14px', borderRadius: 5, background: 'var(--s2)', textAlign: 'center', fontSize: 13, color: 'var(--t3)' }}>
           You must own this tile to deploy a guardian
         </div>
       )}
@@ -405,7 +405,7 @@ function ReportsTab({ guardian, reports, loading }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {reports.map((r, i) => (
         <div key={i} style={{
-          borderRadius: 12,
+          borderRadius: 6,
           background: 'var(--s2)',
           overflow: 'hidden',
         }}>
@@ -473,7 +473,7 @@ function ProfileTab({ profile, loading }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* Score */}
       <div style={{
-        padding: '16px', borderRadius: 12,
+        padding: '16px', borderRadius: 6,
         background: 'var(--s2)',
         display: 'flex', alignItems: 'center', gap: 16,
       }}>
@@ -504,12 +504,12 @@ function ProfileTab({ profile, loading }) {
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {profile.tags.map(tag => (
           <span key={tag} style={{
-            padding: '4px 10px', borderRadius: 99,
+            padding: '4px 10px', borderRadius: 7,
             background: 'var(--s3)', fontSize: 11, color: 'var(--t2)', fontWeight: 500,
           }}>{tag}</span>
         ))}
         <span style={{
-          padding: '4px 10px', borderRadius: 99,
+          padding: '4px 10px', borderRadius: 7,
           background: 'var(--s3)', fontSize: 11, color: 'var(--t2)', fontWeight: 500,
         }}>{profile.climate_zone}</span>
       </div>
@@ -524,7 +524,7 @@ function ProfileTab({ profile, loading }) {
 
       {/* Advertising CTA */}
       <div style={{
-        padding: '12px 14px', borderRadius: 10,
+        padding: '12px 14px', borderRadius: 5,
         background: 'rgba(74,222,128,0.06)',
         border: '1px solid rgba(74,222,128,0.12)',
         fontSize: 12, color: 'var(--t2)', lineHeight: 1.6,
@@ -539,7 +539,7 @@ function ProfileTab({ profile, loading }) {
 
 function MetricCard({ label, value, color }) {
   return (
-    <div style={{ padding: '11px 12px', borderRadius: 10, background: 'var(--s2)' }}>
+    <div style={{ padding: '11px 12px', borderRadius: 5, background: 'var(--s2)' }}>
       <div className="label" style={{ marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color: color ?? 'var(--t1)', fontFamily: 'var(--mono)' }}>{value}</div>
     </div>

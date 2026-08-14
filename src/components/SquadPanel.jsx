@@ -95,7 +95,7 @@ export default function SquadPanel() {
         style={{
           width: '100%', maxWidth: 480,
           background: '#0f0f0f',
-          borderRadius: 22,
+          borderRadius: 10,
           padding: 26,
           animation: 'scale-in 0.32s cubic-bezier(0.34,1.05,0.64,1)',
         }}
@@ -117,7 +117,7 @@ export default function SquadPanel() {
           <button
             onClick={close}
             style={{
-              width: 32, height: 32, borderRadius: 8,
+              width: 32, height: 32, borderRadius: 4,
               background: '#1a1a1a', border: 'none',
               color: '#9ca3af', fontSize: 18, cursor: 'pointer',
             }}
@@ -126,7 +126,7 @@ export default function SquadPanel() {
 
         {!authed && (
           <div style={{
-            padding: 20, background: '#141414', borderRadius: 14,
+            padding: 20, background: '#141414', borderRadius: 7,
             textAlign: 'center',
           }}>
             <p style={{ color: '#9ca3af', fontSize: 13, lineHeight: 1.55, marginBottom: 14 }}>
@@ -137,7 +137,7 @@ export default function SquadPanel() {
               style={{
                 width: '100%', height: 44,
                 background: '#fafafa', color: '#0a0a0a',
-                border: 'none', borderRadius: 12,
+                border: 'none', borderRadius: 6,
                 fontSize: 13, fontWeight: 700, cursor: 'pointer',
               }}
             >Sign in</button>
@@ -173,7 +173,7 @@ export default function SquadPanel() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{
-                    width: 20, height: 20, borderRadius: 6,
+                    width: 20, height: 20, borderRadius: 3,
                     background: '#141414', color: '#9ca3af',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 700,
@@ -212,14 +212,14 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
             onClick={() => setMode('create')}
             style={{
               height: 48, background: '#fafafa', color: '#0a0a0a',
-              border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer',
             }}
           >Create Squad</button>
           <button
             onClick={() => setMode('join')}
             style={{
               height: 48, background: '#1a1a1a', color: '#fafafa',
-              border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             }}
           >Join with code</button>
         </div>
@@ -237,7 +237,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
               width: '100%', height: 48, marginBottom: 10,
               padding: '0 16px',
               background: '#141414', border: '1px solid #1f1f1f',
-              borderRadius: 12, color: '#fafafa', fontSize: 14,
+              borderRadius: 6, color: '#fafafa', fontSize: 14,
               outline: 'none',
             }}
           />
@@ -246,7 +246,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
               onClick={() => setMode('none')}
               style={{
                 height: 44, background: '#1a1a1a', color: '#9ca3af',
-                border: 'none', borderRadius: 12, fontSize: 13, cursor: 'pointer',
+                border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer',
               }}
             >Back</button>
             <button
@@ -256,7 +256,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
                 height: 44,
                 background: name.trim() ? '#fafafa' : '#262626',
                 color: name.trim() ? '#0a0a0a' : '#6b7280',
-                border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 700,
                 cursor: name.trim() ? 'pointer' : 'not-allowed',
               }}
             >{busy ? 'Creating…' : 'Create'}</button>
@@ -276,7 +276,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
               width: '100%', height: 48, marginBottom: 10,
               padding: '0 16px',
               background: '#141414', border: '1px solid #1f1f1f',
-              borderRadius: 12,
+              borderRadius: 6,
               color: '#fafafa', fontSize: 14,
               fontFamily: 'ui-monospace, monospace', letterSpacing: '0.1em',
               outline: 'none',
@@ -287,7 +287,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
               onClick={() => setMode('none')}
               style={{
                 height: 44, background: '#1a1a1a', color: '#9ca3af',
-                border: 'none', borderRadius: 12, fontSize: 13, cursor: 'pointer',
+                border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer',
               }}
             >Back</button>
             <button
@@ -297,7 +297,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
                 height: 44,
                 background: code.trim() ? '#fafafa' : '#262626',
                 color: code.trim() ? '#0a0a0a' : '#6b7280',
-                border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700,
+                border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 700,
                 cursor: code.trim() ? 'pointer' : 'not-allowed',
               }}
             >{busy ? 'Joining…' : 'Join'}</button>
@@ -310,7 +310,7 @@ function NoSquadView({ mode, setMode, name, setName, code, setCode, busy, error,
           marginTop: 12, padding: '10px 14px',
           background: 'rgba(248,113,113,0.08)',
           border: '1px solid rgba(248,113,113,0.2)',
-          borderRadius: 10, fontSize: 12, color: '#fca5a5',
+          borderRadius: 5, fontSize: 12, color: '#fca5a5',
         }}>{error}</div>
       )}
     </div>
@@ -325,7 +325,7 @@ function SquadView({ squad, onLeave, onCopy, copied }) {
     <div>
       {/* Status / yield */}
       <div style={{
-        background: '#141414', borderRadius: 14, padding: 16, marginBottom: 12,
+        background: '#141414', borderRadius: 7, padding: 16, marginBottom: 12,
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <span style={{ fontSize: 10, color: '#6b7280', letterSpacing: '0.16em', textTransform: 'uppercase' }}>
@@ -350,7 +350,7 @@ function SquadView({ squad, onLeave, onCopy, copied }) {
         style={{
           width: '100%',
           background: '#141414', border: '1px solid #1f1f1f',
-          borderRadius: 12, padding: '12px 16px',
+          borderRadius: 6, padding: '12px 16px',
           marginBottom: 12,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           cursor: 'pointer',
@@ -413,7 +413,7 @@ function SquadView({ squad, onLeave, onCopy, copied }) {
         style={{
           width: '100%', height: 40,
           background: 'transparent', color: '#f87171',
-          border: '1px solid rgba(248,113,113,0.2)', borderRadius: 10,
+          border: '1px solid rgba(248,113,113,0.2)', borderRadius: 5,
           fontSize: 12, fontWeight: 600, cursor: 'pointer',
         }}
       >Leave Squad</button>

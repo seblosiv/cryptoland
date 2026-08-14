@@ -1510,14 +1510,14 @@ export default function PurchasePanel() {
 
   const panelStyle = isMobile ? {
     position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30,
-    borderRadius: '20px 20px 0 0',
+    borderRadius: '10px 10px 0 0',
     paddingBottom: 'max(0px, var(--sab))',
     maxHeight: '88dvh', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
     animation: 'sheet-up 0.3s cubic-bezier(0.34,1.2,0.64,1)',
   } : {
     position: 'fixed', right: 14,
     bottom: 'calc(var(--feed-h) + 14px)', zIndex: 30,
-    width: 320, borderRadius: 20,
+    width: 320, borderRadius: 10,
     maxHeight: 'calc(100dvh - 110px)', overflowY: 'auto',
     animation: 'slide-in-right 0.24s cubic-bezier(0.34,1.2,0.64,1)',
   }
@@ -1547,7 +1547,7 @@ export default function PurchasePanel() {
             position: 'absolute', top: 12, right: 12,
             background: 'rgba(0,0,0,0.7)',
             border: 'none',
-            color: 'rgba(255,255,255,0.7)', borderRadius: 8, width: 28, height: 28,
+            color: 'rgba(255,255,255,0.7)', borderRadius: 4, width: 28, height: 28,
             cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>×</button>
         </div>
@@ -1584,7 +1584,7 @@ export default function PurchasePanel() {
           {/* Viewers */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 9px', borderRadius: 20,
+            padding: '5px 9px', borderRadius: 10,
             background: 'var(--s3)',
             fontSize: 11, fontFamily: 'var(--mono)', fontWeight: 600, color: 'var(--t2)',
           }}>
@@ -1620,7 +1620,7 @@ export default function PurchasePanel() {
         <p style={{
           fontSize: 12, color: 'var(--t2)', lineHeight: 1.65,
           fontStyle: 'italic', padding: '10px 13px',
-          background: 'var(--s2)', borderRadius: 10,
+          background: 'var(--s2)', borderRadius: 5,
         }}>
           {narrative}
         </p>
@@ -1648,10 +1648,10 @@ export default function PurchasePanel() {
           </>
         ) : (
           <>
-            <div style={{ background: 'var(--s2)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--s2)', borderRadius: 6, overflow: 'hidden' }}>
               <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--b0)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  width: 36, height: 36, borderRadius: 5, flexShrink: 0,
                   background: accentColor,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 15, fontWeight: 700, color: '#0f0f0f', fontFamily: 'var(--mono)',
@@ -1690,7 +1690,7 @@ export default function PurchasePanel() {
                 <button
                   onClick={() => openGuardianModal(selectedKey, 'deploy')}
                   style={{
-                    width: '100%', padding: '10px', borderRadius: 12,
+                    width: '100%', padding: '10px', borderRadius: 6,
                     background: guardian ? 'rgba(74,222,128,0.08)' : 'var(--s2)',
                     border: guardian ? '1px solid rgba(74,222,128,0.2)' : '1px solid var(--b0)',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -1755,7 +1755,7 @@ function DynamicPricePanel({ selectedKey, country, basePrice, scarcity, shownPri
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
       {/* Scarcity bar — identity + urgency */}
-      <div style={{ background: 'var(--s2)', borderRadius: 12, padding: '12px 14px' }}>
+      <div style={{ background: 'var(--s2)', borderRadius: 6, padding: '12px 14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--t2)' }}>
             🌍 This exact spot on Earth
@@ -1764,9 +1764,9 @@ function DynamicPricePanel({ selectedKey, country, basePrice, scarcity, shownPri
             {regionPct}% claimed
           </span>
         </div>
-        <div style={{ height: 5, borderRadius: 5, background: 'var(--s4)', overflow: 'hidden', marginBottom: 7 }}>
+        <div style={{ height: 5, borderRadius: 3, background: 'var(--s4)', overflow: 'hidden', marginBottom: 7 }}>
           <div style={{
-            height: '100%', borderRadius: 5,
+            height: '100%', borderRadius: 3,
             width: `${Math.min(100, regionPct)}%`,
             background: urgencyColor,
             transition: 'width 0.6s ease',
@@ -1779,7 +1779,7 @@ function DynamicPricePanel({ selectedKey, country, basePrice, scarcity, shownPri
       </div>
 
       {/* Price — big and confident */}
-      <div style={{ background: 'var(--s2)', borderRadius: 12, padding: '14px 14px 10px' }}>
+      <div style={{ background: 'var(--s2)', borderRadius: 6, padding: '14px 14px 10px' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
           <span style={{
             fontSize: 36, fontWeight: 800, fontFamily: 'var(--mono)',
@@ -1793,7 +1793,7 @@ function DynamicPricePanel({ selectedKey, country, basePrice, scarcity, shownPri
               fontSize: 10, fontWeight: 800, fontFamily: 'var(--mono)',
               color: marketUp ? 'var(--green)' : '#f87171',
               background: marketUp ? 'var(--green-d)' : 'rgba(248,113,113,0.1)',
-              borderRadius: 4, padding: '1px 5px',
+              borderRadius: 2, padding: '1px 5px',
             }}>
               {marketUp ? '▲' : '▼'} {Math.abs(marketDelta)}% market
             </span>
@@ -1832,7 +1832,7 @@ function DynamicPricePanel({ selectedKey, country, basePrice, scarcity, shownPri
                   const up   = e.multiplier >= 1
                   const pct  = ((e.multiplier - 1) * 100).toFixed(1)
                   return (
-                    <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, background: 'var(--s3)' }}>
+                    <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 4, background: 'var(--s3)' }}>
                       <span style={{ fontSize: 13, flexShrink: 0 }}>{meta.icon}</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.note}</div>
@@ -1866,7 +1866,7 @@ function Row({ l, v }) {
 }
 
 const iconBtnStyle = {
-  width: 30, height: 30, borderRadius: 8,
+  width: 30, height: 30, borderRadius: 4,
   background: 'var(--s3)', border: 'none',
   color: 'var(--t2)', cursor: 'pointer', fontSize: 14,
   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1942,7 +1942,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
       {/* Guardian status card */}
       {guardian && pm ? (
         <div style={{
-          borderRadius: 12, overflow: 'hidden',
+          borderRadius: 6, overflow: 'hidden',
           border: `1px solid ${pm.color}20`,
           background: `${pm.color}08`,
         }}>
@@ -1953,7 +1953,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+              width: 34, height: 34, borderRadius: 4, flexShrink: 0,
               background: `${pm.color}18`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 16,
@@ -1967,7 +1967,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
               </div>
             </div>
             <div style={{
-              padding: '3px 8px', borderRadius: 99,
+              padding: '3px 8px', borderRadius: 7,
               background: `${pm.color}15`,
               fontSize: 10, fontWeight: 700, color: pm.color,
               flexShrink: 0,
@@ -1997,7 +1997,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
         </div>
       ) : (
         <div style={{
-          padding: '11px 14px', borderRadius: 10,
+          padding: '11px 14px', borderRadius: 5,
           background: 'var(--s2)',
           fontSize: 12, color: 'var(--t3)', textAlign: 'center',
         }}>
@@ -2008,7 +2008,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
       {/* Negotiate with agent */}
       {guardian && fullGuardian && (
         <div style={{
-          borderRadius: 12, background: 'var(--s2)',
+          borderRadius: 6, background: 'var(--s2)',
           border: '1px solid var(--b0)',
           overflow: 'hidden',
         }}>
@@ -2028,7 +2028,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1,
-                    background: 'var(--s3)', borderRadius: 8, padding: '7px 10px',
+                    background: 'var(--s3)', borderRadius: 4, padding: '7px 10px',
                   }}>
                     <span style={{ fontSize: 12, color: 'var(--t3)', flexShrink: 0 }}>$</span>
                     <input
@@ -2048,7 +2048,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
                     onClick={handleNegotiate}
                     disabled={negotiating}
                     style={{
-                      padding: '8px 14px', borderRadius: 8, flexShrink: 0,
+                      padding: '8px 14px', borderRadius: 4, flexShrink: 0,
                       background: 'var(--green-d)', border: '1px solid var(--green-b)',
                       color: 'var(--green)', fontSize: 12, fontWeight: 700,
                       cursor: 'pointer', opacity: negotiating ? 0.6 : 1,
@@ -2064,7 +2064,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
               </>
             ) : (
               <div style={{
-                padding: '10px 12px', borderRadius: 9,
+                padding: '10px 12px', borderRadius: 4,
                 background: negotiateResult.accepted ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.06)',
                 border: `1px solid ${negotiateResult.accepted ? 'rgba(74,222,128,0.2)' : 'rgba(248,113,113,0.15)'}`,
               }}>
@@ -2101,7 +2101,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
             }))
           }}
           style={{
-            width: '100%', padding: '10px', borderRadius: 12,
+            width: '100%', padding: '10px', borderRadius: 6,
             background: 'rgba(248,113,113,0.05)',
             border: '1px solid rgba(248,113,113,0.12)',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -2114,7 +2114,7 @@ function EnemyTileSection({ selectedKey, block, guardian, guardians, myBlocks, o
 
       {/* No guardian — plain owned message */}
       {!guardian && (
-        <div style={{ padding: '11px 14px', borderRadius: 10, textAlign: 'center', background: 'var(--s2)', fontSize: 12, color: 'var(--t3)' }}>
+        <div style={{ padding: '11px 14px', borderRadius: 5, textAlign: 'center', background: 'var(--s2)', fontSize: 12, color: 'var(--t3)' }}>
           This block is already owned
         </div>
       )}
@@ -2145,7 +2145,7 @@ function ShareTileButton({ tileKey, country }) {
       onClick={onShare}
       title="Share a public Frame page for this tile"
       style={{
-        width: '100%', padding: '10px', borderRadius: 12,
+        width: '100%', padding: '10px', borderRadius: 6,
         background: 'var(--s2)',
         border: '1px solid var(--b0)',
         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

@@ -30,7 +30,7 @@ export default function TokenPanel() {
 
   const panelStyle = isMobile ? {
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 200,
-    background: 'var(--s1)', borderRadius: '20px 20px 0 0',
+    background: 'var(--s1)', borderRadius: '10px 10px 0 0',
     maxHeight: '90dvh', overflowY: 'auto',
     paddingBottom: 'max(20px, var(--sab))',
     animation: 'sheet-up 0.26s cubic-bezier(0.34,1.2,0.64,1)',
@@ -39,7 +39,7 @@ export default function TokenPanel() {
     top: '50%', left: '50%',
     transform: 'translate(-50%, -50%)',
     zIndex: 200,
-    background: 'var(--s1)', borderRadius: 20,
+    background: 'var(--s1)', borderRadius: 10,
     width: 'min(460px, calc(100vw - 32px))',
     maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
     boxShadow: 'var(--sh-lg)',
@@ -58,7 +58,7 @@ export default function TokenPanel() {
           padding: '16px 18px 12px',
           borderBottom: '1px solid var(--b0)',
           position: 'sticky', top: 0, background: 'var(--s1)', zIndex: 1,
-          borderRadius: isMobile ? '20px 20px 0 0' : '20px 20px 0 0',
+          borderRadius: isMobile ? '10px 10px 0 0' : '10px 10px 0 0',
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -68,7 +68,7 @@ export default function TokenPanel() {
               }}>$CLND</span>
               <span style={{
                 fontSize: 8, fontWeight: 800, color: '#fbbf24',
-                background: 'rgba(251,191,36,0.12)', padding: '2px 6px', borderRadius: 3,
+                background: 'rgba(251,191,36,0.12)', padding: '2px 6px', borderRadius: 2,
               }}>PRE-TGE</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 1 }}>
@@ -97,7 +97,7 @@ export default function TokenPanel() {
             <>
               {/* Balance card */}
               <div style={{
-                padding: '16px', borderRadius: 14,
+                padding: '16px', borderRadius: 7,
                 background: `linear-gradient(135deg, ${C_AC}12, rgba(0,0,0,0))`,
                 border: `1px solid ${C_AC}25`,
                 marginBottom: 16, textAlign: 'center',
@@ -122,7 +122,7 @@ export default function TokenPanel() {
                   { l: 'Voting Power',  v: `${stakeAmount.toLocaleString()} votes`, col: C_AC },
                   { l: 'Tier',         v: stakeAmount >= 10000 ? 'Whale 🐋' : stakeAmount >= 1000 ? 'Holder 💎' : 'Starter 🌱', col: 'var(--t2)' },
                 ].map(({ l, v, col }) => (
-                  <div key={l} style={{ padding: '10px 12px', borderRadius: 9, background: 'var(--s2)' }}>
+                  <div key={l} style={{ padding: '10px 12px', borderRadius: 4, background: 'var(--s2)' }}>
                     <div style={{ fontSize: 9, color: 'var(--t4)', marginBottom: 3 }}>{l}</div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 800, color: col }}>{v}</div>
                   </div>
@@ -154,7 +154,7 @@ export default function TokenPanel() {
 
               {/* TGE notice */}
               <div style={{
-                marginTop: 16, padding: '10px 12px', borderRadius: 9,
+                marginTop: 16, padding: '10px 12px', borderRadius: 4,
                 background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.15)',
                 fontSize: 10, color: '#fbbf24', lineHeight: 1.6,
               }}>
@@ -166,7 +166,7 @@ export default function TokenPanel() {
               <button
                 onClick={() => { close(); openDAO() }}
                 style={{
-                  width: '100%', marginTop: 12, padding: '11px 0', borderRadius: 9,
+                  width: '100%', marginTop: 12, padding: '11px 0', borderRadius: 4,
                   background: C_AC + '15', border: `1px solid ${C_AC}30`,
                   color: C_AC, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font)',
                 }}

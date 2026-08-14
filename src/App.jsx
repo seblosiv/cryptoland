@@ -244,13 +244,13 @@ export default function App() {
           padding: '10px 16px',
           background: 'var(--s2)',
           border: '1px solid rgba(248,113,113,0.2)',
-          borderRadius: 12,
+          borderRadius: 6,
           boxShadow: 'var(--sh-md)',
           maxWidth: 'calc(100vw - 32px)',
         }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--red)', flexShrink: 0 }} />
           <span style={{ fontSize: 12, color: 'var(--t2)' }}>Backend unreachable</span>
-          <button onClick={loadBlocksFromServer} className="btn-ghost" style={{ height: 32, padding: '0 14px', fontSize: 12, borderRadius: 8 }}>
+          <button onClick={loadBlocksFromServer} className="btn-ghost" style={{ height: 32, padding: '0 14px', fontSize: 12, borderRadius: 4 }}>
             Retry
           </button>
         </div>

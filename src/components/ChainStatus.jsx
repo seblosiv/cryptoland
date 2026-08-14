@@ -89,7 +89,7 @@ export default function ChainStatus({ style }) {
         alignItems: 'center',
         gap: 7,
         padding: '6px 11px',
-        borderRadius: 999,
+        borderRadius: 7,
         background: 'var(--s2)',
         border: '1px solid var(--b0)',
         animation: 'fade-in .3s ease',

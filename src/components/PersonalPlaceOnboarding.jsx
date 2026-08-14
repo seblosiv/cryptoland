@@ -114,7 +114,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
       <div style={{
         width: '100%', maxWidth: 520,
         background: 'var(--s1)',
-        borderRadius: 24,
+        borderRadius: 10,
         padding: 'clamp(24px, 4vw, 36px)',
         boxShadow: 'var(--sh-lg)',
         animation: 'scale-in 0.4s cubic-bezier(0.34,1.05,0.64,1)',
@@ -153,7 +153,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
               fontSize: 15,
               background: 'var(--s2)',
               border: '1px solid var(--b1)',
-              borderRadius: 14,
+              borderRadius: 7,
               color: 'var(--t1)',
               outline: 'none',
               boxSizing: 'border-box',
@@ -174,7 +174,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
         {results.length > 0 && !picked && (
           <div style={{
             display: 'flex', flexDirection: 'column',
-            background: 'var(--s2)', borderRadius: 14, overflow: 'hidden',
+            background: 'var(--s2)', borderRadius: 7, overflow: 'hidden',
             marginBottom: 16,
             maxHeight: 280, overflowY: 'auto',
           }}>
@@ -214,7 +214,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
           <div style={{
             padding: 18,
             background: 'var(--s2)',
-            borderRadius: 14,
+            borderRadius: 7,
             marginBottom: 16,
             border: isOwned ? '1px solid rgba(248,113,113,0.3)' : '1px solid rgba(74,222,128,0.3)',
           }}>
@@ -236,7 +236,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
                 padding: '10px 12px',
                 background: 'rgba(248,113,113,0.08)',
                 border: '1px solid rgba(248,113,113,0.2)',
-                borderRadius: 10,
+                borderRadius: 5,
                 fontSize: 12, color: 'var(--red)', textAlign: 'center',
                 marginBottom: 12,
               }}>
@@ -279,7 +279,7 @@ export default function PersonalPlaceOnboarding({ onClose, flyToRef }) {
                   padding: '10px 12px',
                   background: 'var(--s2)',
                   border: '1px solid var(--b1)',
-                  borderRadius: 10,
+                  borderRadius: 5,
                   fontSize: 12, color: 'var(--t2)',
                   cursor: 'pointer', textAlign: 'left',
                   transition: 'all 0.1s',

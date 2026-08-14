@@ -284,7 +284,7 @@ export default function HUD() {
               <span style={{
                 fontSize: 9, fontWeight: 800, fontFamily: 'var(--mono)',
                 color: 'var(--green)', background: 'rgba(74,222,128,0.15)',
-                borderRadius: 4, padding: '1px 5px', marginLeft: 2,
+                borderRadius: 2, padding: '1px 5px', marginLeft: 2,
               }}>{ownedTiles.length}</span>
             )}
           </button>
@@ -328,7 +328,7 @@ export default function HUD() {
               <div onClick={() => setShowEmpire(false)} style={{ position: 'fixed', inset: 0, zIndex: -1 }} />
               <div className="panel" style={{
                 position: 'absolute', bottom: 'calc(100% + 8px)', left: 0,
-                width: 240, borderRadius: 14,
+                width: 240, borderRadius: 7,
                 animation: 'scale-in 0.18s cubic-bezier(0.34,1.4,0.64,1)',
                 padding: '12px 14px',
               }}>
@@ -342,7 +342,7 @@ export default function HUD() {
                     [myCountries.size, 'Countries'],
                     [`$${myTotalValue.toFixed(0)}`, 'Value'],
                   ].map(([v, l]) => (
-                    <div key={l} style={{ padding: '8px 6px', background: 'var(--s2)', borderRadius: 9, textAlign: 'center' }}>
+                    <div key={l} style={{ padding: '8px 6px', background: 'var(--s2)', borderRadius: 4, textAlign: 'center' }}>
                       <div style={{ fontSize: 14, fontWeight: 800, fontFamily: 'var(--mono)', color: 'var(--green)', lineHeight: 1, marginBottom: 3 }}>{v}</div>
                       <div className="label">{l}</div>
                     </div>
@@ -374,7 +374,7 @@ export default function HUD() {
             width: isMobile ? 'calc(100vw - 28px)' : 280,
             maxHeight: isMobile ? '60dvh' : 360,
             overflowY: 'auto',
-            borderRadius: 16,
+            borderRadius: 8,
             animation: 'scale-in 0.2s cubic-bezier(0.34,1.4,0.64,1)',
           }}>
             <div style={{
@@ -383,7 +383,7 @@ export default function HUD() {
               borderBottom: '1px solid var(--b0)',
               position: 'sticky', top: 0, zIndex: 1,
               background: 'var(--s1)',
-              borderRadius: '16px 16px 0 0',
+              borderRadius: '8px 8px 0 0',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div className="live-dot" />
@@ -518,7 +518,7 @@ function PortfolioRow({ block, onClose }) {
 }
 
 const iconBtn = {
-  width: 28, height: 28, borderRadius: 8,
+  width: 28, height: 28, borderRadius: 4,
   background: 'var(--s3)', border: 'none',
   color: 'var(--t2)', cursor: 'pointer', fontSize: 12,
   display: 'flex', alignItems: 'center', justifyContent: 'center',

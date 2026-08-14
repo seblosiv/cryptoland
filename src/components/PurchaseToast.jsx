@@ -79,7 +79,7 @@ function Toast({ owner, country, price, color }) {
       padding: '10px 13px',
       background: 'var(--s2)',
       borderLeft: `3px solid ${color}`,
-      borderRadius: 12,
+      borderRadius: 6,
       boxShadow: 'var(--sh-md)',
       minWidth: 220, maxWidth: 280,
       opacity: visible ? 1 : 0,
@@ -87,7 +87,7 @@ function Toast({ owner, country, price, color }) {
       transition: 'opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1)',
     }}>
       <div style={{
-        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+        width: 28, height: 28, borderRadius: 4, flexShrink: 0,
         background: 'var(--s3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
