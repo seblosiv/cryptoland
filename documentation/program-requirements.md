@@ -1242,3 +1242,82 @@ done
 
 One browser per proxy, sequential blocks, restart the browser after any error —
 a dead browser poisons the rest of its block. Budget ~30s per programme.
+
+## §25 — Deep crawl, 2026-08-14: the forms name the blockers explicitly
+
+§24 read one page per programme and asked "is this open". This pass rendered
+each programme's site multi-level, **opened the third-party application forms**,
+and extracted their actual fields. Evidence:
+`scripts/formaudit/deep-2026-08-14.jsonl`.
+
+**It did not finish.** The residential proxy died mid-run and ~30 programmes
+came back as ~300-character `ERR_TUNNEL_CONNECTION_FAILED` pages that were being
+recorded as if they were thin content. Those were discarded rather than reported
+— a page that never loaded is *unknown*, not *empty*. Nine programmes rendered
+properly and four real forms were read. **Do not treat this section as complete
+coverage.**
+
+### The required fields, read from the live forms
+
+**Arbitrum Foundation Grants** (Airtable, 12 inputs, 6 required):
+Project Name\*, Email\*, **Telegram handle\***, **X/Twitter profile link\***,
+**Github link\***, Link to the App.
+
+**SafePal Builder's Grant** (Google Forms, 41 inputs / 17 required, plus a
+19-input token form): **On-chain MAU\*** with **proof link\***, **Total unique
+interacting wallets\*** with **proof link\***, **TVL\***, audit reports,
+CMC/CoinGecko listing.
+Deadline found on the page: **2026/12/31 23:59 UTC**.
+
+**Solana Foundation** (Google Forms, 24 inputs).
+
+### What this settles
+
+Three fields are mandatory across these forms and **do not exist**: a public
+GitHub URL, an X handle, a Telegram handle. Three more are mandatory and are
+**zero**: on-chain MAU, unique interacting wallets, TVL — `totalSupply()` is 0
+on all 27 deployments and no tile has been bought.
+
+This is the answer to "can we submit yet", in the programmes' own words rather
+than inferred from documentation. **The blocker is not research.** Publishing
+the repo, creating two accounts and making one real purchase converts six
+mandatory blanks into six filled fields, across Arbitrum, Starknet, Polygon and
+SafePal simultaneously. No further crawling changes that.
+
+### Contact channels harvested (junk filtered)
+
+`eco@safepal.com`, `Marketing@safepal.com`, `contact@celestia.org`,
+`discord.gg/arbitrum`, `t.me/arbitrum`, `t.me/NEAR_HouseOfStake`,
+`discord.gg/roninnetwork`, `discord.gg/oasysofficial`, `t.me/oasysen`.
+
+Scraped personal addresses and GitHub noreply addresses were filtered out — a
+stray Gmail harvested from a page is not a programme's contact channel, and
+listing it as one makes the whole table untrustworthy.
+
+### Four bugs the crawler needed before it produced anything
+
+Recorded because each produced *plausible-looking but empty* output, which is
+the dangerous failure mode:
+
+1. A **multi-line JS regex** inserted by a patch broke the entire form probe
+   silently — every form returned zero questions.
+2. **Strict host matching** rejected every link: programmes routinely put their
+   apply/docs pages on a sibling subdomain (`developers.radixdlt.com` →
+   `www.radixdlt.com`). Comparing registrable domain fixed `pages=1` → `pages=8`.
+3. `dismiss()` looped nine cookie words at `timeout=1.5` each — **13 seconds per
+   page** with no banner present, which read as a hang.
+4. Asset URLs (`.css`, `.js`) consumed page slots.
+
+And one data-quality rule: **a page is only a form if it has inputs.** The
+Questbook portal yielded nine "questions" that were Medium blog headlines.
+Recording those as findings is worse than recording nothing.
+
+### Aggregator diff
+
+Five candidates surfaced that the list had never carried. Verified individually:
+**IOTA DLT Foundation** (open, Tier-1 $10k with no KYC) and **Circle Grants**
+(open, fintech-focused) were added as #61 and #62; **Chainlink BUILD** (#63) and
+**Aleph Zero** (#64) were added already marked DEAD, with the quotes that killed
+them. **Moonbeam was a trap** — the aggregator listing is stale, and
+`config.js` already documents that the chain itself wound down. Its block head
+is now **4.3 days** frozen, up from 27.6 hours when it was first recorded.

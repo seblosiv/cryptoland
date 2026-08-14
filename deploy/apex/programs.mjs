@@ -275,6 +275,25 @@ export const PROGRAMS = [
   // the *instructions*, not an open round. Rendering the page on 2026-08-14:
   // "Round 1 has been closed on August 16, 2025. Please stay tuned for the next
   // round." No round since, almost a year on. A keyword match is not a status.
+  // ── Added 2026-08-14 from an aggregator diff (CLAUDE.md §6: the list is not
+  // fixed). Five candidates surfaced; three were already dead by their own
+  // words, which is why each carries its verbatim evidence.
+  { n: 61, name: 'IOTA DLT Foundation Grants', chain: 'IOTA', amount: 'Tier1 $10K / Tier2 $50K / Tier3 $50K+', equity: '0%',
+    status: 'OPEN', verified: '2026-08-14', url: 'https://iotadlt.foundation/grants',
+    evidence: 'Tiered rubric live: "Tier 1: up to $10,000 — KYC NOT required"',
+    note: 'BEST EFFORT-TO-REWARD of the new five. IOTA EVM verified live: chainId 8822, RPC json-rpc.evm.iotaledger.net, access-control-allow-origin:* (browser-usable) — so this is the EVM-cheap path: CHAINS entry + env template + build target, ~2-4h, no adapter, existing bytecode deploys as-is. TWO CAVEATS: (1) iota.org/build/grants and iotalabs.io/grants both REDIRECT to homepage — only the separate Abu Dhabi DLT Foundation entity has a live page, and its published accounts stop at 2024; (2) categories are Open Source Dev / Research / Education / Events — NO games category, so pitch the adapter + Move contract as reusable open-source tooling, not as a game. Page describes an application form but links none: email contact@iotadlt.foundation to confirm the programme is live BEFORE building. IOTA is also steering toward a Move L1, so a committee may want Move (non-EVM-expensive, ~1-2 weeks, though Sui/Aptos Move work transfers — IOTA docs are adapted from Sui\'s).' },
+  { n: 62, name: 'Circle Grants (Arc / USDC)', chain: 'Arc / multi', amount: 'undisclosed', equity: '0%',
+    status: 'OPEN', verified: '2026-08-14', url: 'https://www.circle.com/grant',
+    evidence: '"Grants for exceptional teams building on Arc and the Circle Developer Platform"; relaunched 2026-05-14',
+    note: 'The only unambiguously open, well-funded one of the five — but a PAYMENTS PIVOT, not an integration. All six focus areas are fintech (agentic payments, stablecoin FX, treasury, lending); a land-NFT game is none of them. Amount is NOT published anywhere — do not quote a figure. Requires KYC/KYB ("applicable screenings") and evidence of usage/revenue. Portal is account-gated JS behind a Circle sign-in; bare URL not resolvable. Real cost 2-4 weeks and it touches the §4 security invariants (/np/finalize, IPN HMAC). Only angle: Guardian agents as "agentic economic activity" + USDC-native settlement replacing NOWPayments.' },
+  { n: 63, name: 'Chainlink BUILD', chain: 'multi', amount: 'n/a', equity: 'TOKEN SUPPLY %',
+    status: 'DEAD', verified: '2026-08-14', url: 'https://chain.link/blog/build-program-evolution',
+    evidence: '"existing arrangements under the Build program are being concluded"; token-reward claims ended 2026-07-07. chain.link/community/grants returns HTTP 404.',
+    note: 'Disqualifying even if alive: BUILD took a percentage of the project TOKEN SUPPLY, and CryptoLand has no token. Successor is "commercial agreements involving fees paid in LINK" — that is a vendor relationship where WE pay. VRF would genuinely suit raid outcomes, but it is a service to buy, per-chain, with no grant attached.' },
+  { n: 64, name: 'Aleph Zero Ecosystem Funding', chain: 'Aleph Zero', amount: 'n/a', equity: 'venture',
+    status: 'DEAD', verified: '2026-08-14', url: 'https://alephzero.org/blog/sunset-of-the-aleph-zero-evm/',
+    evidence: '"The Foundation will be winding down"; official post "Sunset of the Aleph Zero EVM"; ecosystem-funding-program URL redirects to homepage',
+    note: 'The CHAIN is going, not just the programme: Aleph Zero EVM RPC returns NXDOMAIN and the Substrate L1 RPC times out. Would also be non-EVM-expensive (ink! contract + new adapter family) — integrating a chain that is switching off. Privacy/ZK thesis is the opposite of a public geospatial land game anyway.' },
   { n: 60, name: 'Flow Ecosystem Support', chain: 'Flow', amount: '~$100K', equity: '0%',
     status: 'FLUX', verified: '2026-08-14',
     url: 'https://developers.flow.com/ecosystem/developer-support-hub/grants',
