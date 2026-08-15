@@ -75,3 +75,8 @@ export function logoFor(chainKey) {
   const base_ = chainKey.split('-')[0]
   return CHAIN_LOGOS[base_] ?? null
 }
+
+// The parent brand. Not in CHAIN_LOGOS and never returned by logoFor() — XONO
+// is the company, the chain marks are its children. Import it directly:
+//   import { XonoWordmark, XonoGlyph } from './logos'
+export { XonoWordmark, XonoGlyph } from './_xono.jsx'
