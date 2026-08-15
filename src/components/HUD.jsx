@@ -12,6 +12,7 @@ import TileCertificate from './TileCertificate'
 import { AgentFeedChip } from './AgentFeedPanel'
 import { LandDropChip } from './LandDropModal'
 import { SquadChip } from './SquadPanel'
+import { XonoGlyph } from './logos'
 
 export default function HUD() {
   const blocks   = useGameStore(s => s.blocks)
@@ -92,16 +93,27 @@ export default function HUD() {
           flexShrink: 0,
           boxShadow: 'var(--sh-sm)',
         }}>
-          <div className="live-dot" />
+          {/* The XONO glyph is the MARK; CRYPTOLAND is the product name beside
+              it. Previously the name was set in the UI font at weight 800,
+              which reads as a heading rather than a logo — the same reason the
+              monoline wordmark was rejected.
+
+              CRYPTOLAND is not drawn as a Didone: that would mean cutting eight
+              new letters (C R Y P T L A D) by hand to match, and eight
+              inconsistent glyphs look far worse than none. Instead it is set
+              small, uppercase and widely tracked, which is how a luxury
+              lockup treats the name next to its mark — the drawn glyph carries
+              the character, the name stays quiet. */}
+          <XonoGlyph size={17} accent style={{ flexShrink: 0 }} />
           <span style={{
-            fontFamily: 'var(--font)', fontWeight: 800,
-            fontSize: 14, letterSpacing: '-0.03em', color: 'var(--t1)',
+            fontFamily: 'var(--font)', fontWeight: 600,
+            fontSize: 10.5, letterSpacing: '0.20em', color: 'var(--t1)',
+            textTransform: 'uppercase', paddingLeft: 1,
           }}>
-            {/* --chain-accent-ui, not --chain-accent: this is 14px text on a dark
-                surface, and the raw brand hex is under 2:1 on Cardano and Radix.
-                Onboarding paints the wordmark in the accent, so using green here
-                made the brand colour change the moment you entered the map. */}
-            CRYPTO<span style={{ color: 'var(--chain-accent-ui, var(--green))' }}>LAND</span>
+            {/* --chain-accent-ui, not --chain-accent: small text on a dark
+                surface, and the raw brand hex is under 2:1 on Cardano and
+                Radix. */}
+            Crypto<span style={{ color: 'var(--chain-accent-ui, var(--green))' }}>land</span>
           </span>
         </div>
 

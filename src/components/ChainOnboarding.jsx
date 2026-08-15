@@ -22,7 +22,7 @@ import { useState, useEffect } from 'react'
 import { PROFILE, ACTIVE_CHAIN_KEY } from '../lib/chainProfile.js'
 import { ACTIVE_CHAIN } from '../lib/blockchain/config.js'
 import { api } from '../lib/api'
-import { logoFor } from './logos'
+import { logoFor, XonoWordmark } from './logos'
 import ChainHero from './ChainHero'
 import ChainStatus from './ChainStatus'
 
@@ -194,13 +194,20 @@ export default function ChainOnboarding({ onEnter }) {
         <>
           <ChainMark size={62} />
 
+          {/* The company mark leads: this is the first screen anyone sees, and
+              a drawn Didone reads as a brand where set body text reads as a
+              heading. CRYPTOLAND stays underneath as the product name — quiet,
+              tracked, and clearly subordinate to the mark. */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+            <XonoWordmark size={30} accent accentColor={ACCENT_UI} />
+          </div>
           <div style={{
-            fontFamily: 'var(--font)', fontWeight: 900,
-            fontSize: 'clamp(34px,7.5vw,52px)', letterSpacing: '-0.03em',
-            lineHeight: 1, textAlign: 'center', marginBottom: 10,
-            color: 'var(--t1)', whiteSpace: 'nowrap',
+            fontFamily: 'var(--font)', fontWeight: 700,
+            fontSize: 'clamp(15px,3vw,19px)', letterSpacing: '0.22em',
+            lineHeight: 1, textAlign: 'center', marginBottom: 12,
+            color: 'var(--t1)', whiteSpace: 'nowrap', textTransform: 'uppercase',
           }}>
-            CRYPTO<span style={{ color: ACCENT_UI }}>LAND</span>
+            Crypto<span style={{ color: ACCENT_UI }}>land</span>
           </div>
 
           <p style={{

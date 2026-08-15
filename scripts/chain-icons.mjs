@@ -284,11 +284,16 @@ export function writeChainIcons(outDir, { chain, name, accent, bg = '#000000', i
   // iOS composites onto black, so this one is opaque on purpose.
   writeFileSync(join(outDir, 'apple-touch-icon.png'),
     encodePNG(180, rasterise(180, { accent, bg, ink })))
-  // .ico keeps a solid background: older Windows shells drop the alpha channel
-  // and a transparent source renders as black there anyway.
+  // .ico is TRANSPARENT, and this one matters most: Chrome prefers
+  // `<link rel="icon" href="/favicon.ico" sizes="any">` over the PNGs, so an
+  // opaque .ico is the black square in the tab even when every PNG beside it is
+  // transparent. That is exactly what shipped first — the PNGs were fixed and
+  // the tab did not change, because nothing was reading them.
+  // (The earlier worry about old Windows shells dropping alpha does not apply:
+  // the ICO is PNG-encoded, and every browser that reads it handles alpha.)
   writeFileSync(join(outDir, 'favicon.ico'),
     encodeICO([16, 32, 48].map(size => ({
-      size, png: encodePNG(size, rasterise(size, { accent, bg, ink })),
+      size, png: encodePNG(size, rasterise(size, { accent, bg: 'none', ink: inkT })),
     }))))
 
   writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({
