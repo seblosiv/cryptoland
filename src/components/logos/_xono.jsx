@@ -2,7 +2,7 @@
  * XONO — the company wordmark, cut as a high-contrast Didone.
  *
  * Underscore-prefixed so `logoFor()` never resolves it as a chain: this is the
- * PARENT brand. Pure filled paths, no fonts, no filters, no gradients.
+ * PARENT brand. Filled paths, no fonts, no filters, no gradients.
  *
  * ── Why a Didone, not the geometric monoline this replaces ──────────────────
  * The first attempt was monoline geometric — even stroke weight, circle-and-
@@ -29,14 +29,14 @@
  * out. Use XonoGlyph for favicons and very small nav rows.
  *
  * ── Colour ─────────────────────────────────────────────────────────────────
- * `accent` (default false) paints BOTH O's in the accent colour and leaves the
- * X and N white. The two O's alternate — white, accent, white, accent — which
- * gives the word a rhythm a single coloured letter cannot; and the O's are the
- * roundest shapes, so they hold a colour without the hairlines muddying it.
+ * `accent` paints exactly ONE letter — the final O. An earlier draft coloured
+ * both O's; two accents split the eye and the word read as decorated rather
+ * than marked. A single accent at the end works like a full stop: the word
+ * resolves into the colour instead of opening on it.
  *
- * The accent defaults to `var(--chain-accent-ui)`, the DERIVED readable variant,
- * never the raw brand hex: four chain accents fail 4.5:1 on our surfaces, and
- * this is text. See src/lib/chainProfile.js.
+ * Defaults to `var(--chain-accent-ui)`, the DERIVED readable variant, never the
+ * raw brand hex — four chain accents fail 4.5:1 on our surfaces and this is
+ * text. See src/lib/chainProfile.js.
  */
 
 /** The full XONO wordmark. `size` drives HEIGHT; width follows the ratio. */
@@ -50,7 +50,6 @@ export function XonoWordmark({
 }) {
   const w = 352
   const h = 100
-  const o = accent ? accentColor : 'currentColor'
   return (
     <svg
       height={size}
@@ -71,10 +70,8 @@ export function XonoWordmark({
       <path d="M50.5 82.3 h18 v1.7 h-18 Z" />
       <path d="M56.05 16 h18 v1.7 h-18 Z" />
       <path d="M5.949999999999999 82.3 h18 v1.7 h-18 Z" />
-      {/* O — takes the accent when `accent` is set */}
-      <g fill={o}>
-        <path d="M100 50 A29 35.2 0 0 1 158 50 A29 35.2 0 0 1 100 50 ZM113 50 A16 33.300000000000004 0 0 0 145 50 A16 33.300000000000004 0 0 0 113 50 Z" />
-      </g>
+      {/* O */}
+      <path d="M100 50 A29 35.2 0 0 1 158 50 A29 35.2 0 0 1 100 50 ZM113 50 A16 33.300000000000004 0 0 0 145 50 A16 33.300000000000004 0 0 0 113 50 Z" />
       {/* N */}
       <path d="M192 16 h13 L246 84 h-13 Z" />
       <path d="M192 16 h1.9 v68 h-1.9 Z" />
@@ -83,8 +80,8 @@ export function XonoWordmark({
       <path d="M183.95 82.3 h18 v1.7 h-18 Z" />
       <path d="M236.05 16 h18 v1.7 h-18 Z" />
       <path d="M236.05 82.3 h18 v1.7 h-18 Z" />
-      {/* O */}
-      <g fill={o}>
+      {/* O — the single accented letter. One, not two: see the header. */}
+      <g fill={accent ? accentColor : 'currentColor'}>
         <path d="M280 50 A29 35.2 0 0 1 338 50 A29 35.2 0 0 1 280 50 ZM293 50 A16 33.300000000000004 0 0 0 325 50 A16 33.300000000000004 0 0 0 293 50 Z" />
       </g>
     </svg>
@@ -99,7 +96,7 @@ export function XonoWordmark({
  * literally the first and last letters of XONO locked together.
  *
  * With `accent`, the ring takes the colour and the X stays white — the same
- * figure/ground split as the wordmark.
+ * single-accent logic as the wordmark.
  */
 export function XonoGlyph({
   size = 28,
