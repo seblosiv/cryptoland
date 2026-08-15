@@ -232,23 +232,64 @@ const PNG_SIZES = [16, 32, 48, 72, 96, 128, 180, 192, 512]
  * @param {string} outDir  the dist directory to write into
  * @param {{chain:string,name:string,accent:string,bg?:string,ink?:string}} opts
  */
+/* On a transparent favicon the X must NOT be white.
+ *
+ * Making the PNGs transparent fixed the black-square problem and immediately
+ * created another: a white X on a light browser tab is invisible, so the mark
+ * reads as an empty ring. Compositing it onto white and onto dark side by side
+ * is what showed it — the dark tab looked perfect and the light one had no X
+ * at all.
+ *
+ * The X is therefore drawn in the ACCENT, darkened, rather than in white: it
+ * stays visible on any tab colour because it never relies on the background for
+ * contrast. `ink` still exists for the opaque icons, where white is correct
+ * against their solid dark field. */
+
+/* Favicons are TRANSPARENT; the Apple touch icon is not.
+ *
+ * Baking #000 into every PNG made the tab icon a solid black square with a
+ * small ring inside it — fine on a dark browser theme, wrong everywhere else,
+ * and it is what a reviewer sees in their tab bar. A transparent PNG lets the
+ * mark sit on whatever the browser is using.
+ *
+ * apple-touch-icon is the deliberate exception: iOS composites it onto BLACK
+ * rather than the home-screen wallpaper, so a transparent one renders as a dark
+ * blob. It keeps an opaque background. Same for the .ico, which older Windows
+ * shells render without an alpha channel. */
+/** Mix a hex toward black — used for the X on transparent icons. */
+function darken(h, amount = 0.45) {
+  const [r, g, b] = hex(h)
+  const m = (v) => Math.round(v * (1 - amount))
+  return '#' + [m(r), m(g), m(b)].map((v) => v.toString(16).padStart(2, '0')).join('')
+}
+
 export function writeChainIcons(outDir, { chain, name, accent, bg = '#000000', ink = '#ffffff' }) {
+  // Visible on a white tab AND a dark one, because it does not depend on the
+  // background for contrast.
+  const inkT = darken(accent, 0.55)
   mkdirSync(join(outDir, 'icons'), { recursive: true })
 
   // Tab icon: transparent ground so it sits correctly in light and dark chrome.
-  writeFileSync(join(outDir, 'favicon.svg'), markSVG({ accent, bg: 'none', ink }))
+  writeFileSync(join(outDir, 'favicon.svg'), markSVG({ accent, bg: 'none', ink: inkT }))
   // Maskable/PWA art keeps its own ground, because the OS crops it.
   writeFileSync(join(outDir, 'icon.svg'), markSVG({ accent, bg, ink }))
 
   const png = {}
   for (const s of PNG_SIZES) {
-    png[s] = encodePNG(s, rasterise(s, { accent, bg, ink }))
+    // Transparent for tab/PWA use.
+    png[s] = encodePNG(s, rasterise(s, { accent, bg: 'none', ink: inkT }))
     writeFileSync(join(outDir, 'icons', `icon-${s}.png`), png[s])
   }
   // iOS looks for this exact path when a page ships no apple-touch-icon link.
-  writeFileSync(join(outDir, 'apple-touch-icon.png'), png[180])
+  // iOS composites onto black, so this one is opaque on purpose.
+  writeFileSync(join(outDir, 'apple-touch-icon.png'),
+    encodePNG(180, rasterise(180, { accent, bg, ink })))
+  // .ico keeps a solid background: older Windows shells drop the alpha channel
+  // and a transparent source renders as black there anyway.
   writeFileSync(join(outDir, 'favicon.ico'),
-    encodeICO([16, 32, 48].map(size => ({ size, png: png[size] }))))
+    encodeICO([16, 32, 48].map(size => ({
+      size, png: encodePNG(size, rasterise(size, { accent, bg, ink })),
+    }))))
 
   writeFileSync(join(outDir, 'manifest.json'), JSON.stringify({
     name: `CryptoLand on ${name}`,
