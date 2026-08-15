@@ -14,6 +14,7 @@
  * believing the rest of the application.
  */
 import { writeFileSync, mkdirSync } from 'node:fs'
+import { xonoWordmark } from './brand.mjs'
 
 /**
  * Render a string as an inline SVG image rather than HTML text.
@@ -175,6 +176,7 @@ footer{margin-top:46px;padding-top:20px;border-top:1px solid var(--b0);color:var
 </div>
 
 <footer>
+  <div style="margin-bottom:26px">${xonoWordmark({ height: 19, base: 'rgba(255,255,255,.62)', accent: 'var(--acc)' })}</div>
   Every per-chain deployment also exposes <code>/ecosystem</code> — that chain's live traction, its native
   integration spec, and the same disclosures as above.
 </footer>

@@ -9,7 +9,11 @@
  * index.html, so each "icon" was 3.6 KB of HTML served as image/png. Install
  * the app and you got a broken tile; share it and you got nothing.
  *
- * THE MARK. One filled tile on a grid — the product reduced to its smallest
+ * THE MARK. The XONO glyph — a Didone O with the X inside, the first and last
+ * letters of the company name. Every subdomain carries it in that chain's own
+ * accent, so 32 favicons read as one family.
+ *
+ * (Previously: one filled tile on a grid — the product reduced to its smallest
  * true statement, the same mark the apex homepage uses. It has to survive 16px
  * in a browser tab, so it is three elements: ground, two hairlines each way,
  * one solid square. Drawn on a 64-unit grid so every edge lands on a whole
@@ -29,19 +33,50 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /* ── the mark, as geometry ──────────────────────────────────────────────────
-   64-unit grid. Lines at 24 and 44 with a 2-unit stroke; the claimed tile is
-   the 20×20 square they enclose. */
-const GRID = [24, 44]
-const STROKE = 2
-const TILE = { x: 24, y: 24, w: 20, h: 20 }
+   The XONO glyph: a Didone O with the X set inside it — the first and last
+   letters of the company name locked together. Replaces the earlier
+   grid-with-a-tile mark, which was generic and tied the 32 subdomains to
+   nothing.
 
-export function markSVG({ accent, bg = 'none', grid = '#8a8a8e' }) {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" fill="${bg}"/>
-  <g stroke="${grid}" stroke-width="${STROKE}" shape-rendering="crispEdges">
-    <path d="M${GRID[0]} 0 V64 M${GRID[1]} 0 V64 M0 ${GRID[0]} H64 M0 ${GRID[1]} H64"/>
-  </g>
-  <rect x="${TILE.x}" y="${TILE.y}" width="${TILE.w}" height="${TILE.h}" fill="${accent}"/>
+   Drawn on a 100-unit box to match deploy/apex/brand.mjs exactly, so the
+   favicon and the wordmark are the same drawing at different sizes.
+
+   The ring takes the chain's accent; the X stays white. That is the same
+   single-accent logic as the wordmark, and it means every subdomain gets a
+   favicon in its OWN colour while remaining recognisably one family. */
+const RING = { cx: 50, cy: 50, rx: 34, ry: 40, ix: 23, iy: 37.8 }
+const ARM = 15          // X reach from centre
+const XW = 7.5          // thick stroke of the X — the Didone contrast
+const XT = 1.6          // hairline stroke
+
+/* Contrast does not survive a favicon.
+   Rendered at 32px the 1.6-unit hairline collapses to under half a pixel: the
+   X reads as a single slash and the mark stops being an X at all. Below 48px
+   the two strokes are therefore equalised — the SHAPE (X inside O) is what has
+   to survive at that size, not the type detail. Verified by magnifying the
+   actual 32px output, not by assuming. */
+/* Verified by magnifying real output at 16/32/48/96, not by assuming:
+     >= 96  full Didone contrast — the hairline is over a pixel wide
+     32-95  both strokes equalised; the hairline still collapses at 48
+     <= 24  the X blurs into the ring, so it is dropped entirely and the mark
+            becomes a solid accent ring. A recognisable O beats an illegible X.
+   The shape is what must survive at favicon size, not the type detail. */
+const strokesFor = (size) => {
+  if (!size || size >= 96) return [XW, XT]
+  if (size <= 24) return [0, 0]
+  return [5.2, 5.2]
+}
+
+export function markSVG({ accent, bg = 'none', ink = '#ffffff', size = null }) {
+  const { cx, cy, rx, ry, ix, iy } = RING
+  const [w1, w2] = strokesFor(size)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" fill="${bg}"/>
+  <path fill="${accent}" fill-rule="evenodd"
+        d="M${cx - rx} ${cy} A${rx} ${ry} 0 0 1 ${cx + rx} ${cy} A${rx} ${ry} 0 0 1 ${cx - rx} ${cy} Z
+           M${cx - ix} ${cy} A${ix} ${iy} 0 0 0 ${cx + ix} ${cy} A${ix} ${iy} 0 0 0 ${cx - ix} ${cy} Z"/>
+  ${w1 > 0 ? `<path fill="${ink}" d="M${cx - ARM} ${cy - ARM} l${w1} 0 L${cx + ARM} ${cy + ARM} l${-w1} 0 Z"/>` : ''}
+  ${w2 > 0 ? `<path fill="${ink}" d="M${cx + ARM - w2} ${cy - ARM} l${w2} 0 L${cx - ARM + w2} ${cy + ARM} l${-w2} 0 Z"/>` : ''}
 </svg>
 `
 }
@@ -52,31 +87,80 @@ const hex = h => {
   return [parseInt(f.slice(0, 2), 16), parseInt(f.slice(2, 4), 16), parseInt(f.slice(4, 6), 16)]
 }
 
-/** Flat rectangles into RGBA. No antialiasing wanted — a blurred mark at 16px
- *  is a mark nobody recognises, and every edge is on a whole pixel by design. */
-function rasterise(size, { accent, bg, grid }) {
-  const buf = Buffer.alloc(size * size * 4)          // transparent by default
-  const s = size / 64
-  const put = (x0, y0, x1, y1, [r, g, b], a = 255) => {
-    const X0 = Math.max(0, Math.round(x0 * s)), X1 = Math.min(size, Math.round(x1 * s))
-    const Y0 = Math.max(0, Math.round(y0 * s)), Y1 = Math.min(size, Math.round(y1 * s))
-    for (let y = Y0; y < Y1; y++) {
-      for (let x = X0; x < X1; x++) {
-        const i = (y * size + x) * 4
-        buf[i] = r; buf[i + 1] = g; buf[i + 2] = b; buf[i + 3] = a
+/** Draw the glyph into RGBA with no native dependency.
+ *
+ *  The previous version filled axis-aligned rectangles only, which is why the
+ *  old mark was a grid: rectangles are all it could express. The glyph needs an
+ *  ellipse and two slanted strokes, so both are added as primitives here.
+ *
+ *  Curved edges are supersampled 2x2. The original note — that a blurred mark
+ *  at 16px is unrecognisable — is right about BLUR, but an unantialiased curve
+ *  at 16px reads as a jagged blob, which is worse. Straight edges still land on
+ *  whole pixels. */
+function rasterise(size, { accent, bg, ink }) {
+  const buf = Buffer.alloc(size * size * 4)
+  const A = hex(accent), I = hex(ink), B = bg && bg !== 'none' ? hex(bg) : null
+  const k = size / 100
+  const SS = 2                       // supersample factor for curved edges
+  const { cx, cy, rx, ry, ix, iy } = RING
+  const [w1, w2] = strokesFor(size)
+
+  const inEllipse = (x, y, ex, ey) => {
+    const dx = (x - cx) / ex, dy = (y - cy) / ey
+    return dx * dx + dy * dy <= 1
+  }
+  // Point-in-parallelogram for the X strokes, expressed as two half-planes.
+  const inStroke = (x, y, x0, y0, x1, y1, w) => {
+    const vx = x1 - x0, vy = y1 - y0
+    const len = Math.hypot(vx, vy)
+    const t = ((x - x0) * vx + (y - y0) * vy) / (len * len)
+    if (t < 0 || t > 1) return false
+    const px = x0 + vx * t, py = y0 + vy * t
+    return Math.hypot(x - px, y - py) <= w / 2
+  }
+
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      let ringHits = 0, inkHits = 0
+      for (let sy = 0; sy < SS; sy++) {
+        for (let sx = 0; sx < SS; sx++) {
+          const ux = (px + (sx + 0.5) / SS) / k
+          const uy = (py + (sy + 0.5) / SS) / k
+          if ((w1 > 0 && inStroke(ux, uy, cx - ARM, cy - ARM, cx + ARM, cy + ARM, w1)) ||
+              (w2 > 0 && inStroke(ux, uy, cx + ARM, cy - ARM, cx - ARM, cy + ARM, w2))) {
+            inkHits++
+          } else if (inEllipse(ux, uy, rx, ry) && !inEllipse(ux, uy, ix, iy)) {
+            ringHits++
+          }
+        }
+      }
+      const total = SS * SS
+      const i = (py * size + px) * 4
+      if (B) { buf[i] = B[0]; buf[i + 1] = B[1]; buf[i + 2] = B[2]; buf[i + 3] = 255 }
+      if (inkHits) {
+        const a = Math.round((inkHits / total) * 255)
+        blend(buf, i, I, a)
+      } else if (ringHits) {
+        blend(buf, i, A, Math.round((ringHits / total) * 255))
       }
     }
   }
-
-  if (bg) put(0, 0, 64, 64, hex(bg))
-  const gc = hex(grid)
-  for (const g of GRID) {
-    put(g - STROKE / 2, 0, g + STROKE / 2, 64, gc)   // vertical
-    put(0, g - STROKE / 2, 64, g + STROKE / 2, gc)   // horizontal
-  }
-  put(TILE.x, TILE.y, TILE.x + TILE.w, TILE.y + TILE.h, hex(accent))
   return buf
 }
+
+/** Source-over composite, so an antialiased edge sits on the background
+ *  instead of punching a hole in it. */
+function blend(buf, i, [r, g, b], a) {
+  if (a >= 255) { buf[i] = r; buf[i + 1] = g; buf[i + 2] = b; buf[i + 3] = 255; return }
+  const dst = buf[i + 3]
+  const out = a + dst * (1 - a / 255)
+  if (out <= 0) return
+  buf[i] = Math.round((r * a + buf[i] * dst * (1 - a / 255)) / out)
+  buf[i + 1] = Math.round((g * a + buf[i + 1] * dst * (1 - a / 255)) / out)
+  buf[i + 2] = Math.round((b * a + buf[i + 2] * dst * (1 - a / 255)) / out)
+  buf[i + 3] = Math.round(out)
+}
+
 
 /* ── PNG ──────────────────────────────────────────────────────────────────── */
 const CRC = (() => {
@@ -146,19 +230,19 @@ const PNG_SIZES = [16, 32, 48, 72, 96, 128, 180, 192, 512]
 /**
  * Write the whole set into a built bundle.
  * @param {string} outDir  the dist directory to write into
- * @param {{chain:string,name:string,accent:string,bg?:string,grid?:string}} opts
+ * @param {{chain:string,name:string,accent:string,bg?:string,ink?:string}} opts
  */
-export function writeChainIcons(outDir, { chain, name, accent, bg = '#0f0f0f', grid = '#3a3a3c' }) {
+export function writeChainIcons(outDir, { chain, name, accent, bg = '#000000', ink = '#ffffff' }) {
   mkdirSync(join(outDir, 'icons'), { recursive: true })
 
   // Tab icon: transparent ground so it sits correctly in light and dark chrome.
-  writeFileSync(join(outDir, 'favicon.svg'), markSVG({ accent, bg: 'none', grid: '#8a8a8e' }))
+  writeFileSync(join(outDir, 'favicon.svg'), markSVG({ accent, bg: 'none', ink }))
   // Maskable/PWA art keeps its own ground, because the OS crops it.
-  writeFileSync(join(outDir, 'icon.svg'), markSVG({ accent, bg, grid }))
+  writeFileSync(join(outDir, 'icon.svg'), markSVG({ accent, bg, ink }))
 
   const png = {}
   for (const s of PNG_SIZES) {
-    png[s] = encodePNG(s, rasterise(s, { accent, bg, grid }))
+    png[s] = encodePNG(s, rasterise(s, { accent, bg, ink }))
     writeFileSync(join(outDir, 'icons', `icon-${s}.png`), png[s])
   }
   // iOS looks for this exact path when a page ships no apple-touch-icon link.

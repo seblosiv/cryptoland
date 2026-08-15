@@ -124,6 +124,47 @@ Real classes defined in `src/index.css`:
 
 ---
 
+## The XONO mark
+
+The company wordmark and glyph live in two places that must agree:
+`src/components/logos/_xono.jsx` (React, for the app) and
+`deploy/apex/brand.mjs` (SVG strings, for the generated static pages, which are
+built by plain node scripts that cannot import JSX).
+`src/test/brand.test.js` fails the build if they drift — and it has already
+caught a hand-transcription that flipped an arc sweep and rendered both O's as
+solid blobs.
+
+**A high-contrast Didone**, not the geometric monoline first attempted: thick
+stems, hairline thins, flat cut serifs, wide tracking. That register is what
+reads premium; monoline geometric reads as a 2015 startup regardless of how
+carefully it is drawn.
+
+**One accented letter — the final O.** Two accents split the eye and the word
+reads as decorated. One at the end works like a full stop. The accent defaults
+to `var(--chain-accent-ui)`, the derived readable variant, never a raw brand hex.
+
+Where it appears: the apex and `/about` footers, the closing slide of all 34
+decks, and as the favicon on all 32 subdomains via `scripts/chain-icons.mjs`.
+`xono.ai/brand` is the preview.
+
+### Contrast does not survive a favicon
+
+The glyph's stroke weights change by size, and this was verified by magnifying
+real PNG output rather than assumed:
+
+| Size | Treatment |
+|---|---|
+| ≥ 96px | full Didone contrast — the hairline is over a pixel wide |
+| 32–95px | both X strokes equalised; the hairline still collapses at 48 |
+| ≤ 24px | the X is dropped entirely — a clean accent ring beats an illegible X |
+
+At 32px the 1.6-unit hairline falls under half a pixel and the X reads as a
+single slash. The SHAPE has to survive at that size, not the type detail.
+
+CryptoLand remains the product wordmark in-app (`CRYPTO` + accent `LAND` in the
+HUD). XONO is the company and signs the page; it does not replace the product
+name in the hero.
+
 ## The instrument register
 
 Brought over from the apex homepage (`deploy/apex/build-apex.mjs`), whose hero

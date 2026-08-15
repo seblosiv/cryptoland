@@ -61,6 +61,7 @@ function ui(hex){ const rgb=hex2rgb(hex); if(contrast(rgb,S1)>=4.5) return hex
    Access-Control-Allow-Origin — scripts/check-rpcs.mjs exists to keep that true,
    and it is why this can be a live check rather than a screenshot. */
 import { readFileSync as _rf, existsSync as _ex } from 'node:fs'
+import { xonoWordmark } from './brand.mjs'
 
 /* How each non-EVM chain proves itself to a browser. Verified reachable with
    Access-Control-Allow-Origin on 2026-08-13; the four omitted genuinely cannot:
@@ -480,6 +481,10 @@ ${cards}
 
 
 <footer>
+  <!-- The company mark signs the page. CryptoLand is the product; XONO is who
+       builds it, so the wordmark belongs at the foot, not competing with the
+       product name in the hero. -->
+  <div style="margin-bottom:26px">${xonoWordmark({ height: 19, base: 'rgba(255,255,255,.62)', accent: 'var(--acc)' })}</div>
   <a href="/about" style="color:var(--acc)">About &amp; who builds this →</a><br><br>
   Every build exposes <code>/ecosystem</code> — that chain's live traction, its native integration spec, and
   an explicit statement of what is and is not deployed on-chain.

@@ -28,6 +28,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { xonoWordmark } from '../deploy/apex/brand.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'deploy', 'deck')
@@ -296,7 +297,11 @@ function deck(chain) {
   /* 09 — close. */
   slide('close', 'Contact', `
     <div class="close">
-      <p class="eyebrow mono">CryptoLand by XONO</p>
+      <!-- The company mark replaces the typed name on the closing slide: this
+           is the last thing a reviewer looks at, and a drawn mark signs the
+           deck where set body text merely labels it. -->
+      <div style="margin-bottom:18px">${xonoWordmark({ height: 26, base: 'rgba(255,255,255,.72)', accent: accentUi })}</div>
+      <p class="eyebrow mono">CryptoLand</p>
       <h2 class="closing chrome">${esc(tagline)}</h2>
       <dl class="cover-meta">
         <div><dt class="mono">Live</dt><dd class="mono">${chain ? esc(chain.key) + '.xono.ai' : 'xono.ai'}</dd></div>
