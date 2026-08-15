@@ -1,156 +1,111 @@
 /**
- * XONO — the company wordmark and its standalone glyph.
+ * XONO — the company wordmark, cut as a high-contrast Didone.
  *
  * Underscore-prefixed so `logoFor()` never resolves it as a chain: this is the
- * PARENT brand, and the chain marks in this directory are its children. The
- * conventions still apply — monochrome `currentColor`, pure paths, no fonts,
- * no filters — so it tints and scales exactly like the rest of the system.
+ * PARENT brand. Monochrome `currentColor`, filled paths, no fonts, no filters —
+ * so it tints and scales like every other mark in this directory.
  *
- * ── Why it is drawn, not set in a typeface ───────────────────────────────────
- * A wordmark set in a webfont is not a logo: it depends on that font loading,
- * shifts between platforms, and cannot be reduced to a single glyph. These are
- * geometric paths on a strict grid, so the mark is identical everywhere, works
- * at 14px in a nav and at 2000px on a deck, and needs nothing to load.
+ * ── Why a Didone, not the geometric monoline this replaces ──────────────────
+ * The first attempt was a monoline geometric wordmark: even stroke weight,
+ * circle-and-diagonal letterforms. That vocabulary is the default of every
+ * 2015-era startup and reads as cheap however carefully it is drawn.
  *
- * ── The idea ────────────────────────────────────────────────────────────────
- * XONO is X · O · N · O — two crosses of diagonals bracketing two rings. The
- * product is a world divided into square tiles, so every letter is built from
- * the same square cell: the O is a ring inscribed in it, the X its two
- * diagonals, the N its two verticals plus one diagonal. Same cell, same stroke
- * weight, same optical rhythm — the letters read as a system rather than as
- * type, which is the same argument the chain marks make.
+ * The premium register is the Didone — thick stems against hairline thins, flat
+ * unbracketed serifs, vertical stress. It is what Vogue, Dior and Bulgari use,
+ * and it signals luxury precisely because extreme contrast is unforgiving: it
+ * only survives if the drawing is exact.
  *
- * Strokes are drawn as strokes (not outlined paths) with `vectorEffect:
- * non-scaling-stroke` deliberately NOT set: the weight must scale with the
- * mark, or it thickens into a blob when it is small and hairlines when large.
+ * Drawn as filled paths rather than set in a typeface: nothing to load, no
+ * platform substitution, identical everywhere, no licence.
  *
- * ── Optical corrections, which are the whole job ────────────────────────────
- * Round shapes read smaller than flat ones at the same measured height, so each
- * O overshoots the X and N by ~2% and carries a slightly lighter stroke — a ring
- * at the same weight as a straight stem looks heavier, because more of its
- * length sits at the extremes. Both are standard type corrections.
+ * ── The three things that make it read expensive ────────────────────────────
+ * 1. CONTRAST — stems are ~7x the hairlines. Less contrast slides toward Times
+ *    and reads as a document rather than a mark.
+ * 2. TRACKING — letters sit 34 units apart on a 68 cap height, which is very
+ *    wide. Luxury logotypes breathe; tight setting reads as body copy. This is
+ *    the single biggest difference between a word and a mark.
+ * 3. SERIFS slightly wider than the stems they cap, which is what makes a
+ *    Didone look cut rather than drawn.
  *
- * These numbers were MEASURED against renders, not eyeballed. The first attempt
- * used r = 9.6 "for a 4% overshoot" and was actually 10.4% too SHORT: a ring's
- * visual height is (2r + stroke), and I had compared it against the wrong
- * reference. The word sagged in the middle. See RING_R below.
+ * The O overshoots the cap line by 1.2 units top and bottom — round shapes read
+ * short against flat terminals. Measured against renders, not guessed: the
+ * monoline draft got this wrong in the other direction and the word sagged.
+ *
+ * WARNING: contrast is the idea and also the constraint. Below ~18px the
+ * hairlines thin out. Use XonoGlyph for favicons and very small nav rows.
  */
 
-/** Cell geometry, shared by every letter so the rhythm is exact. */
-const PAD = 4            // keeps strokes off the viewBox edge — they clip otherwise
-const CELL = 22          // letter box
-const GAP = 9            // space between letters
-const STROKE = 2.6       // stem weight
-const RING_STROKE = 2.45 // rings slightly lighter — see header
-
-// MEASURED, not guessed. A ring's visual height is (2r + strokeWidth); the X
-// and N occupy (CELL + STROKE) = 24.6. An r of 9.6 made the O 10.4% SHORTER
-// than its neighbours — the word visibly sagged in the middle. 11.32 puts the
-// O at +2% overshoot, which is the standard correction for round caps against
-// flat ones.
-const RING_R = 11.32
-// The N's diagonal stops short of both stem tops. Meeting them turns the
-// counters into a solid triangle at small sizes — it read as a filled wedge.
-const N_INSET = 3.2
-
-const x0 = (i) => PAD + i * (CELL + GAP)
-
-/**
- * The full XONO wordmark.
- *
- * `size` drives HEIGHT (as with every mark here); width follows the aspect
- * ratio, so it drops into a nav row without measuring anything.
- */
+/** The full XONO wordmark. `size` drives HEIGHT; width follows the ratio. */
 export function XonoWordmark({ size = 28, className, style, title = 'XONO' }) {
-  const w = PAD * 2 + CELL * 4 + GAP * 3
-  const h = PAD * 2 + CELL
-  const y0 = PAD
-  const y1 = PAD + CELL
-  const cy = (y0 + y1) / 2
-  const n = x0(2)
+  const w = 352
+  const h = 100
   return (
     <svg
       height={size}
       width={size * (w / h)}
       viewBox={`0 0 ${w} ${h}`}
-      fill="none"
+      fill="currentColor"
+      fillRule="evenodd"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       style={style}
       role="img"
       aria-label={title}
     >
-      {/* X — the cell's two diagonals, corner to corner. */}
-      <path
-        d={`M${x0(0)} ${y0} L${x0(0) + CELL} ${y1} M${x0(0) + CELL} ${y0} L${x0(0)} ${y1}`}
-        stroke="currentColor"
-        strokeWidth={STROKE}
-        strokeLinecap="square"
-      />
-
-      {/* O — a ring inscribed in the cell, drawn slightly oversized. */}
-      <circle
-        cx={x0(1) + CELL / 2}
-        cy={cy}
-        r={RING_R}
-        stroke="currentColor"
-        strokeWidth={RING_STROKE}
-      />
-
-      {/* N — two stems plus a diagonal drawn separately, so the diagonal can be
-          inset at both ends and the counters stay open. */}
-      <path d={`M${n} ${y1} L${n} ${y0}`} stroke="currentColor"
-            strokeWidth={STROKE} strokeLinecap="square" />
-      <path d={`M${n + CELL} ${y1} L${n + CELL} ${y0}`} stroke="currentColor"
-            strokeWidth={STROKE} strokeLinecap="square" />
-      <path d={`M${n} ${y0 + N_INSET} L${n + CELL} ${y1 - N_INSET}`}
-            stroke="currentColor" strokeWidth={STROKE} strokeLinecap="butt" />
-
-      {/* O */}
-      <circle
-        cx={x0(3) + CELL / 2}
-        cy={cy}
-        r={RING_R}
-        stroke="currentColor"
-        strokeWidth={RING_STROKE}
-      />
+      <path d="M14 16 l13 0 L66 84 l-13 0 Z" />
+      <path d="M64.1 16 l1.9 0 L15.9 84 l-1.9 0 Z" />
+      <path d="M11.5 16 h18 v1.7 h-18 Z" />
+      <path d="M50.5 82.3 h18 v1.7 h-18 Z" />
+      <path d="M56.05 16 h18 v1.7 h-18 Z" />
+      <path d="M5.949999999999999 82.3 h18 v1.7 h-18 Z" />
+      <path d="M100 50 A29 35.2 0 0 1 158 50 A29 35.2 0 0 1 100 50 ZM113 50 A16 33.300000000000004 0 0 0 145 50 A16 33.300000000000004 0 0 0 113 50 Z" />
+      <path d="M192 16 h13 L246 84 h-13 Z" />
+      <path d="M192 16 h1.9 v68 h-1.9 Z" />
+      <path d="M244.1 16 h1.9 v68 h-1.9 Z" />
+      <path d="M183.95 16 h18 v1.7 h-18 Z" />
+      <path d="M183.95 82.3 h18 v1.7 h-18 Z" />
+      <path d="M236.05 16 h18 v1.7 h-18 Z" />
+      <path d="M236.05 82.3 h18 v1.7 h-18 Z" />
+      <path d="M280 50 A29 35.2 0 0 1 338 50 A29 35.2 0 0 1 280 50 ZM293 50 A16 33.300000000000004 0 0 0 325 50 A16 33.300000000000004 0 0 0 293 50 Z" />
     </svg>
   )
 }
 
 /**
- * The standalone glyph — an X inside a ring, for a favicon, an avatar, or
- * anywhere the full word would be illegible.
+ * The standalone glyph — a Didone O with the X set inside it.
  *
- * It is the first and last letters of XONO collapsed into one figure, which is
- * why it reads as the same brand rather than as an unrelated icon. Square
- * viewBox so it centres in a round or square container without adjustment.
+ * The wordmark cannot survive a 16px favicon: its hairlines disappear. This
+ * carries the same vocabulary (vertical stress, high contrast, flat serifs) in
+ * a form that holds as a silhouette, and it is literally the first and last
+ * letters of XONO locked together.
  */
 export function XonoGlyph({ size = 28, className, style, title = 'XONO' }) {
-  const S = 48
+  const S = 100
   const c = S / 2
-  const r = 20.5
-  const arm = 9.4     // diagonal reach — kept clear of the ring's inner edge
+  const rx = 34
+  const ry = 40
+  const stem = 11
+  const hair = 2.2
+  const ix = rx - stem
+  const iy = ry - hair
+  const arm = 15
+  const xs = 7.5      // the inner X keeps the ring's contrast: thick \ , thin /
   return (
     <svg
       width={size}
       height={size}
       viewBox={`0 0 ${S} ${S}`}
-      fill="none"
+      fill="currentColor"
+      fillRule="evenodd"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       style={style}
       role="img"
       aria-label={title}
     >
-      <circle cx={c} cy={c} r={r} stroke="currentColor" strokeWidth="2.6" />
-      <path
-        d={`M${c - arm} ${c - arm} L${c + arm} ${c + arm}
-            M${c + arm} ${c - arm} L${c - arm} ${c + arm}`}
-        stroke="currentColor"
-        strokeWidth="2.9"
-        strokeLinecap="square"
-      />
+      <path d={`M${c - rx} ${c} A${rx} ${ry} 0 0 1 ${c + rx} ${c} A${rx} ${ry} 0 0 1 ${c - rx} ${c} Z M${c - ix} ${c} A${ix} ${iy} 0 0 0 ${c + ix} ${c} A${ix} ${iy} 0 0 0 ${c - ix} ${c} Z`} />
+      <path d={`M${c - arm} ${c - arm} l${xs} 0 L${c + arm} ${c + arm} l${-xs} 0 Z`} />
+      <path d={`M${c + arm - 1.6} ${c - arm} l1.6 0 L${c - arm + 1.6} ${c + arm} l${-1.6} 0 Z`} />
     </svg>
   )
 }

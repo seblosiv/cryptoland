@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <circle cx="24" cy="24" r="20.5" stroke="currentColor" stroke-width="2.6"/>
-  <path d="M14.6 14.6 L33.4 33.4 M33.4 14.6 L14.6 33.4" stroke="currentColor" stroke-width="2.9" stroke-linecap="square"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor" fill-rule="evenodd"><path d="M16 50 A34 40 0 0 1 84 50 A34 40 0 0 1 16 50 Z M27 50 A23 37.8 0 0 0 73 50 A23 37.8 0 0 0 27 50 Z"/><path d="M35 35 l7.5 0 L65 65 l-7.5 0 Z"/><path d="M63.4 35 l1.6 0 L36.6 65 l-1.6 0 Z"/></svg>
